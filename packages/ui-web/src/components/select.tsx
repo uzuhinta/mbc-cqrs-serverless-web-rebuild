@@ -105,7 +105,7 @@ export const SelectContent = forwardRef<
         data-slot="select-content"
         position={position}
         className={cn(
-          'mbc:data-[state=closed]:fade-out-0 mbc:data-[state=open]:fade-in-0 mbc:data-[state=closed]:zoom-out-95 mbc:data-[state=open]:zoom-in-95 mbc:data-[side=bottom]:slide-in-from-top-2 mbc:data-[side=left]:slide-in-from-right-2 mbc:data-[side=right]:slide-in-from-left-2 mbc:data-[side=top]:slide-in-from-bottom-2 mbc:max-h-(--radix-select-content-available-height) mbc:origin-(--radix-select-content-transform-origin) mbc:bg-popover mbc:text-popover-foreground mbc:data-[state=closed]:animate-out mbc:data-[state=open]:animate-in mbc:relative mbc:z-50 mbc:min-w-[8rem] mbc:overflow-y-auto mbc:overflow-x-hidden mbc:rounded-md mbc:border mbc:shadow-md',
+          'mbc:data-[state=closed]:fade-out-0 mbc:data-[state=open]:fade-in-0 mbc:data-[state=closed]:zoom-out-95 mbc:data-[state=open]:zoom-in-95 mbc:data-[side=bottom]:slide-in-from-top-2 mbc:data-[side=left]:slide-in-from-right-2 mbc:data-[side=right]:slide-in-from-left-2 mbc:data-[side=top]:slide-in-from-bottom-2 mbc:max-h-(--radix-select-content-available-height) mbc:origin-(--radix-select-content-transform-origin) mbc:bg-popover mbc:text-popover-foreground mbc:data-[state=closed]:animate-out mbc:data-[state=open]:animate-in mbc:relative mbc:z-50 mbc:min-w-[8rem] mbc:overflow-y-auto mbc:overflow-x-hidden mbc:rounded-md mbc:border mbc:border-border mbc:max-w-(--radix-select-content-available-width) mbc:shadow-md',
           position === 'popper' &&
             'mbc:data-[side=bottom]:translate-y-1 mbc:data-[side=left]:-translate-x-1 mbc:data-[side=right]:translate-x-1 mbc:data-[side=top]:-translate-y-1',
           className

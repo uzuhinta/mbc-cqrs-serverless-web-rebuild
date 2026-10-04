@@ -1,0 +1,3 @@
+@import '@mbc-cqrs-serverless/ui-web/styles.layer.css';
+@import 'tailwindcss';
+@source './layered.tsx';

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "pnpm --filter \"./packages/*\" -r build",
-    "typecheck": "tsc -p tsconfig.json && pnpm --filter \"./packages/*\" -r typecheck",
+    "typecheck": "tsc -p tsconfig.json && pnpm --filter \"./packages/*\" --filter \"./apps/*\" -r typecheck",
     "lint": "eslint .",
     "test": "vitest run",
     "format": "prettier --write .",
@@ -16,6 +16,8 @@
     "check:package": "pnpm --filter \"./packages/*\" -r check:package",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm build && pnpm test && pnpm check:package",
     "use-react": "node scripts/use-react.ts",
+    "playground": "pnpm --filter @mbc-cqrs-serverless/playground dev",
+    "playground:react18": "pnpm use-react 18 && pnpm build && pnpm playground",
     "changeset": "changeset"
   },
   "devDependencies": {

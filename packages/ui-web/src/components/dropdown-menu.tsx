@@ -35,7 +35,7 @@ export const DropdownMenuContent = forwardRef<
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
-          'mbc:data-[state=closed]:fade-out-0 mbc:data-[state=open]:fade-in-0 mbc:data-[state=closed]:zoom-out-95 mbc:data-[state=open]:zoom-in-95 mbc:data-[side=bottom]:slide-in-from-top-2 mbc:data-[side=left]:slide-in-from-right-2 mbc:data-[side=right]:slide-in-from-left-2 mbc:data-[side=top]:slide-in-from-bottom-2 mbc:max-h-(--radix-dropdown-menu-content-available-height) mbc:origin-(--radix-dropdown-menu-content-transform-origin) mbc:bg-popover mbc:text-popover-foreground mbc:data-[state=closed]:animate-out mbc:data-[state=open]:animate-in mbc:z-50 mbc:min-w-[8rem] mbc:overflow-y-auto mbc:overflow-x-hidden mbc:rounded-md mbc:border mbc:p-1 mbc:shadow-md',
+          'mbc:data-[state=closed]:fade-out-0 mbc:data-[state=open]:fade-in-0 mbc:data-[state=closed]:zoom-out-95 mbc:data-[state=open]:zoom-in-95 mbc:data-[side=bottom]:slide-in-from-top-2 mbc:data-[side=left]:slide-in-from-right-2 mbc:data-[side=right]:slide-in-from-left-2 mbc:data-[side=top]:slide-in-from-bottom-2 mbc:max-h-(--radix-dropdown-menu-content-available-height) mbc:origin-(--radix-dropdown-menu-content-transform-origin) mbc:bg-popover mbc:text-popover-foreground mbc:data-[state=closed]:animate-out mbc:data-[state=open]:animate-in mbc:z-50 mbc:min-w-[8rem] mbc:overflow-y-auto mbc:overflow-x-hidden mbc:rounded-md mbc:border mbc:border-border mbc:max-w-(--radix-dropdown-menu-content-available-width) mbc:p-1 mbc:shadow-md',
           className
         )}
         {...props}

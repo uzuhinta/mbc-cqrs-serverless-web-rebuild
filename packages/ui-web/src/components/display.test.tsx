@@ -93,6 +93,19 @@ describe('Badge', () => {
   })
 })
 
+describe('explicit border colours', () => {
+  it('colour borders without relying on a host border rule', () => {
+    render(
+      <>
+        <Alert data-testid="alert">Saved</Alert>
+        <Badge variant="outline">Outline</Badge>
+      </>
+    )
+    expect(screen.getByTestId('alert')).toHaveClass('mbc:border-border')
+    expect(screen.getByText('Outline')).toHaveClass('mbc:border-border')
+  })
+})
+
 describe('Separator and Skeleton', () => {
   it('keep v0 classes and mark their roots', () => {
     render(

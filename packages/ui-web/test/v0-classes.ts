@@ -1,4 +1,10 @@
-/** v0 class strings (Tailwind v4 reading, look rulings applied). */
+/**
+ * v0 class strings (Tailwind v4 reading, look rulings applied).
+ * `border-border`: v0 relied on the host's `* { border-color: var(--border) }`;
+ * the library states the colour (SP2 probe: Tailwind v3 preflight turned
+ * borders black). Select/DropdownMenu content cap their width at the
+ * available width (SP2 probe: 512px list overflowed a 375px screen).
+ */
 export const V0 = {
   // ui/form/FormDescription.tsx
   'field.description': 'text-sm font-normal text-[#475467]',
@@ -26,7 +32,7 @@ export const V0 = {
   'switch.thumb':
     'bg-background dark:data-[state=checked]:bg-primary-foreground dark:data-[state=unchecked]:bg-foreground pointer-events-none block size-4 rounded-full ring-0 transition-transform data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0',
   // ui/card.tsx — `[.border-b]`/`[.border-t]` target the prefixed class now
-  card: 'bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm',
+  card: 'border-border bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm',
   'card.header':
     '@container/card-header has-data-[slot=card-action]:grid-cols-[1fr_auto] [.mbc\\:border-b]:pb-6 grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6',
   'card.title': 'font-semibold leading-none',
@@ -52,7 +58,7 @@ export const V0 = {
   'dialog.overlay':
     'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=open]:animate-in fixed inset-0 z-50 bg-black/50',
   'dialog.content':
-    'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 bg-background data-[state=closed]:animate-out data-[state=open]:animate-in fixed left-[50%] top-[50%] z-50 w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg',
+    'border-border data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 bg-background data-[state=closed]:animate-out data-[state=open]:animate-in fixed left-[50%] top-[50%] z-50 w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg',
   'dialog.close':
     "rounded-xs ring-offset-background focus:outline-hidden focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute right-4 top-4 cursor-pointer opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none [&_svg:not([class*='size-'])]:size-6 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   'dialog.title': 'text-lg font-semibold leading-none',
@@ -61,14 +67,14 @@ export const V0 = {
   'dialog.footer': 'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
   // ui/alert-dialog.tsx
   'alert-dialog.content':
-    'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 bg-background data-[state=closed]:animate-out data-[state=open]:animate-in fixed left-[50%] top-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg',
+    'border-border data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 bg-background data-[state=closed]:animate-out data-[state=open]:animate-in fixed left-[50%] top-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg',
   'alert-dialog.title': 'text-lg font-semibold',
   // ui/popover.tsx
   'popover.content':
-    'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-(--radix-popover-content-transform-origin) bg-popover text-popover-foreground outline-hidden data-[state=closed]:animate-out data-[state=open]:animate-in z-50 w-72 rounded-md border p-4 shadow-md',
+    'border-border data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-(--radix-popover-content-transform-origin) bg-popover text-popover-foreground outline-hidden data-[state=closed]:animate-out data-[state=open]:animate-in z-50 w-72 rounded-md border p-4 shadow-md',
   // ui/dropdown-menu.tsx — `*:[svg]:!text-destructive` → `*:[svg]:text-destructive!`; checkbox/radio item corruption repaired
   'dropdown-menu.content':
-    'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 max-h-(--radix-dropdown-menu-content-available-height) origin-(--radix-dropdown-menu-content-transform-origin) bg-popover text-popover-foreground data-[state=closed]:animate-out data-[state=open]:animate-in z-50 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border p-1 shadow-md',
+    'border-border max-w-(--radix-dropdown-menu-content-available-width) data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 max-h-(--radix-dropdown-menu-content-available-height) origin-(--radix-dropdown-menu-content-transform-origin) bg-popover text-popover-foreground data-[state=closed]:animate-out data-[state=open]:animate-in z-50 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border p-1 shadow-md',
   'dropdown-menu.item':
     "data-[variant=destructive]:*:[svg]:text-destructive! outline-hidden focus:bg-primary/50 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default select-none items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:outline-none focus:text-black data-[disabled]:pointer-events-none data-[inset]:pl-8 data-[disabled]:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   'dropdown-menu.choice-item':
@@ -79,7 +85,7 @@ export const V0 = {
   'select.trigger':
     "border-input shadow-xs aria-invalid:border-[#FDA29B] aria-invalid:ring-[#FDA29B]/20 data-[state=open]:border-primary data-[placeholder]:text-muted-foreground dark:bg-input/30 dark:aria-invalid:ring-[#FDA29B]/40 dark:hover:bg-input/50 [&_svg:not([class*='text-'])]:text-muted-foreground flex w-fit items-center justify-between gap-2 whitespace-nowrap rounded-md border bg-transparent px-3 py-2 text-sm outline-none transition-[color,box-shadow] disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-9 data-[size=extra-md]:h-10 data-[size=lg]:h-11 data-[size=sm]:h-8 data-[size=xs]:text-xs *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   'select.content':
-    'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 max-h-(--radix-select-content-available-height) origin-(--radix-select-content-transform-origin) bg-popover text-popover-foreground data-[state=closed]:animate-out data-[state=open]:animate-in relative z-50 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border shadow-md data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
+    'border-border max-w-(--radix-select-content-available-width) data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 max-h-(--radix-select-content-available-height) origin-(--radix-select-content-transform-origin) bg-popover text-popover-foreground data-[state=closed]:animate-out data-[state=open]:animate-in relative z-50 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border shadow-md data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
   'select.item':
     "data-[disabled]:opacity-50 [&_svg:not([class*='size-'])]:size-4 outline-hidden hover:bg-accent focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 relative flex w-full cursor-default select-none items-center gap-2 rounded-sm py-1.5 pl-2 pr-8 text-sm data-[disabled]:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0",
   'select.label': 'text-muted-foreground px-2 py-1.5 text-xs',

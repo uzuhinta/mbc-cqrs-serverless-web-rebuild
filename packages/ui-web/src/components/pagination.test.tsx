@@ -77,5 +77,10 @@ describe('Pagination', () => {
     for (const name of V0['pagination.link-extra'].split(' ')) {
       expect(active).toHaveClass(`mbc:${name}`)
     }
+    expect(active).toHaveClass('mbc:border-brand')
+    expect(active).not.toHaveClass('mbc:border-border')
+    expect(screen.getByRole('link', { name: '前のページへ' })).toHaveClass(
+      'mbc:border-border'
+    )
   })
 })

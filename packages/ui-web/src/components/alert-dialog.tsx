@@ -52,7 +52,7 @@ export const AlertDialogContent = forwardRef<
         data-mbc=""
         data-slot="alert-dialog-content"
         className={cn(
-          'mbc:data-[state=closed]:fade-out-0 mbc:data-[state=open]:fade-in-0 mbc:data-[state=closed]:zoom-out-95 mbc:data-[state=open]:zoom-in-95 mbc:bg-background mbc:data-[state=closed]:animate-out mbc:data-[state=open]:animate-in mbc:fixed mbc:left-[50%] mbc:top-[50%] mbc:z-50 mbc:grid mbc:w-full mbc:max-w-[calc(100%-2rem)] mbc:translate-x-[-50%] mbc:translate-y-[-50%] mbc:gap-4 mbc:rounded-lg mbc:border mbc:p-6 mbc:shadow-lg mbc:duration-200 mbc:sm:max-w-lg',
+          'mbc:data-[state=closed]:fade-out-0 mbc:data-[state=open]:fade-in-0 mbc:data-[state=closed]:zoom-out-95 mbc:data-[state=open]:zoom-in-95 mbc:bg-background mbc:data-[state=closed]:animate-out mbc:data-[state=open]:animate-in mbc:fixed mbc:left-[50%] mbc:top-[50%] mbc:z-50 mbc:grid mbc:w-full mbc:max-w-[calc(100%-2rem)] mbc:translate-x-[-50%] mbc:translate-y-[-50%] mbc:gap-4 mbc:rounded-lg mbc:border mbc:border-border mbc:p-6 mbc:shadow-lg mbc:duration-200 mbc:sm:max-w-lg',
           className
         )}
         {...props}

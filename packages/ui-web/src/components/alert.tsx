@@ -4,7 +4,7 @@ import { forwardRef, type HTMLAttributes } from 'react'
 import { cn } from '../lib/cn'
 
 export const alertVariants = cva(
-  'mbc:relative mbc:w-full mbc:rounded-lg mbc:border mbc:p-4 mbc:[&>svg~*]:pl-7 mbc:[&>svg+div]:translate-y-[-3px] mbc:[&>svg]:absolute mbc:[&>svg]:left-4 mbc:[&>svg]:top-4 mbc:[&>svg]:text-foreground',
+  'mbc:relative mbc:w-full mbc:rounded-lg mbc:border mbc:border-border mbc:p-4 mbc:[&>svg~*]:pl-7 mbc:[&>svg+div]:translate-y-[-3px] mbc:[&>svg]:absolute mbc:[&>svg]:left-4 mbc:[&>svg]:top-4 mbc:[&>svg]:text-foreground',
   {
     variants: {
       variant: {

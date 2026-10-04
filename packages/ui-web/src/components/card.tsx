@@ -25,7 +25,7 @@ function part(slot: string, classes: string, root = false) {
 
 export const Card = part(
   'card',
-  'mbc:bg-card mbc:text-card-foreground mbc:flex mbc:flex-col mbc:gap-6 mbc:rounded-xl mbc:border mbc:py-6 mbc:shadow-sm',
+  'mbc:bg-card mbc:text-card-foreground mbc:flex mbc:flex-col mbc:gap-6 mbc:rounded-xl mbc:border mbc:border-border mbc:py-6 mbc:shadow-sm',
   true
 )
 export const CardHeader = part(
