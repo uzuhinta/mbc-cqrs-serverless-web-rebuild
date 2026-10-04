@@ -11,7 +11,7 @@ Rewrite the survey package as a real UI library that works in any React 18 or Re
 
 ### Success criteria
 
-1. `survey-web` runs in a React 18 app and a React 19 app (Vite and Next.js 15 App Router + Turbopack) with no build workarounds.
+1. `survey-web` runs in a React 18 app and a React 19 app (Vite and Next.js App Router + Turbopack) with no build workarounds.
 2. Using the core (`SurveyForm`, `SurveyCreator`) requires no backend, env vars, router, or toast library.
 3. Library styles never leak into a host app, never conflict with the host's Tailwind (v3, v4, or none), and can be overridden by host CSS without `!important`.
 4. Every UI string is translatable; Japanese (default) and English ship built in.
@@ -23,7 +23,7 @@ Rewrite the survey package as a real UI library that works in any React 18 or Re
 | Topic | Decision |
 |---|---|
 | Scope | Pure UI core + prop-driven page components + separate `/mbc` backend entry |
-| Styling | Pre-compiled, prefixed Tailwind v4 CSS, no preflight, CSS-variable theming |
+| Styling | Pre-compiled, prefixed Tailwind v4 CSS, no preflight, CSS-variable theming; unlayered `styles.css` + opt-in `styles.layer.css` |
 | i18n | Built-in `ja` + `en`, typed messages, partial overrides |
 | Backend deps | No AWS SDKs: host supplies `getAuthToken`; built-in `fetch` + AppSync realtime WebSocket |
 | Location | `rebuild/` standalone monorepo; publishes `survey-web@1.0.0` (breaking major) |
@@ -59,7 +59,7 @@ rebuild/
 │  └─ survey-web/   @mbc-cqrs-serverless/survey-web
 └─ apps/
    ├─ playground/   Vite demo app (private)
-   └─ next-smoke/   Next.js 15 App Router + Turbopack build check (private)
+   └─ next-smoke/   Next.js 16 App Router + Turbopack build check (private)
 ```
 
 ### Package boundaries
@@ -69,8 +69,8 @@ Dependencies point one way: `survey-web → ui-web`, `survey-web/mbc → client-
 | Package | Dependencies | Peer dependencies | Entry points |
 |---|---|---|---|
 | `client-web` | none | `react` (optional; only for `/react`) | `.` framework-agnostic client · `/react` hooks |
-| `ui-web` | `radix-ui`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react` | `react`, `react-dom` | `.` primitives, provider, i18n · `/styles.css` |
-| `survey-web` | `ui-web`, `client-web`, `react-hook-form`, `@hookform/resolvers`, `zod` (v4), `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/modifiers`, `@dnd-kit/utilities`, `react-day-picker` (v9), `date-fns` (v4) | `react`, `react-dom` | `.` core · `/templates` · `/mbc` · `/styles.css` · deprecated `/SurveyForm`, `/SurveyCreator` |
+| `ui-web` | `radix-ui`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react` | `react`, `react-dom` | `.` primitives, provider, i18n · `/styles.css` · `/styles.layer.css` |
+| `survey-web` | `ui-web`, `client-web`, `react-hook-form`, `@hookform/resolvers`, `zod` (v4), `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/modifiers`, `@dnd-kit/utilities`, `react-day-picker` (v9), `date-fns` (v4) | `react`, `react-dom` | `.` core · `/templates` · `/mbc` · `/styles.css` · `/styles.layer.css` · deprecated `/SurveyForm`, `/SurveyCreator` |
 
 All React peer ranges: `^18.2.0 || ^19.0.0`.
 
@@ -90,12 +90,14 @@ All React peer ranges: `^18.2.0 || ^19.0.0`.
 - Tailwind v4, compiled per package by the Tailwind CLI with `prefix(mbc)`. Classes are written `mbc:flex`, `mbc:hover:bg-primary`.
 - No preflight. A minimal zero-specificity base applies only inside library roots: `:where([data-mbc]) *, :where([data-mbc]) *::before, :where([data-mbc]) *::after` sets `box-sizing`, border defaults, and font inheritance.
 - Every root element and every portal content element renders `data-mbc`.
-- All library CSS is inside the cascade layer `mbc` (sub-layers for theme/base/utilities). Unlayered host CSS wins without `!important`. Documented consequence: a broad unlayered host rule (e.g. `button { … }`) also wins.
+- Two stylesheets per package, same rules, different cascade placement (decided 2026-10-04 after review — a layered-only file is broken by Tailwind v3's unlayered preflight):
+  - `styles.css` (default) — **unlayered**. Library class selectors (0,1,0) beat host element resets (0,0,1) in Tailwind v3, v4, or no-Tailwind hosts. Hosts override with their own CSS loaded later, or with `mbc:`-prefixed classes passed via `className` (resolved by tailwind-merge).
+  - `styles.layer.css` (opt-in) — the same rules inside `@layer mbc`, preceded by `@layer theme, base, mbc, components, utilities;` so it sits above the host's preflight and below the host's utilities. For Tailwind v4 hosts that want host utilities to win.
 
 ### 3.2 Theme tokens
 
-- Semantic CSS variables, shadcn-compatible names: `--mbc-background`, `--mbc-foreground`, `--mbc-card(-foreground)`, `--mbc-popover(-foreground)`, `--mbc-primary(-foreground)`, `--mbc-secondary(-foreground)`, `--mbc-muted(-foreground)`, `--mbc-accent(-foreground)`, `--mbc-destructive(-foreground)`, `--mbc-border`, `--mbc-input`, `--mbc-ring`, `--mbc-radius`.
-- Defaults equal v0's slate palette (same look).
+- Semantic CSS variables, shadcn-compatible names: `--mbc-background`, `--mbc-foreground`, `--mbc-card(-foreground)`, `--mbc-popover(-foreground)`, `--mbc-primary(-foreground)`, `--mbc-secondary(-foreground)`, `--mbc-muted(-foreground)`, `--mbc-accent(-foreground)`, `--mbc-destructive(-foreground)`, `--mbc-border`, `--mbc-input`, `--mbc-ring`, `--mbc-radius`, plus `--mbc-brand` (`#417E96`) and `--mbc-brand-accent` (`#369CA3`), which v0 hard-coded in the outline button.
+- Defaults equal v0's slate palette (same look). Values are complete colours (`hsl(222.2 47.4% 11.2%)`), not bare HSL triplets, so hosts can override with any colour format.
 - Declared on `:where(:root)` so Radix portals in `<body>` are themed.
 - Dark values apply under an ancestor `.dark` or `[data-mbc-theme="dark"]`. No dependency on `next-themes`.
 - Hosts override by setting variables on `:root` or any wrapper.
@@ -294,13 +296,14 @@ One folder per kind (`short-text`, `long-text`, `single-choice`, `multiple-choic
 - **Component (Testing Library + user-event, jsdom):** `SurveyForm` flows (branching, Back, required, `defaultValues` edit, focus management); creator (add, duplicate, change type, lock rules, keyboard drag); `/templates` components; `vitest-axe` on key screens.
 - **Ported behaviours:** the 10 v0 behaviour test files (`schema`, `locked-question`, `section-locked`, `section-locked-question`, `question-creator-id`, `survey-form`, `get-pagination-item`, `subscribe`, `cn`, `id`) are rewritten against the new code. v0's `dependencies` test becomes the build-output checks below.
 - **Schema compatibility:** v0 sample surveys and v0 `schema.test.ts` cases as fixtures; v1 parse output must equal v0's.
-- **Build-output tests (on `dist/`):** modules using client-only code start with `"use client"`; no `process.env` or `next/` references; every class selector in `styles.css` carries the `mbc` prefix (except `:where([data-mbc])` base and `:root` variables); importing `SurveyForm` does not pull in `client-web` (esbuild metafile).
+- **Build-output tests (on `dist/`):** modules using client-only code start with `"use client"`; no `process.env` or `next/` references; every class selector in `styles.css` and `styles.layer.css` carries the `mbc` prefix (except `:where([data-mbc])` base and `:root` variables); `styles.css` has no `@layer` blocks; every rule in `styles.layer.css` is inside `@layer mbc`; importing `SurveyForm` does not pull in `client-web` (esbuild metafile).
 
 ## 8. CI, tooling, release
 
 - **CI:** lint → typecheck ×2 (`@types/react` 18 / 19) → test ×2 (`react` 18 / 19 via `scripts/use-react.mjs`) → build → `publint` + `attw --profile esm-only` → `apps/next-smoke` `next build` (Turbopack) importing every entry point.
-- **Build:** tsdown `unbundle: true`, ESM-only, `.d.ts`, automatic JSX runtime; Tailwind v4 CLI per package for `styles.css`. `sideEffects: ["**/*.css"]`.
-- **Playground:** Vite, React 19 by default, `pnpm playground:react18`. Pages: form with sample surveys, creator, `/templates` with mock data, `/mbc` with a mock client (optional real backend through a playground-only `.env.local`). Theme, locale, and dark-mode toggles.
+- **Toolchain versions (verified 2026-10-04):** Node 24 (≥ 24.13; tsdown needs ≥ 22.18), pnpm 10.29, TypeScript ~6.0 (typescript-eslint supports < 6.1, so not TS 7), Vitest 5, jsdom 29 (jsdom 30 needs Node ≥ 24.15), react-day-picker 9, Next 16 for `next-smoke`.
+- **Build:** tsdown `unbundle: true`, ESM-only, `.d.ts`, automatic JSX runtime; Tailwind v4 CLI per package for `styles.css` and `styles.layer.css`. `sideEffects: ["**/*.css"]`.
+- **Playground:** Vite, React 19 by default, `pnpm playground:react18`. Pages: form with sample surveys, creator, `/templates` with mock data, `/mbc` with a mock client (optional real backend through a playground-only `.env.local`), and a "host with Tailwind v3 preflight" fixture page. Theme, locale, and dark-mode toggles.
 - **Release:** Changesets, independent versions, all three packages start at `1.0.0`. Publishing is manual until `rebuild/` moves into the GitHub repo; the CI workflow is ready but inert until then.
 - **Docs:** README per package; `packages/survey-web/MIGRATION.md`.
 - **Runtime:** Node 20+, pnpm 10 via corepack.
