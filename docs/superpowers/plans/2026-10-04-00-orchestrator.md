@@ -78,7 +78,7 @@ git status --porcelain                                        # must be empty af
   - From the SP1 review: variant helpers (`badgeVariants`, `inputVariants`, …) in modules without `"use client"`; the keyframes test allows only tw-animate-css's `enter`/`exit` besides `mbc-*`; playground fixtures for (a) the latest Tailwind v3 preflight loaded after the library CSS and (b) `styles.layer.css` imported before a host Tailwind v4 stylesheet.
   - Depends on: SP1.
 
-- [ ] **SP3 — `client-web`** (`03-sp3-client-web`)
+- [x] **SP3 — `client-web`** (`03-sp3-client-web`)
   - Spec: §4.
   - Builds: `createMbcClient` HTTP (auth, tenant, query arrays, timeout, abort), typed errors, AppSync realtime client (URL derivation, handshake, `ka` watchdog, multiplexing, reconnect), `command()` with subscribe-before-send, `/react` provider + `useCommand`.
   - Gate: standard gate; fake-WebSocket tests for handshake, keep-alive loss, reconnect + resubscribe, finish-before-response race, timeout, abort, StrictMode.
@@ -108,6 +108,7 @@ git status --porcelain                                        # must be empty af
   - Spec: §5.2, §5.3, §5.4 deprecated subpaths.
   - Builds: `SurveyTemplateList`, `SurveyTemplateEditor`, `createSurveyTemplateApi`, `submitSurveyAnswer`, `useSurveyTemplates`, `useSurveyTemplate`, `useSurveyTemplateMutations`, `useSubmitSurveyAnswer`, `MbcSurveyTemplateListPage`, `MbcSurveyTemplateEditorPage`, `/SurveyForm` + `/SurveyCreator` alias entries, playground pages with a mock client.
   - Gate: standard gate; ported `get-pagination-item` behaviour; build-output test that `.` and `/templates` do not import `client-web`.
+  - From the SP3 review: a save with unchanged data returns no `requestId` (backend `publishPartialUpdateAsync` → `null`); `command()` rejects with `MbcApiError` — `/mbc` mutations must treat that case as a no-op success, not an error.
   - Depends on: SP3, SP6.
 
 - [ ] **SP8 — Release readiness** (`08-sp8-release`)
