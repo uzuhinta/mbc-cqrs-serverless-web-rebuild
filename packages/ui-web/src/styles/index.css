@@ -5,6 +5,7 @@
 @import 'tailwindcss/utilities.css' layer(mbc.utilities) prefix(mbc)
   source(none);
 @source '../';
+@source not '../**/*.test.{ts,tsx}';
 
 @import './theme.css';
 @import './tokens.css' layer(mbc.base);

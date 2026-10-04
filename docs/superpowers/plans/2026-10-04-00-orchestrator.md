@@ -75,6 +75,7 @@ git status --porcelain                                        # must be empty af
   - Spec: §3.2 tokens, §3.3 provider + i18n, §3.4 primitives.
   - Builds: animation utilities for Radix open/close states, `MbcProvider`, `defineMessages` / `useMessages` / `MessagesFor`, `ui` namespace (`ja`, `en`), the 20 primitives + `Field*` helpers, `apps/playground` (Vite) with a primitives gallery and the Tailwind-v3-preflight fixture page.
   - Gate: standard gate; `vitest-axe` clean on the gallery primitives; every portal primitive renders `data-mbc` on its content.
+  - From the SP1 review: variant helpers (`badgeVariants`, `inputVariants`, …) in modules without `"use client"`; the keyframes test allows only tw-animate-css's `enter`/`exit` besides `mbc-*`; playground fixtures for (a) the latest Tailwind v3 preflight loaded after the library CSS and (b) `styles.layer.css` imported before a host Tailwind v4 stylesheet.
   - Depends on: SP1.
 
 - [ ] **SP3 — `client-web`** (`03-sp3-client-web`)
@@ -109,6 +110,7 @@ git status --porcelain                                        # must be empty af
 
 - [ ] **SP8 — Release readiness** (`08-sp8-release`)
   - Spec: §5.4 migration, §7 remaining build-output checks, §8 CI/next-smoke/docs/release.
+  - README must state the host requirements from spec §3.1: `styles.layer.css` import order, Tailwind v3 ≥ 3.4, and that `mbc:` overrides only work for shipped classes.
   - Builds: `apps/next-smoke` (Next 16 App Router + Turbopack) importing every entry point in client and server components; CI job for it; READMEs for the three packages; `packages/survey-web/MIGRATION.md`; initial changesets (`major` for all three → `1.0.0`); final whole-repo review.
   - Gate: standard gate + `next build` in `apps/next-smoke` on React 18 and 19 + `changeset status` shows the three `1.0.0` releases.
   - Depends on: SP7.

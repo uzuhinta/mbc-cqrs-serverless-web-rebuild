@@ -72,6 +72,20 @@ export function elementOnlyRules(root: Root): string[] {
   return offenders
 }
 
+/**
+ * Utilities Tailwind wraps in `:where(...)` (space-*, divide-*) have zero
+ * specificity, so any host reset beats them. Library code must not use them.
+ */
+export function zeroSpecificityUtilities(root: Root): string[] {
+  const offenders: string[] = []
+  root.walkRules((rule: Rule) => {
+    for (const selector of rule.selectors) {
+      if (/^:where\(\s*\.mbc\\:/.test(selector.trim())) offenders.push(selector)
+    }
+  })
+  return offenders
+}
+
 /** At-rules that define names, not styles, so their layer placement is moot. */
 const NON_CASCADING_AT_RULES = /^(property|font-face|(-[a-z]+-)?keyframes)$/i
 

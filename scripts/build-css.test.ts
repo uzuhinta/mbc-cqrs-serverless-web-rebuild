@@ -21,6 +21,11 @@ describe('unwrapLayers', () => {
     expect(unwrapLayers(LAYERED, 'mbc')).not.toMatch(/@layer[^{]*;/)
   })
 
+  it('renames mapped layers instead of unwrapping them', () => {
+    const out = parseCss(unwrapLayers(LAYERED, 'mbc', { 'mbc.base': 'base' }))
+    expect(layerNames(out)).toEqual(['properties', 'base'])
+  })
+
   it('keeps every rule, in order', () => {
     const out = parseCss(unwrapLayers(LAYERED, 'mbc'))
     const selectors: string[] = []

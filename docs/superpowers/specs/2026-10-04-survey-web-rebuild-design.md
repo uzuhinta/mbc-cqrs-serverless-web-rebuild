@@ -88,11 +88,17 @@ All React peer ranges: `^18.2.0 || ^19.0.0`.
 ### 3.1 Styling
 
 - Tailwind v4, compiled per package by the Tailwind CLI with `prefix(mbc)`. Classes are written `mbc:flex`, `mbc:hover:bg-primary`.
-- No preflight. A minimal zero-specificity base applies only inside library roots: `:where([data-mbc]) *, :where([data-mbc]) *::before, :where([data-mbc]) *::after` sets `box-sizing`, border defaults, and font inheritance.
+- No preflight. A zero-specificity scoped base (a subset of Tailwind's preflight: box-sizing, margin/padding/border reset, font and form-control resets) applies to library roots and their descendants: `:where([data-mbc], [data-mbc] *)`. It lives in a cascade layer (see below), so host resets and host utilities always beat it.
 - Every root element and every portal content element renders `data-mbc`.
 - Two stylesheets per package, same rules, different cascade placement (decided 2026-10-04 after review — a layered-only file is broken by Tailwind v3's unlayered preflight):
-  - `styles.css` (default) — **unlayered**. Library class selectors (0,1,0) beat host element resets (0,0,1) in Tailwind v3, v4, or no-Tailwind hosts. Hosts override with their own CSS loaded later, or with `mbc:`-prefixed classes passed via `className` (resolved by tailwind-merge).
-  - `styles.layer.css` (opt-in) — the same rules inside `@layer mbc`, preceded by `@layer theme, base, mbc, components, utilities;` so it sits above the host's preflight and below the host's utilities. For Tailwind v4 hosts that want host utilities to win.
+  - `styles.css` (default) — utilities and theme variables **unlayered**; the scoped base and tokens in the host's `@layer base`. Library class selectors (0,1,0) beat host element resets (0,0,1) in Tailwind v3, v4, or no-Tailwind hosts, and host Tailwind v4 utilities on library elements (e.g. `ml-auto`) are not overridden by the library's reset (SP1 review). Hosts override library utilities with their own CSS loaded after `styles.css`. `mbc:`-prefixed classes passed via `className` replace a conflicting library class (tailwind-merge), but they only take effect for classes the library already ships — hosts cannot compile new `mbc:` classes.
+  - `styles.layer.css` (opt-in) — the same rules inside `@layer mbc`, preceded by `@layer theme, base, mbc, components, utilities;` so it sits above the host's preflight and below the host's utilities. For Tailwind v4 hosts that want host utilities to win. **Host requirement:** import it before the host's `@import "tailwindcss"` (or declare that layer order first in the host CSS); a layer's position is fixed where its name first appears.
+- Host requirements and library rules from the SP1 review:
+  - Tailwind v3 hosts need ≥ 3.4 (3.0–3.3 preflight's `[type='button']` ties with library classes), or must load the library CSS after their own.
+  - Library source never uses zero-specificity utilities (`space-*`, `divide-*`); use `gap-*`. Enforced by a CSS build-output test.
+  - Keyframes are named `mbc-*` (Tailwind's `spin`/`ping`/`pulse`/`bounce` are re-registered under that prefix), since keyframe names are global. Exception: tw-animate-css's `enter`/`exit`, identical wherever tw-animate is used.
+  - Test files are excluded from the Tailwind source scan.
+  - Variant helpers (`buttonVariants`, …) live in modules without `"use client"`, so Server Components can call them.
 
 ### 3.2 Theme tokens
 

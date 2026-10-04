@@ -26,3 +26,40 @@
   --radius-md: calc(var(--mbc-radius) - 2px);
   --radius-lg: var(--mbc-radius);
 }
+
+/* Prefixed keyframe names: keyframes are global, so `spin`/`pulse` would collide with the host's. */
+@theme {
+  --animate-spin: mbc-spin 1s linear infinite;
+  --animate-ping: mbc-ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+  --animate-pulse: mbc-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-bounce: mbc-bounce 1s infinite;
+
+  @keyframes mbc-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes mbc-ping {
+    75%,
+    100% {
+      transform: scale(2);
+      opacity: 0;
+    }
+  }
+  @keyframes mbc-pulse {
+    50% {
+      opacity: 0.5;
+    }
+  }
+  @keyframes mbc-bounce {
+    0%,
+    100% {
+      transform: translateY(-25%);
+      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+      transform: none;
+      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+  }
+}

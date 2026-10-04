@@ -6,6 +6,7 @@ import {
   parseCss,
   topLevelOutsideLayer,
   unprefixedClasses,
+  zeroSpecificityUtilities,
 } from './css-output.ts'
 
 describe('layerNames', () => {
@@ -51,6 +52,17 @@ describe('elementOnlyRules', () => {
       '@layer properties { *, ::before { --mbc-tw-x: 0 } }\n@keyframes k { from { opacity: 0 } }'
     )
     expect(elementOnlyRules(root)).toEqual([])
+  })
+})
+
+describe('zeroSpecificityUtilities', () => {
+  it('flags utilities Tailwind wraps in :where(), like space-* and divide-*', () => {
+    const root = parseCss(
+      ':where(.mbc\\:space-y-2>:not(:last-child)){margin-top:4px}\n:where([data-mbc]) *{margin:0}\n.mbc\\:p-1{padding:1px}'
+    )
+    expect(zeroSpecificityUtilities(root)).toEqual([
+      ':where(.mbc\\:space-y-2>:not(:last-child))',
+    ])
   })
 })
 

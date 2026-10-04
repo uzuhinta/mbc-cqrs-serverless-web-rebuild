@@ -35,6 +35,12 @@ describe('ui-web JavaScript output', () => {
     expect(hasUseClientDirective(readText(dist, 'index.js'))).toBe(false)
   })
 
+  it('keeps variant helpers callable from Server Components', () => {
+    expect(
+      hasUseClientDirective(readText(dist, 'components/button-variants.js'))
+    ).toBe(false)
+  })
+
   it('uses the automatic JSX runtime and never bundles React', () => {
     const button = readText(dist, 'components/button.js')
 
