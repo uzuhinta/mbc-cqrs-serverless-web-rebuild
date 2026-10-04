@@ -65,7 +65,7 @@ git status --porcelain                                        # must be empty af
 
 ## Sub-plans
 
-- [ ] **SP1 — Workspace foundation** (`01-sp1-foundation`)
+- [x] **SP1 — Workspace foundation** (`01-sp1-foundation`)
   - Spec: §2 (layout, boundaries, library rules), §3.1 (CSS pipeline), §8 (toolchain, CI).
   - Builds: pnpm workspace, tsconfig, ESLint (incl. library-rule lints), Prettier, Vitest projects + jsdom + Testing Library, `scripts/use-react.ts`, shared tsdown config with `"use client"` preservation, shared Tailwind build script producing `styles.css` + `styles.layer.css`, theme tokens (light/dark, v0 values) + scoped base CSS, shared build-output test helpers, Changesets, CI workflow. Proven end to end by a `ui-web` skeleton exporting `cn` and `Button`.
   - Gate: standard gate; build-output tests prove `"use client"` survives, CSS is prefixed, `styles.css` is unlayered, `styles.layer.css` is fully layered.
