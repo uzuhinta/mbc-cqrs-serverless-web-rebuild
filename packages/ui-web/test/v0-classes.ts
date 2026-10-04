@@ -48,4 +48,31 @@ export const V0 = {
     'bg-border shrink-0 data-[orientation=horizontal]:h-px data-[orientation=vertical]:h-full data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-px',
   // ui/skeleton.tsx
   skeleton: 'bg-accent animate-pulse rounded-md',
+  // ui/dialog.tsx — `!h-6 !w-6` → `h-6! w-6!`
+  'dialog.overlay':
+    'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=open]:animate-in fixed inset-0 z-50 bg-black/50',
+  'dialog.content':
+    'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 bg-background data-[state=closed]:animate-out data-[state=open]:animate-in fixed left-[50%] top-[50%] z-50 w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg',
+  'dialog.close':
+    "rounded-xs ring-offset-background focus:outline-hidden focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute right-4 top-4 cursor-pointer opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none [&_svg:not([class*='size-'])]:size-6 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  'dialog.title': 'text-lg font-semibold leading-none',
+  'dialog.description': 'text-muted-foreground text-sm',
+  'dialog.header': 'flex flex-col gap-2 text-center sm:text-left',
+  'dialog.footer': 'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
+  // ui/alert-dialog.tsx
+  'alert-dialog.content':
+    'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 bg-background data-[state=closed]:animate-out data-[state=open]:animate-in fixed left-[50%] top-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg',
+  'alert-dialog.title': 'text-lg font-semibold',
+  // ui/popover.tsx
+  'popover.content':
+    'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-(--radix-popover-content-transform-origin) bg-popover text-popover-foreground outline-hidden data-[state=closed]:animate-out data-[state=open]:animate-in z-50 w-72 rounded-md border p-4 shadow-md',
+  // ui/dropdown-menu.tsx — `*:[svg]:!text-destructive` → `*:[svg]:text-destructive!`; checkbox/radio item corruption repaired
+  'dropdown-menu.content':
+    'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 max-h-(--radix-dropdown-menu-content-available-height) origin-(--radix-dropdown-menu-content-transform-origin) bg-popover text-popover-foreground data-[state=closed]:animate-out data-[state=open]:animate-in z-50 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border p-1 shadow-md',
+  'dropdown-menu.item':
+    "data-[variant=destructive]:*:[svg]:text-destructive! outline-hidden focus:bg-primary/50 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default select-none items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:outline-none focus:text-black data-[disabled]:pointer-events-none data-[inset]:pl-8 data-[disabled]:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  'dropdown-menu.choice-item':
+    "data-[disabled]:opacity-50 [&_svg:not([class*='size-'])]:size-4 outline-hidden focus:bg-accent focus:text-accent-foreground relative flex cursor-default select-none items-center gap-2 rounded-sm py-1.5 pl-8 pr-2 text-sm data-[disabled]:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  'dropdown-menu.label': 'px-2 py-1.5 text-sm font-medium data-[inset]:pl-8',
+  'dropdown-menu.separator': 'bg-border -mx-1 my-1 h-px',
 } as const

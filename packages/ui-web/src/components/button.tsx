@@ -2,7 +2,7 @@
 
 import type { VariantProps } from 'class-variance-authority'
 import { LoaderCircle } from 'lucide-react'
-import { Slot } from 'radix-ui'
+import { Slot } from '@radix-ui/react-slot'
 import { forwardRef, type ButtonHTMLAttributes } from 'react'
 
 import { cn } from '../lib/cn'
@@ -33,7 +33,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     if (asChild) {
       return (
-        <Slot.Root
+        <Slot
           ref={ref}
           data-mbc=""
           data-slot="button"
@@ -41,7 +41,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           {...props}
         >
           {children}
-        </Slot.Root>
+        </Slot>
       )
     }
 

@@ -61,8 +61,11 @@ describe('styles.css (default)', () => {
   })
 
   it('names every keyframes rule with the mbc- prefix', () => {
+    const TW_ANIMATE = ['enter', 'exit']
     expect(
-      keyframeNames(unlayered).filter((name) => !name.startsWith('mbc-'))
+      keyframeNames(unlayered).filter(
+        (name) => !name.startsWith('mbc-') && !TW_ANIMATE.includes(name)
+      )
     ).toEqual([])
   })
 
