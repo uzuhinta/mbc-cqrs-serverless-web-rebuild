@@ -75,9 +75,11 @@ rebuild/
 ### Task 1: Root workspace scaffold
 
 **Files:**
+
 - Create: `package.json`, `pnpm-workspace.yaml`, `.node-version`, `.gitignore`, `.prettierrc.json`, `.prettierignore`, `tsconfig.base.json`, `README.md`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: root scripts `build`, `typecheck`, `lint`, `test`, `format`, `format:check`, `check:package`, `verify`, `use-react`, `changeset`; `tsconfig.base.json` that every package extends.
 
@@ -273,9 +275,11 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ### Task 2: Vitest projects and the React version switch
 
 **Files:**
+
 - Create: `vitest.config.ts`, `scripts/vitest.config.ts`, `tsconfig.json`, `scripts/use-react.ts`, `scripts/use-react.test.ts`
 
 **Interfaces:**
+
 - Consumes: root `package.json` `pnpm.overrides` (Task 1).
 - Produces: `REACT_VERSIONS`, `isReactMajor(value: string | undefined): value is ReactMajor`, `applyReactVersion(pkg: PackageJson, major: ReactMajor): PackageJson`; CLI `pnpm use-react <18|19>` (rewrites overrides, runs `pnpm install --no-frozen-lockfile`).
 
@@ -467,9 +471,11 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ### Task 3: ESLint with library rules
 
 **Files:**
+
 - Create: `eslint.config.js`, `scripts/eslint-rules.test.ts`
 
 **Interfaces:**
+
 - Consumes: nothing new.
 - Produces: `pnpm lint`; rules that every later sub-plan relies on to keep `packages/*/src` free of host-framework code.
 
@@ -551,7 +557,7 @@ describe('library rules in packages/*/src', () => {
 
 describe('tooling files', () => {
   it('allow console and process.env in scripts', async () => {
-    const code = "console.log(process.env.HOME)\n"
+    const code = 'console.log(process.env.HOME)\n'
     expect(await ruleIds(code, 'scripts/tool.ts')).toEqual([])
   })
 })
@@ -603,9 +609,15 @@ export default defineConfig([
         'error',
         {
           paths: [
-            { name: 'next', message: 'Library code must not depend on Next.js.' },
+            {
+              name: 'next',
+              message: 'Library code must not depend on Next.js.',
+            },
             { name: 'nuqs', message: 'URL state belongs to the host app.' },
-            { name: 'sonner', message: 'Notifications belong to the host app.' },
+            {
+              name: 'sonner',
+              message: 'Notifications belong to the host app.',
+            },
             {
               name: 'react',
               importNames: ['use', 'useActionState', 'useOptimistic'],
@@ -635,7 +647,7 @@ export default defineConfig([
         },
         {
           selector:
-            "MemberExpression[object.name=/^React(DOM)?$/][property.name=/^(use|useActionState|useOptimistic|useFormStatus)$/]",
+            'MemberExpression[object.name=/^React(DOM)?$/][property.name=/^(use|useActionState|useOptimistic|useFormStatus)$/]',
           message: REACT_19_ONLY,
         },
       ],
@@ -676,9 +688,11 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ### Task 4: `ui-web` package with `cn` and `Button`
 
 **Files:**
+
 - Create: `packages/ui-web/package.json`, `packages/ui-web/tsconfig.json`, `packages/ui-web/tsconfig.build.json`, `packages/ui-web/vitest.config.ts`, `packages/ui-web/test/setup.ts`, `packages/ui-web/src/index.ts`, `packages/ui-web/src/lib/cn.ts`, `packages/ui-web/src/lib/cn.test.ts`, `packages/ui-web/src/components/button.tsx`, `packages/ui-web/src/components/button.test.tsx`
 
 **Interfaces:**
+
 - Consumes: root tooling (Tasks 1–3).
 - Produces (exported from `@mbc-cqrs-serverless/ui-web`):
   - `cn(...inputs: ClassValue[]): string` — clsx + tailwind-merge configured with `prefix: 'mbc'`.
@@ -695,9 +709,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   "license": "MIT",
   "author": "Murakami Business Consulting, Inc.",
   "type": "module",
-  "sideEffects": [
-    "**/*.css"
-  ],
+  "sideEffects": ["**/*.css"],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -707,9 +719,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
     "./styles.layer.css": "./dist/styles.layer.css",
     "./package.json": "./package.json"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsdown && node ../../scripts/build-css.ts",
     "typecheck": "tsc -p tsconfig.json",
@@ -1070,10 +1080,12 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ### Task 5: Unbundled ESM build with `"use client"` preserved
 
 **Files:**
+
 - Create: `scripts/build-output.ts`, `scripts/build-output.test.ts`, `scripts/tsdown-preset.ts`, `packages/ui-web/tsdown.config.ts`, `packages/ui-web/test/build/js-output.test.ts`
 - Modify: `packages/ui-web/tsconfig.json` (allow `.ts` import extensions)
 
 **Interfaces:**
+
 - Consumes: `packages/ui-web/src/**` (Task 4).
 - Produces:
   - `scripts/build-output.ts`: `hasUseClientDirective(code: string): boolean`, `distDir(packageDir: string): string` (throws `… Run "pnpm build" …` when missing), `listFiles(dir: string, extension: string): string[]` (relative POSIX paths, sorted), `readText(dir: string, file: string): string`, `FORBIDDEN_JS_PATTERNS: readonly RegExp[]`.
@@ -1361,9 +1373,11 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ### Task 6: CSS assertion helpers
 
 **Files:**
+
 - Create: `scripts/css-output.ts`, `scripts/css-output.test.ts`
 
 **Interfaces:**
+
 - Consumes: `postcss`, `postcss-selector-parser`.
 - Produces:
   - `parseCss(css: string): Root`
@@ -1403,7 +1417,9 @@ describe('unprefixedClasses', () => {
   })
 
   it('ignores keyframe selectors', () => {
-    const root = parseCss('@keyframes spin { from { opacity: 0 } to { opacity: 1 } }')
+    const root = parseCss(
+      '@keyframes spin { from { opacity: 0 } to { opacity: 1 } }'
+    )
     expect(unprefixedClasses(root)).toEqual([])
   })
 })
@@ -1531,7 +1547,10 @@ export function elementOnlyRules(root: Root): string[] {
   return offenders
 }
 
-export function topLevelOutsideLayer(root: Root, layerPrefix: string): string[] {
+export function topLevelOutsideLayer(
+  root: Root,
+  layerPrefix: string
+): string[] {
   const offenders: string[] = []
   for (const node of root.nodes) {
     if (node.type === 'comment') continue
@@ -1575,9 +1594,11 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ### Task 7: Tailwind CSS pipeline, tokens, and scoped base
 
 **Files:**
+
 - Create: `scripts/build-css.ts`, `scripts/build-css.test.ts`, `packages/ui-web/src/styles/tokens.css`, `packages/ui-web/src/styles/base.css`, `packages/ui-web/src/styles/theme.css`, `packages/ui-web/src/styles/index.css`, `packages/ui-web/test/build/css-output.test.ts`
 
 **Interfaces:**
+
 - Consumes: Task 6 helpers (`parseCss`, `layerNames`, `unprefixedClasses`, `elementOnlyRules`, `topLevelOutsideLayer`); `Button` classes (Task 4).
 - Produces:
   - `unwrapLayers(css: string, layerPrefix: string): string` — removes every `@layer` statement and replaces every `@layer <layerPrefix>` / `@layer <layerPrefix>.*` block with its contents; other blocks (e.g. `@layer properties`) stay.
@@ -1785,9 +1806,9 @@ A zero-specificity subset of Tailwind's preflight, applied only inside library r
 }
 
 :where(button, input, select, optgroup, textarea):where(
-    [data-mbc],
-    [data-mbc] *
-  ) {
+  [data-mbc],
+  [data-mbc] *
+) {
   font: inherit;
   font-feature-settings: inherit;
   letter-spacing: inherit;
@@ -1851,7 +1872,8 @@ A zero-specificity subset of Tailwind's preflight, applied only inside library r
 @layer mbc.theme, mbc.base, mbc.utilities;
 
 @import 'tailwindcss/theme.css' layer(mbc.theme) prefix(mbc);
-@import 'tailwindcss/utilities.css' layer(mbc.utilities) prefix(mbc) source(none);
+@import 'tailwindcss/utilities.css' layer(mbc.utilities) prefix(mbc)
+  source(none);
 @source '../';
 
 @import './theme.css';
@@ -1889,9 +1911,9 @@ const layered = parseCss(layeredCss)
 
 describe('styles.css (default, unlayered)', () => {
   it('has no cascade layers except Tailwind’s @property fallback layer', () => {
-    expect(layerNames(unlayered).filter((name) => name !== 'properties')).toEqual(
-      []
-    )
+    expect(
+      layerNames(unlayered).filter((name) => name !== 'properties')
+    ).toEqual([])
   })
 
   it('prefixes every class with mbc:', () => {
@@ -1958,9 +1980,11 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ### Task 8: Package checks, Changesets, CI
 
 **Files:**
+
 - Create: `.changeset/config.json` (generated), `.changeset/README.md` (generated), `.github/workflows/ci.yml`
 
 **Interfaces:**
+
 - Consumes: `check:package` script in `packages/ui-web/package.json` (Task 4).
 - Produces: `pnpm check:package` green; `pnpm changeset` usable; CI running `pnpm verify` on React 18 and 19.
 
@@ -2026,6 +2050,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ### Task 9: Gate on React 18 and 19, merge
 
 **Files:**
+
 - Modify: `docs/superpowers/plans/2026-10-04-00-orchestrator.md` (tick SP1)
 
 - [ ] **Step 1: Verify on React 18**

@@ -20,17 +20,17 @@ Rewrite the survey package as a real UI library that works in any React 18 or Re
 
 ### What the user decided (2026-10-04 brainstorm)
 
-| Topic | Decision |
-|---|---|
-| Scope | Pure UI core + prop-driven page components + separate `/mbc` backend entry |
-| Styling | Pre-compiled, prefixed Tailwind v4 CSS, no preflight, CSS-variable theming; unlayered `styles.css` + opt-in `styles.layer.css` |
-| i18n | Built-in `ja` + `en`, typed messages, partial overrides |
-| Backend deps | No AWS SDKs: host supplies `getAuthToken`; built-in `fetch` + AppSync realtime WebSocket |
-| Location | `rebuild/` standalone monorepo; publishes `survey-web@1.0.0` (breaking major) |
-| Shared code | Published `ui-web` and `client-web` packages, consumed as normal dependencies |
-| Look | Keep the current shadcn/slate look; refactor internals only (evon `/ui-ux` in "refactor, keep the look" mode) |
-| Toolchain | pnpm + tsdown (unbundled, ESM-only) + Tailwind v4 CLI + Vitest + Changesets |
-| Behaviour change | Answers from sections abandoned by branching are submitted as `undefined` |
+| Topic            | Decision                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Scope            | Pure UI core + prop-driven page components + separate `/mbc` backend entry                                                     |
+| Styling          | Pre-compiled, prefixed Tailwind v4 CSS, no preflight, CSS-variable theming; unlayered `styles.css` + opt-in `styles.layer.css` |
+| i18n             | Built-in `ja` + `en`, typed messages, partial overrides                                                                        |
+| Backend deps     | No AWS SDKs: host supplies `getAuthToken`; built-in `fetch` + AppSync realtime WebSocket                                       |
+| Location         | `rebuild/` standalone monorepo; publishes `survey-web@1.0.0` (breaking major)                                                  |
+| Shared code      | Published `ui-web` and `client-web` packages, consumed as normal dependencies                                                  |
+| Look             | Keep the current shadcn/slate look; refactor internals only (evon `/ui-ux` in "refactor, keep the look" mode)                  |
+| Toolchain        | pnpm + tsdown (unbundled, ESM-only) + Tailwind v4 CLI + Vitest + Changesets                                                    |
+| Behaviour change | Answers from sections abandoned by branching are submitted as `undefined`                                                      |
 
 ### Problems in v0 this design removes
 
@@ -40,7 +40,7 @@ Rewrite the survey package as a real UI library that works in any React 18 or Re
 - `strict: false`, `as any` casts, `console.log` left in components.
 - Unprefixed global Tailwind output; ~35 copied shadcn primitives of which 22 are used.
 - Japanese strings hard-coded across 41 files.
-- Command status subscribes *after* the HTTP call (lost-message race) with no default timeout.
+- Command status subscribes _after_ the HTTP call (lost-message race) with no default timeout.
 - Abandoned-branch answers are submitted.
 
 ## 2. Repository layout
@@ -66,11 +66,11 @@ rebuild/
 
 Dependencies point one way: `survey-web → ui-web`, `survey-web/mbc → client-web`. No cycles.
 
-| Package | Dependencies | Peer dependencies | Entry points |
-|---|---|---|---|
-| `client-web` | none | `react` (optional; only for `/react`) | `.` framework-agnostic client · `/react` hooks |
-| `ui-web` | `radix-ui`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react` | `react`, `react-dom` | `.` primitives, provider, i18n · `/styles.css` · `/styles.layer.css` |
-| `survey-web` | `ui-web`, `client-web`, `react-hook-form`, `@hookform/resolvers`, `zod` (v4), `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/modifiers`, `@dnd-kit/utilities`, `react-day-picker` (v9), `date-fns` (v4) | `react`, `react-dom` | `.` core · `/templates` · `/mbc` · `/styles.css` · `/styles.layer.css` · deprecated `/SurveyForm`, `/SurveyCreator` |
+| Package      | Dependencies                                                                                                                                                                                             | Peer dependencies                     | Entry points                                                                                                        |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `client-web` | none                                                                                                                                                                                                     | `react` (optional; only for `/react`) | `.` framework-agnostic client · `/react` hooks                                                                      |
+| `ui-web`     | `radix-ui`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`                                                                                                                         | `react`, `react-dom`                  | `.` primitives, provider, i18n · `/styles.css` · `/styles.layer.css`                                                |
+| `survey-web` | `ui-web`, `client-web`, `react-hook-form`, `@hookform/resolvers`, `zod` (v4), `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/modifiers`, `@dnd-kit/utilities`, `react-day-picker` (v9), `date-fns` (v4) | `react`, `react-dom`                  | `.` core · `/templates` · `/mbc` · `/styles.css` · `/styles.layer.css` · deprecated `/SurveyForm`, `/SurveyCreator` |
 
 All React peer ranges: `^18.2.0 || ^19.0.0`.
 
@@ -188,29 +188,29 @@ Without `realtime` config, `command()` resolves right after the HTTP response (d
 
 **`<SurveyForm>`**
 
-| Prop | Type | Notes |
-|---|---|---|
-| `schema` | `Survey` | unchanged |
-| `onSubmit` | `(answers, meta) => void \| Promise<void>` | Promise → submitting state |
-| `onSubmitError` | `(error: unknown) => void` | optional |
-| `defaultValues` | `SurveyAnswers` | read once on mount (unchanged) |
-| `disabled` | `boolean` | unchanged |
-| `submitLabel` | `ReactNode` | unchanged; falls back to messages |
-| `children` | `ReactNode` | rendered above the section's questions (unchanged) |
-| `onSectionChange` | `(sectionId: string) => void` | new |
-| `components` | `Partial<Record<QuestionKind, ComponentType<QuestionRendererProps>>>` | new; replace a renderer |
-| `className` | `string` | new |
+| Prop              | Type                                                                  | Notes                                              |
+| ----------------- | --------------------------------------------------------------------- | -------------------------------------------------- |
+| `schema`          | `Survey`                                                              | unchanged                                          |
+| `onSubmit`        | `(answers, meta) => void \| Promise<void>`                            | Promise → submitting state                         |
+| `onSubmitError`   | `(error: unknown) => void`                                            | optional                                           |
+| `defaultValues`   | `SurveyAnswers`                                                       | read once on mount (unchanged)                     |
+| `disabled`        | `boolean`                                                             | unchanged                                          |
+| `submitLabel`     | `ReactNode`                                                           | unchanged; falls back to messages                  |
+| `children`        | `ReactNode`                                                           | rendered above the section's questions (unchanged) |
+| `onSectionChange` | `(sectionId: string) => void`                                         | new                                                |
+| `components`      | `Partial<Record<QuestionKind, ComponentType<QuestionRendererProps>>>` | new; replace a renderer                            |
+| `className`       | `string`                                                              | new                                                |
 
 **`<SurveyCreator>`**
 
-| Prop | Type | Notes |
-|---|---|---|
-| `defaultValue` | `Survey` | replaces `initialSchema` |
-| `onChange` | `(survey, { isValid, isDirty }) => void` | replaces `onSchemaChange` |
-| `onSubmit` | `(survey) => void \| Promise<void>` | |
-| `disabled` | `boolean` | |
-| `className` | `string` | |
-| `ref` | `SurveyCreatorHandle` | `{ submit(): Promise<boolean>; reset(next?: Survey): void; getValue(): Survey }` — replaces `submitButtonRef` |
+| Prop           | Type                                     | Notes                                                                                                         |
+| -------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `defaultValue` | `Survey`                                 | replaces `initialSchema`                                                                                      |
+| `onChange`     | `(survey, { isValid, isDirty }) => void` | replaces `onSchemaChange`                                                                                     |
+| `onSubmit`     | `(survey) => void \| Promise<void>`      |                                                                                                               |
+| `disabled`     | `boolean`                                |                                                                                                               |
+| `className`    | `string`                                 |                                                                                                               |
+| `ref`          | `SurveyCreatorHandle`                    | `{ submit(): Promise<boolean>; reset(next?: Survey): void; getValue(): Survey }` — replaces `submitButtonRef` |
 
 ### 5.2 `/templates` (prop-driven, current look)
 
@@ -236,15 +236,15 @@ Requires `<MbcClientProvider>` from `client-web/react`.
 
 ### 5.4 Migration (v0 → v1)
 
-| v0 | v1 |
-|---|---|
-| `SurveyTemplatePage` | `MbcSurveyTemplateListPage` + `onCreate` / `onSelect` |
-| `EditSurveyTemplatePage` (reads `useParams`) | `MbcSurveyTemplateEditorPage id={…}` + callbacks |
-| `NEXT_PUBLIC_*` env vars | `createMbcClient({...})` + `<MbcClientProvider>` |
-| `SurveyCreator initialSchema / onSchemaChange / submitButtonRef` | `defaultValue / onChange / ref.submit()` |
-| `/SurveyForm`, `/SurveyCreator` subpaths | root import (subpaths kept as deprecated aliases) |
-| `import '…/styles.css'` | unchanged |
-| Abandoned-branch answers submitted | submitted as `undefined` |
+| v0                                                               | v1                                                    |
+| ---------------------------------------------------------------- | ----------------------------------------------------- |
+| `SurveyTemplatePage`                                             | `MbcSurveyTemplateListPage` + `onCreate` / `onSelect` |
+| `EditSurveyTemplatePage` (reads `useParams`)                     | `MbcSurveyTemplateEditorPage id={…}` + callbacks      |
+| `NEXT_PUBLIC_*` env vars                                         | `createMbcClient({...})` + `<MbcClientProvider>`      |
+| `SurveyCreator initialSchema / onSchemaChange / submitButtonRef` | `defaultValue / onChange / ref.submit()`              |
+| `/SurveyForm`, `/SurveyCreator` subpaths                         | root import (subpaths kept as deprecated aliases)     |
+| `import '…/styles.css'`                                          | unchanged                                             |
+| Abandoned-branch answers submitted                               | submitted as `undefined`                              |
 
 `MIGRATION.md` gives before/after code for each row.
 
@@ -266,7 +266,7 @@ One folder per kind (`short-text`, `long-text`, `single-choice`, `multiple-choic
 ### 6.3 Creator state
 
 - `creatorReducer(state, action)` — pure. Actions: `addQuestion`, `addSection`, `duplicate`, `remove`, `move`, `changeType`, `updateItem`, `mergeSection`, `reorderSections`, `select`.
-- Lock rules (v0 behaviour, from README) live only in the reducer's guards: `canEdit`, `canDelete`, `canDuplicate`, `canDrag`, `canInsertInto`, `canMerge`. Locked question: no edit/delete/duplicate/drag. Locked section: no title/description edit, no delete, no merge in either direction, nothing added into it, floating bar hidden when it or its question is selected, questions cannot be dragged in or out; it can still be moved; duplicating it yields an unlocked copy. A section containing a locked question cannot be deleted. Adding a section *after* a locked section is allowed.
+- Lock rules (v0 behaviour, from README) live only in the reducer's guards: `canEdit`, `canDelete`, `canDuplicate`, `canDrag`, `canInsertInto`, `canMerge`. Locked question: no edit/delete/duplicate/drag. Locked section: no title/description edit, no delete, no merge in either direction, nothing added into it, floating bar hidden when it or its question is selected, questions cannot be dragged in or out; it can still be moved; duplicating it yields an unlocked copy. A section containing a locked question cannot be deleted. Adding a section _after_ a locked section is allowed.
 - Store: a small `useSyncExternalStore` store with per-item selectors so editing one card re-renders only that card.
 - Validation: `SurveySchema.safeParse` on change (debounced) and on submit; issues mapped to item cards by path. Dangling `nextSectionId` / `targetSectionId` show a warning, not an error.
 - Ids: `createId()` (`crypto.randomUUID` with fallback), stable for the item's life.

@@ -32,11 +32,11 @@ Every sub-plan's tasks implicitly include these.
 
 Cross-cutting failure modes no single sub-plan's happy-path tests would catch. Each line names the owning sub-plan that must pin it with a test.
 
-1. **Host app with Tailwind v3 preflight loaded after `styles.css`** → library buttons, inputs, and borders keep their styling. *Owner: SP1 (CSS structure test: `styles.css` has no `@layer` blocks and no rule outside `:where(...)` / `:root` targets elements without an `mbc:` class), SP2 (playground fixture page that loads a Tailwind v3 preflight after the library CSS, for a visual check).*
-2. **React 18 StrictMode double-mount during `useCommand` / realtime subscribe** → exactly one live subscription afterwards, the command resolves once, nothing leaks on unmount. *Owner: SP3.*
-3. **v0 survey JSON with extra unknown fields, a dangling `nextSectionId`, or no leading section header** → parses, renders, and navigates without throwing. *Owner: SP4 (parse + engine), SP5 (render).*
-4. **Server rendering in Next App Router** (`SurveyForm` with `shuffleOptions`, any generated ids) → no hydration mismatch, no `window` access during render. *Owner: SP5 (`renderToString` test), SP8 (`next-smoke` build).*
-5. **`getAuthToken` rejects, or the realtime socket drops mid-`command()`** → the promise rejects with a typed error (or resubscribes and still resolves); it never hangs past `timeoutMs`. *Owner: SP3.*
+1. **Host app with Tailwind v3 preflight loaded after `styles.css`** → library buttons, inputs, and borders keep their styling. _Owner: SP1 (CSS structure test: `styles.css` has no `@layer` blocks and no rule outside `:where(...)` / `:root` targets elements without an `mbc:` class), SP2 (playground fixture page that loads a Tailwind v3 preflight after the library CSS, for a visual check)._
+2. **React 18 StrictMode double-mount during `useCommand` / realtime subscribe** → exactly one live subscription afterwards, the command resolves once, nothing leaks on unmount. _Owner: SP3._
+3. **v0 survey JSON with extra unknown fields, a dangling `nextSectionId`, or no leading section header** → parses, renders, and navigates without throwing. _Owner: SP4 (parse + engine), SP5 (render)._
+4. **Server rendering in Next App Router** (`SurveyForm` with `shuffleOptions`, any generated ids) → no hydration mismatch, no `window` access during render. _Owner: SP5 (`renderToString` test), SP8 (`next-smoke` build)._
+5. **`getAuthToken` rejects, or the realtime socket drops mid-`command()`** → the promise rejects with a typed error (or resubscribes and still resolves); it never hangs past `timeoutMs`. _Owner: SP3._
 
 ---
 
@@ -115,18 +115,18 @@ git status --porcelain                                        # must be empty af
 
 ## Spec coverage map
 
-| Spec section | Sub-plan |
-|---|---|
-| §1 success criteria 1, 3 | SP1, SP2, SP8 |
-| §1 success criteria 2, 4, 5, 6 | SP4–SP7 |
+| Spec section                         | Sub-plan                                                                     |
+| ------------------------------------ | ---------------------------------------------------------------------------- |
+| §1 success criteria 1, 3             | SP1, SP2, SP8                                                                |
+| §1 success criteria 2, 4, 5, 6       | SP4–SP7                                                                      |
 | §2 layout, boundaries, library rules | SP1 (enforced by lint + build-output tests), SP7 (client-web isolation test) |
-| §3 ui-web | SP1 (CSS pipeline), SP2 |
-| §4 client-web | SP3 |
-| §5.1 core API | SP4, SP5, SP6 |
-| §5.2 `/templates` | SP7 |
-| §5.3 `/mbc` | SP7 |
-| §5.4 migration | SP7 (aliases), SP8 (`MIGRATION.md`) |
-| §6 internals | SP4, SP5, SP6 |
-| §7 testing | every SP; schema-compat SP4; build-output SP1 + SP7 + SP8 |
-| §8 CI, tooling, release | SP1, SP8 |
-| §9 out of scope | — |
+| §3 ui-web                            | SP1 (CSS pipeline), SP2                                                      |
+| §4 client-web                        | SP3                                                                          |
+| §5.1 core API                        | SP4, SP5, SP6                                                                |
+| §5.2 `/templates`                    | SP7                                                                          |
+| §5.3 `/mbc`                          | SP7                                                                          |
+| §5.4 migration                       | SP7 (aliases), SP8 (`MIGRATION.md`)                                          |
+| §6 internals                         | SP4, SP5, SP6                                                                |
+| §7 testing                           | every SP; schema-compat SP4; build-output SP1 + SP7 + SP8                    |
+| §8 CI, tooling, release              | SP1, SP8                                                                     |
+| §9 out of scope                      | —                                                                            |
