@@ -30,7 +30,8 @@ export const Card = part(
 )
 export const CardHeader = part(
   'card-header',
-  'mbc:@container/card-header mbc:has-data-[slot=card-action]:grid-cols-[1fr_auto] mbc:[.mbc\\:border-b]:pb-6 mbc:grid mbc:auto-rows-min mbc:grid-rows-[auto_auto] mbc:items-start mbc:gap-1.5 mbc:px-6'
+  // String.raw: Tailwind scans source text, so the escape must match runtime.
+  String.raw`mbc:@container/card-header mbc:has-data-[slot=card-action]:grid-cols-[1fr_auto] mbc:[.mbc\:border-b]:pb-6 mbc:grid mbc:auto-rows-min mbc:grid-rows-[auto_auto] mbc:items-start mbc:gap-1.5 mbc:px-6`
 )
 export const CardTitle = part(
   'card-title',
@@ -47,5 +48,5 @@ export const CardAction = part(
 export const CardContent = part('card-content', 'mbc:px-6')
 export const CardFooter = part(
   'card-footer',
-  'mbc:[.mbc\\:border-t]:pt-6 mbc:flex mbc:items-center mbc:px-6'
+  String.raw`mbc:[.mbc\:border-t]:pt-6 mbc:flex mbc:items-center mbc:px-6`
 )

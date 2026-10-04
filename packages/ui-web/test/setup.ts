@@ -13,7 +13,10 @@ class ResizeObserverStub {
   unobserve(): void {}
   disconnect(): void {}
 }
-globalThis.ResizeObserver ??= ResizeObserverStub
-Element.prototype.hasPointerCapture ??= () => false
-Element.prototype.releasePointerCapture ??= () => {}
-Element.prototype.scrollIntoView ??= () => {}
+// Build-output tests run in the node environment, where there is no DOM.
+if (typeof Element !== 'undefined') {
+  globalThis.ResizeObserver ??= ResizeObserverStub
+  Element.prototype.hasPointerCapture ??= () => false
+  Element.prototype.releasePointerCapture ??= () => {}
+  Element.prototype.scrollIntoView ??= () => {}
+}
