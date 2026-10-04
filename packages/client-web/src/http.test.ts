@@ -218,4 +218,41 @@ describe('createHttp', () => {
       MbcTimeoutError
     )
   })
+
+  it('works on browsers without AbortSignal.any', async () => {
+    const original = AbortSignal.any
+    Reflect.deleteProperty(AbortSignal, 'any')
+    try {
+      const ok = createHttp({
+        apiUrl: 'https://a',
+        tenantCode: 't',
+        fetch: fakeFetch(() => json({ ok: true })).fetch,
+      })
+      await expect(
+        ok.request('GET', '/x', { signal: new AbortController().signal })
+      ).resolves.toEqual({ ok: true })
+
+      const controller = new AbortController()
+      const hanging = createHttp({
+        apiUrl: 'https://a',
+        tenantCode: 't',
+        fetch: fakeFetch(
+          (call) =>
+            new Promise<Response>((_, reject) => {
+              call.init.signal?.addEventListener('abort', () =>
+                reject(call.init.signal?.reason)
+              )
+            })
+        ).fetch,
+      })
+      const pending = hanging.request('GET', '/x', {
+        signal: controller.signal,
+      })
+      await Promise.resolve()
+      controller.abort()
+      await expect(pending).rejects.toBeInstanceOf(MbcAbortError)
+    } finally {
+      AbortSignal.any = original
+    }
+  })
 })

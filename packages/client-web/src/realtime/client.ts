@@ -94,6 +94,12 @@ export function createRealtimeClient(options: RealtimeOptions): RealtimeClient {
     entries.delete(id)
     settle(entry, error)
     entry.handlers.error?.(error)
+    releaseIfIdle()
+  }
+
+  /** The socket lives only while a subscription needs it. */
+  function releaseIfIdle(): void {
+    if (entries.size === 0) shutdown()
   }
 
   function failAll(error: MbcRealtimeError): void {
@@ -119,7 +125,36 @@ export function createRealtimeClient(options: RealtimeOptions): RealtimeClient {
   }
 
   function sendStart(id: string, entry: Entry): void {
-    if (header) send(startMessage(id, entry.operation, header))
+    if (options.auth.type === 'API_KEY') {
+      if (header) send(startMessage(id, entry.operation, header))
+      return
+    }
+    // AppSync checks the authorization of every start: user-pool tokens
+    // expire, so each start gets a fresh one, not the one from connect time.
+    const ws = socket
+    void (async () => {
+      let fresh: Record<string, string>
+      try {
+        fresh = authHeader(
+          options.auth,
+          endpoint.host,
+          await options.getAuthToken?.()
+        )
+      } catch (cause) {
+        fail(
+          id,
+          cause instanceof MbcRealtimeError
+            ? cause
+            : new MbcRealtimeError('Could not get a real-time auth token', {
+                cause,
+              })
+        )
+        return
+      }
+      // A reconnect re-sends every start after its own connection_ack.
+      if (socket !== ws || !acknowledged || entries.get(id) !== entry) return
+      send(startMessage(id, entry.operation, fresh))
+    })()
   }
 
   function handle(message: ServerMessage): void {
@@ -155,6 +190,7 @@ export function createRealtimeClient(options: RealtimeOptions): RealtimeClient {
         return
       case 'complete':
         entries.delete(message.id)
+        releaseIfIdle()
         return
       case 'connection_error': {
         const error = new MbcRealtimeError(

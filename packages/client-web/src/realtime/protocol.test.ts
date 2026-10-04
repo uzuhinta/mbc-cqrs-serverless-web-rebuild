@@ -98,3 +98,12 @@ describe('messages', () => {
     expect(parseServerMessage('{"no":"type"}')).toBeUndefined()
   })
 })
+
+describe('realtimeEndpoint for local development', () => {
+  it('maps http:// endpoints to ws://', () => {
+    expect(realtimeEndpoint('http://localhost:4001/graphql')).toEqual({
+      url: 'ws://localhost:4001/graphql/realtime',
+      host: 'localhost:4001',
+    })
+  })
+})

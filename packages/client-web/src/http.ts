@@ -48,6 +48,31 @@ export function toQueryString(query?: QueryParams): string {
   return text ? `?${text}` : ''
 }
 
+/** `AbortSignal.any` where available (Safari ≥ 17.4); listener-based fallback elsewhere. */
+function anySignal(signals: AbortSignal[]): {
+  signal: AbortSignal
+  dispose: () => void
+} {
+  if (typeof AbortSignal.any === 'function') {
+    return { signal: AbortSignal.any(signals), dispose: () => {} }
+  }
+  const controller = new AbortController()
+  const onAbort = (event: Event) =>
+    controller.abort((event.target as AbortSignal).reason)
+  const dispose = () => {
+    for (const signal of signals) signal.removeEventListener('abort', onAbort)
+  }
+  for (const signal of signals) {
+    if (signal.aborted) {
+      controller.abort(signal.reason)
+      dispose()
+      return { signal: controller.signal, dispose: () => {} }
+    }
+    signal.addEventListener('abort', onAbort, { once: true })
+  }
+  return { signal: controller.signal, dispose }
+}
+
 export function joinUrl(base: string, path: string): string {
   return `${base.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`
 }
@@ -100,38 +125,44 @@ export function createHttp(config: HttpConfig): Http {
     const timeoutMs =
       options.timeoutMs ?? config.timeoutMs ?? DEFAULT_TIMEOUT_MS
     const timeout = AbortSignal.timeout(timeoutMs)
-    const signal = options.signal
-      ? AbortSignal.any([options.signal, timeout])
-      : timeout
-    const hasBody = options.body !== undefined
-    const headers = await buildHeaders(hasBody)
-    // The token lookup is async: the caller may have aborted meanwhile.
-    if (options.signal?.aborted) {
-      throw new MbcAbortError({ cause: options.signal.reason })
-    }
-    if (timeout.aborted) throw new MbcTimeoutError(timeoutMs)
-    const doFetch = config.fetch ?? globalThis.fetch
-
-    let response: Response
+    const combined = options.signal
+      ? anySignal([options.signal, timeout])
+      : { signal: timeout, dispose: () => {} }
     try {
-      response = await doFetch(
-        joinUrl(config.apiUrl, path) + toQueryString(options.query),
-        {
-          method,
-          headers,
-          body: hasBody ? JSON.stringify(options.body) : undefined,
-          signal,
-        }
-      )
-    } catch (cause) {
-      if (options.signal?.aborted) throw new MbcAbortError({ cause })
+      const hasBody = options.body !== undefined
+      const headers = await buildHeaders(hasBody)
+      // The token lookup is async: the caller may have aborted meanwhile.
+      if (options.signal?.aborted) {
+        throw new MbcAbortError({ cause: options.signal.reason })
+      }
       if (timeout.aborted) throw new MbcTimeoutError(timeoutMs)
-      throw new MbcApiError(0, undefined, 'Network request failed', { cause })
-    }
+      const doFetch = config.fetch ?? globalThis.fetch
 
-    const body = await readBody(response)
-    if (!response.ok) throw new MbcApiError(response.status, body)
-    return body as T
+      let response: Response
+      try {
+        response = await doFetch(
+          joinUrl(config.apiUrl, path) + toQueryString(options.query),
+          {
+            method,
+            headers,
+            body: hasBody ? JSON.stringify(options.body) : undefined,
+            signal: combined.signal,
+          }
+        )
+      } catch (cause) {
+        if (options.signal?.aborted) throw new MbcAbortError({ cause })
+        if (timeout.aborted) throw new MbcTimeoutError(timeoutMs)
+        throw new MbcApiError(0, undefined, 'Network request failed', {
+          cause,
+        })
+      }
+
+      const body = await readBody(response)
+      if (!response.ok) throw new MbcApiError(response.status, body)
+      return body as T
+    } finally {
+      combined.dispose()
+    }
   }
 
   return { request, resolveTenantCode }

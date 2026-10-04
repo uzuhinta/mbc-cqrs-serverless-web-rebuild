@@ -218,6 +218,7 @@ describe('createRealtimeClient', () => {
       )
     ) as Record<string, string>
     socket.accept()
+    await flush()
 
     expect(header.Authorization).toBe('jwt-1')
     expect(socket.starts()[0]?.payload).toMatchObject({
@@ -234,5 +235,52 @@ describe('createRealtimeClient', () => {
 
     await expect(subscription.ready).rejects.toBeInstanceOf(MbcRealtimeError)
     expect(FakeWebSocket.instances).toHaveLength(0)
+  })
+
+  it('closes the socket when the server ends the last subscription', async () => {
+    const realtime = client()
+    const subscription = realtime.subscribe(OPERATION, { next: () => {} })
+    await flush()
+    const socket = FakeWebSocket.latest()
+    socket.accept()
+    const [start] = socket.starts()
+
+    socket.receive({ type: 'error', id: start?.id, payload: { errors: [] } })
+    subscription.unsubscribe()
+    expect(socket.closedWith?.code).toBe(1000)
+
+    const again = client()
+    again.subscribe(OPERATION, { next: () => {} })
+    await flush()
+    const second = FakeWebSocket.latest()
+    second.accept()
+    second.receive({ type: 'complete', id: second.starts()[0]?.id })
+    expect(second.closedWith?.code).toBe(1000)
+  })
+
+  it('sends a fresh user-pool token with every start', async () => {
+    let issued = 0
+    const realtime = client({
+      auth: { type: 'USER_POOL' },
+      getAuthToken: async () => `jwt-${(issued += 1)}`,
+    })
+    realtime.subscribe(OPERATION, { next: () => {} })
+    await flush()
+    const socket = FakeWebSocket.latest()
+    socket.accept()
+    await flush()
+    realtime.subscribe(OPERATION, { next: () => {} })
+    await flush()
+
+    const tokens = socket.starts().map(
+      (start) =>
+        (
+          start.payload as {
+            extensions: { authorization: { Authorization: string } }
+          }
+        ).extensions.authorization.Authorization
+    )
+    expect(tokens).toHaveLength(2)
+    expect(tokens[1]).not.toBe(tokens[0])
   })
 })

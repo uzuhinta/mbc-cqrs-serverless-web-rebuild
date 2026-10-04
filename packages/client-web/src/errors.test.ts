@@ -51,4 +51,9 @@ describe('errors', () => {
       'sync_data:FAILED',
     ])
   })
+
+  it('keep their names when constructors are renamed (minified builds)', () => {
+    class Renamed extends MbcTimeoutError {}
+    expect(new Renamed(1).name).toBe('MbcTimeoutError')
+  })
 })

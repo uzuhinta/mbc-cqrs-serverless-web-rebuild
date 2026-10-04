@@ -9,7 +9,8 @@ import {
 import { StrictMode, useEffect, type ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
-import type { MbcClient } from '../client'
+import { FakeWebSocket } from '../../test/fake-websocket'
+import { createMbcClient, type MbcClient } from '../client'
 import { MbcClientProvider, useMbcClient } from './provider'
 import { useCommand } from './use-command'
 
@@ -137,5 +138,71 @@ describe('useCommand', () => {
     expect(seen.at(-1)?.aborted).toBe(true)
     expect(errors).not.toHaveBeenCalled()
     errors.mockRestore()
+  })
+
+  it('ignores a superseded run that settles late', async () => {
+    const first = deferred<string>()
+    const second = deferred<string>()
+    const gates = [first, second]
+    const { result } = renderHook(
+      () => useCommand(async () => (gates.shift() ?? first).promise),
+      { wrapper }
+    )
+    act(() => {
+      void result.current.run()
+    })
+    act(() => {
+      void result.current.run()
+    })
+
+    await act(async () => {
+      first.resolve('stale')
+      await first.promise
+    })
+    expect(result.current.status).toBe('sending')
+    expect(result.current.data).toBeUndefined()
+
+    await act(async () => {
+      second.resolve('fresh')
+      await second.promise
+    })
+    expect(result.current.data).toBe('fresh')
+  })
+
+  it('releases the command subscription when the component unmounts', async () => {
+    FakeWebSocket.reset()
+    const real = createMbcClient({
+      apiUrl: 'https://api',
+      tenantCode: 't',
+      fetch: (() => new Promise<Response>(() => {})) as typeof fetch,
+      realtime: {
+        url: 'https://abc.appsync-api.ap-northeast-1.amazonaws.com/graphql',
+        auth: { type: 'API_KEY', apiKey: 'k' },
+        WebSocket: FakeWebSocket,
+      },
+    })
+    function Saver() {
+      const { run } = useCommand(({ client, signal }) =>
+        client.command({ method: 'POST', path: '/x' }, { signal })
+      )
+      useEffect(() => {
+        void run()
+      }, [run])
+      return null
+    }
+    const { unmount } = render(
+      <MbcClientProvider client={real}>
+        <Saver />
+      </MbcClientProvider>
+    )
+    await waitFor(() =>
+      expect(FakeWebSocket.instances.length).toBeGreaterThan(0)
+    )
+    const socket = FakeWebSocket.latest()
+    socket.accept()
+    socket.ackAll()
+
+    unmount()
+    await waitFor(() => expect(socket.closedWith?.code).toBe(1000))
   })
 })

@@ -146,7 +146,7 @@ const client = createMbcClient({
 client.get<T>(path, { query?, signal? }): Promise<T>
 client.post<T>(path, body, { signal? }) / put / delete
 client.command<T>(request, { timeoutMs = 60_000, signal? }): Promise<{ data: T; requestId: string }>
-client.realtime.subscribe(filter, handler): () => void
+client.messages?.subscribe(filter, onMessage, onError?): { ready: Promise<void>; unsubscribe(): void }   // undefined without `realtime`
 ```
 
 - HTTP: JSON in/out; sends `x-tenant-code`; sends `Authorization: Bearer <token>` only when `getAuthToken` returns a value; `AbortSignal` supported; HTTP timeout via `AbortSignal.timeout` composition.

@@ -30,10 +30,10 @@ export function realtimeEndpoint(httpUrl: string): {
       '.appsync-api.',
       '.appsync-realtime-api.'
     )
-    url.protocol = 'wss:'
+    url.protocol = url.protocol === 'http:' ? 'ws:' : 'wss:'
     return { url: url.toString(), host }
   }
-  url.protocol = 'wss:'
+  url.protocol = url.protocol === 'http:' ? 'ws:' : 'wss:'
   url.pathname = `${url.pathname.replace(/\/+$/, '')}/realtime`
   return { url: url.toString(), host }
 }

@@ -1,12 +1,17 @@
+// Names are literals: minifiers rename classes, and `error.name` checks or
+// telemetry grouping must behave the same in production builds.
 export class MbcError extends Error {
+  override name = 'MbcError'
+
   constructor(message: string, options?: { cause?: unknown }) {
     super(message, options)
-    this.name = new.target.name
   }
 }
 
 /** The server answered with a non-2xx status, or no response arrived (`status: 0`). */
 export class MbcApiError extends MbcError {
+  override name = 'MbcApiError'
+
   readonly status: number
   readonly body: unknown
 
@@ -23,6 +28,8 @@ export class MbcApiError extends MbcError {
 }
 
 export class MbcTimeoutError extends MbcError {
+  override name = 'MbcTimeoutError'
+
   readonly timeoutMs: number
 
   constructor(timeoutMs: number) {
@@ -32,12 +39,16 @@ export class MbcTimeoutError extends MbcError {
 }
 
 export class MbcAbortError extends MbcError {
+  override name = 'MbcAbortError'
+
   constructor(options?: { cause?: unknown }) {
     super('The operation was aborted', options)
   }
 }
 
 export class MbcRealtimeError extends MbcError {
+  override name = 'MbcRealtimeError'
+
   readonly errors: unknown
 
   constructor(
@@ -51,6 +62,8 @@ export class MbcRealtimeError extends MbcError {
 
 /** The backend reported a `<step>:FAILED` command status. */
 export class MbcCommandError extends MbcError {
+  override name = 'MbcCommandError'
+
   readonly requestId: string
   readonly status: string
 
