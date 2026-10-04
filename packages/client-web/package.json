@@ -1,0 +1,50 @@
+{
+  "name": "@mbc-cqrs-serverless/client-web",
+  "version": "0.0.0",
+  "description": "HTTP and AppSync real-time client for MBC CQRS Serverless web apps",
+  "license": "MIT",
+  "author": "Murakami Business Consulting, Inc.",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc -p tsconfig.json",
+    "check:package": "publint --strict && attw --pack . --profile esm-only --exclude-entrypoints ./package.json"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mbc-net/mbc-cqrs-serverless-web.git",
+    "directory": "packages/client-web"
+  }
+}

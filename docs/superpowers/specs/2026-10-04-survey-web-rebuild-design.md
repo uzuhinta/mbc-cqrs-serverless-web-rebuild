@@ -151,7 +151,7 @@ client.realtime.subscribe(filter, handler): () => void
 
 - HTTP: JSON in/out; sends `x-tenant-code`; sends `Authorization: Bearer <token>` only when `getAuthToken` returns a value; `AbortSignal` supported; HTTP timeout via `AbortSignal.timeout` composition.
 - `query` arrays serialise as repeated keys (`orderBys=a&orderBys=b`), matching the backend `SearchDto`.
-- Errors are classes: `MbcApiError { status, body }`, `MbcTimeoutError`, `MbcRealtimeError`, `MbcAbortError`. No logging, no toasts.
+- Errors are classes: `MbcApiError { status, body }`, `MbcTimeoutError`, `MbcRealtimeError`, `MbcAbortError`. No logging, no toasts. Also `MbcCommandError { requestId, status }` when the backend reports a `<step>:FAILED` command status (v0 waited forever), and `MbcApiError.status` is `0` when no response arrived (network failure or `getAuthToken` failure).
 - `USER_POOL` realtime auth uses the token from `getAuthToken`.
 
 ### 4.2 AppSync realtime
