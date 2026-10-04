@@ -89,4 +89,12 @@ export const V0 = {
   'tabs.trigger':
     "data-[state=active]:border-b-primary data-[state=active]:text-primary dark:data-[state=active]:bg-input/30 inline-flex h-[calc(100%-1px)] flex-1 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap px-3 py-5 text-base font-normal transition-[color,box-shadow] disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-b-[2px] [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   'tabs.content': 'flex-1 outline-none',
+  // ui/pagination.tsx — hover:border-[#369CA3] → hover:border-brand-accent (same colour, token)
+  'pagination.nav': 'flex gap-2',
+  'pagination.content': 'flex flex-row items-center gap-2',
+  'pagination.link-extra':
+    'hover:text-primary h-8 w-8 border text-sm text-[#191A32] hover:border-brand-accent hover:bg-white',
+  // ui/calendar.tsx — CalendarDayButton, `min-w-[--cell-size]` → `min-w-(--cell-size)`
+  'calendar.day-button-extra':
+    'data-[range-end=true]:bg-primary data-[range-middle=true]:bg-accent data-[range-start=true]:bg-primary data-[selected-single=true]:bg-primary data-[range-end=true]:text-primary-foreground data-[range-middle=true]:text-accent-foreground data-[range-start=true]:text-primary-foreground data-[selected-single=true]:text-primary-foreground group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-ring/50 flex aspect-square h-auto w-full min-w-(--cell-size) flex-col gap-1 font-normal leading-none data-[range-end=true]:rounded-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-[3px] [&>span]:text-xs [&>span]:opacity-70',
 } as const
