@@ -62,6 +62,13 @@ describe('topLevelOutsideLayer', () => {
     expect(topLevelOutsideLayer(root, 'mbc')).toEqual([])
   })
 
+  it('accepts top-level @keyframes and @font-face, which are not style rules', () => {
+    const root = parseCss(
+      '@keyframes spin { to { transform: rotate(360deg) } }\n@font-face { font-family: x; src: local(x) }'
+    )
+    expect(topLevelOutsideLayer(root, 'mbc')).toEqual([])
+  })
+
   it('reports unlayered rules and foreign layers', () => {
     const root = parseCss(
       '.mbc\\:p-1 { padding: 1px }\n@layer utilities { .x { color: red } }'

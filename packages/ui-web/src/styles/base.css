@@ -1,0 +1,64 @@
+:where([data-mbc], [data-mbc] *),
+:where([data-mbc], [data-mbc] *)::before,
+:where([data-mbc], [data-mbc] *)::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0 solid var(--mbc-border);
+}
+
+:where([data-mbc]) {
+  font-family: inherit;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+:where(h1, h2, h3, h4, h5, h6):where([data-mbc], [data-mbc] *) {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+:where(ol, ul, menu):where([data-mbc], [data-mbc] *) {
+  list-style: none;
+}
+
+:where(img, svg, video, canvas):where([data-mbc], [data-mbc] *) {
+  display: block;
+  vertical-align: middle;
+}
+
+:where(img, video):where([data-mbc], [data-mbc] *) {
+  max-width: 100%;
+  height: auto;
+}
+
+:where(a):where([data-mbc], [data-mbc] *) {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+:where(button, input, select, optgroup, textarea):where(
+  [data-mbc],
+  [data-mbc] *
+) {
+  font: inherit;
+  font-feature-settings: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  background-color: transparent;
+  border-radius: 0;
+  opacity: 1;
+}
+
+:where(textarea):where([data-mbc], [data-mbc] *) {
+  resize: vertical;
+}
+
+:where([data-mbc], [data-mbc] *)::placeholder {
+  opacity: 1;
+  color: color-mix(in oklab, currentcolor 50%, transparent);
+}
+
+:where([hidden]:not([hidden='until-found'])):where([data-mbc], [data-mbc] *) {
+  display: none !important;
+}

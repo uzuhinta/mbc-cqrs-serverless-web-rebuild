@@ -1,0 +1,46 @@
+:where(:root) {
+  --mbc-background: hsl(0 0% 100%);
+  --mbc-foreground: hsl(222.2 84% 4.9%);
+  --mbc-card: hsl(0 0% 100%);
+  --mbc-card-foreground: hsl(222.2 84% 4.9%);
+  --mbc-popover: hsl(0 0% 100%);
+  --mbc-popover-foreground: hsl(222.2 84% 4.9%);
+  --mbc-primary: hsl(222.2 47.4% 11.2%);
+  --mbc-primary-foreground: hsl(210 40% 98%);
+  --mbc-secondary: hsl(210 40% 96.1%);
+  --mbc-secondary-foreground: hsl(222.2 47.4% 11.2%);
+  --mbc-muted: hsl(210 40% 96.1%);
+  --mbc-muted-foreground: hsl(215.4 16.3% 46.9%);
+  --mbc-accent: hsl(210 40% 96.1%);
+  --mbc-accent-foreground: hsl(222.2 47.4% 11.2%);
+  --mbc-destructive: hsl(0 84.2% 60.2%);
+  --mbc-destructive-foreground: hsl(210 40% 98%);
+  --mbc-border: hsl(214.3 31.8% 91.4%);
+  --mbc-input: hsl(214.3 31.8% 91.4%);
+  --mbc-ring: hsl(222.2 84% 4.9%);
+  --mbc-brand: #417e96;
+  --mbc-brand-accent: #369ca3;
+  --mbc-radius: 0.5rem;
+}
+
+:where(.dark, [data-mbc-theme='dark']) {
+  --mbc-background: hsl(222.2 84% 4.9%);
+  --mbc-foreground: hsl(210 40% 98%);
+  --mbc-card: hsl(222.2 84% 4.9%);
+  --mbc-card-foreground: hsl(210 40% 98%);
+  --mbc-popover: hsl(222.2 84% 4.9%);
+  --mbc-popover-foreground: hsl(210 40% 98%);
+  --mbc-primary: hsl(210 40% 98%);
+  --mbc-primary-foreground: hsl(222.2 47.4% 11.2%);
+  --mbc-secondary: hsl(217.2 32.6% 17.5%);
+  --mbc-secondary-foreground: hsl(210 40% 98%);
+  --mbc-muted: hsl(217.2 32.6% 17.5%);
+  --mbc-muted-foreground: hsl(215 20.2% 65.1%);
+  --mbc-accent: hsl(217.2 32.6% 17.5%);
+  --mbc-accent-foreground: hsl(210 40% 98%);
+  --mbc-destructive: hsl(0 62.8% 30.6%);
+  --mbc-destructive-foreground: hsl(210 40% 98%);
+  --mbc-border: hsl(217.2 32.6% 17.5%);
+  --mbc-input: hsl(217.2 32.6% 17.5%);
+  --mbc-ring: hsl(212.7 26.8% 83.9%);
+}

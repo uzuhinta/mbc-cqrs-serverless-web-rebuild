@@ -72,6 +72,9 @@ export function elementOnlyRules(root: Root): string[] {
   return offenders
 }
 
+/** At-rules that define names, not styles, so their layer placement is moot. */
+const NON_CASCADING_AT_RULES = /^(property|font-face|(-[a-z]+-)?keyframes)$/i
+
 export function topLevelOutsideLayer(
   root: Root,
   layerPrefix: string
@@ -81,7 +84,7 @@ export function topLevelOutsideLayer(
     if (node.type === 'comment') continue
     if (node.type === 'atrule') {
       const params = node.params.trim()
-      if (node.name === 'property') continue
+      if (NON_CASCADING_AT_RULES.test(node.name)) continue
       if (node.name === 'layer' && !node.nodes) continue
       if (
         node.name === 'layer' &&

@@ -1,0 +1,11 @@
+@layer theme, base, mbc, components, utilities;
+@layer mbc.theme, mbc.base, mbc.utilities;
+
+@import 'tailwindcss/theme.css' layer(mbc.theme) prefix(mbc);
+@import 'tailwindcss/utilities.css' layer(mbc.utilities) prefix(mbc)
+  source(none);
+@source '../';
+
+@import './theme.css';
+@import './tokens.css' layer(mbc.base);
+@import './base.css' layer(mbc.base);
