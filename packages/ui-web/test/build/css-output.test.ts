@@ -19,6 +19,8 @@ const unlayeredCss = readText(dist, 'styles.css')
 const layeredCss = readText(dist, 'styles.layer.css')
 const unlayered = parseCss(unlayeredCss)
 const layered = parseCss(layeredCss)
+// react-day-picker's own structural classes, targeted by Calendar's RTL rules.
+const THIRD_PARTY_CLASSES = ['dark', 'rdp-button_next', 'rdp-button_previous']
 
 function keyframeNames(root: Root): string[] {
   const names: string[] = []
@@ -74,7 +76,7 @@ describe('styles.css (default)', () => {
   })
 
   it('prefixes every class with mbc:', () => {
-    expect(unprefixedClasses(unlayered)).toEqual([])
+    expect(unprefixedClasses(unlayered, THIRD_PARTY_CLASSES)).toEqual([])
   })
 
   it('never styles bare elements outside library scopes', () => {
@@ -106,6 +108,6 @@ describe('styles.layer.css (opt-in, layered)', () => {
   })
 
   it('prefixes every class with mbc:', () => {
-    expect(unprefixedClasses(layered)).toEqual([])
+    expect(unprefixedClasses(layered, THIRD_PARTY_CLASSES)).toEqual([])
   })
 })
