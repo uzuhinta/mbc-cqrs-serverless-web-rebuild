@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { MbcProvider } from '../i18n/provider'
@@ -35,6 +36,13 @@ import {
   DropdownMenuTrigger,
 } from './dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from './popover'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './select'
 
 function OpenDialog() {
   return (
@@ -193,6 +201,35 @@ describe('DropdownMenu', () => {
     expectV0Classes(
       screen.getByTestId('separator'),
       V0['dropdown-menu.separator']
+    )
+  })
+})
+
+describe('nested overlays', () => {
+  it('keeps a dialog open when choosing from a select inside it', async () => {
+    const user = userEvent.setup()
+    render(
+      <Dialog defaultOpen>
+        <DialogContent>
+          <DialogTitle>Edit</DialogTitle>
+          <DialogDescription>Pick a fruit</DialogDescription>
+          <Select>
+            <SelectTrigger aria-label="Fruit">
+              <SelectValue placeholder="Pick" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="apple">Apple</SelectItem>
+            </SelectContent>
+          </Select>
+        </DialogContent>
+      </Dialog>
+    )
+    await user.click(screen.getByRole('combobox', { name: 'Fruit' }))
+    await user.click(await screen.findByRole('option', { name: 'Apple' }))
+
+    expect(screen.getByRole('dialog', { name: 'Edit' })).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Fruit' })).toHaveTextContent(
+      'Apple'
     )
   })
 })

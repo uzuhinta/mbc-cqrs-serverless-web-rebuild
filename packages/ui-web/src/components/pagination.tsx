@@ -75,7 +75,7 @@ export const PaginationLink = forwardRef<
       data-active={isActive}
       className={cn(
         buttonVariants({ variant: isActive ? 'outline' : 'ghost', size }),
-        'mbc:hover:text-primary mbc:h-8 mbc:w-8 mbc:border mbc:text-sm mbc:text-[#191A32] mbc:hover:border-brand-accent mbc:hover:bg-white',
+        'mbc:hover:text-primary mbc:h-8 mbc:w-8 mbc:border mbc:text-sm mbc:text-[#191A32] mbc:dark:text-foreground mbc:hover:border-brand-accent mbc:hover:bg-white',
         // Inactive links (ghost) get no border colour from their variant.
         !isActive && 'mbc:border-border',
         className

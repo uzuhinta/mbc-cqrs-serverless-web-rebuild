@@ -52,6 +52,7 @@ const EXPECTED = [
   'Field',
   'FieldDescription',
   'FieldError',
+  'FieldGroup',
   'FieldLabel',
   'Input',
   'Label',

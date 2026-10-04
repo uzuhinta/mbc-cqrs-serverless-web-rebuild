@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
+import { MbcProvider } from '../i18n/provider'
 import { expectV0Classes } from '../../test/parity'
 import { V0 } from '../../test/v0-classes'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs'
@@ -39,5 +40,14 @@ describe('Tabs', () => {
     await userEvent.click(screen.getByRole('tab', { name: 'Preview' }))
 
     expect(screen.getByRole('tabpanel')).toHaveTextContent('Preview pane')
+  })
+
+  it('follows the provider direction', () => {
+    render(
+      <MbcProvider dir="rtl">
+        <Example />
+      </MbcProvider>
+    )
+    expect(screen.getByTestId('tabs')).toHaveAttribute('dir', 'rtl')
   })
 })

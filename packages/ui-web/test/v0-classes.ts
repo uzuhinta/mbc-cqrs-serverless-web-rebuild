@@ -4,12 +4,14 @@
  * the library states the colour (SP2 probe: Tailwind v3 preflight turned
  * borders black). Select/DropdownMenu content cap their width at the
  * available width (SP2 probe: 512px list overflowed a 375px screen).
+ * `dark:` text overrides (SP2 review): pagination numbers and error text were
+ * unreadable in dark mode; the light look is unchanged.
  */
 export const V0 = {
   // ui/form/FormDescription.tsx
   'field.description': 'text-sm font-normal text-[#475467]',
   // ui/form/variants.ts formMessageVariants — text-error-400 → text-destructive
-  'field.error': 'text-destructive text-sm',
+  'field.error': 'text-destructive dark:text-red-400 text-sm',
   // ui/label.tsx
   label:
     'flex select-none items-center text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50 group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50',
@@ -43,7 +45,7 @@ export const V0 = {
   'card.footer': '[.mbc\\:border-t]:pt-6 flex items-center px-6',
   // ui/alert.tsx
   'alert.destructive':
-    'relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive',
+    'dark:text-red-400 relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive',
   'alert.title': 'mb-1 font-medium leading-none tracking-tight',
   'alert.description': 'text-sm [&_p]:leading-relaxed',
   // ui/badge.tsx (secondary — the variant survey uses)
@@ -99,7 +101,7 @@ export const V0 = {
   'pagination.nav': 'flex gap-2',
   'pagination.content': 'flex flex-row items-center gap-2',
   'pagination.link-extra':
-    'hover:text-primary h-8 w-8 border text-sm text-[#191A32] hover:border-brand-accent hover:bg-white',
+    'dark:text-foreground hover:text-primary h-8 w-8 border text-sm text-[#191A32] hover:border-brand-accent hover:bg-white',
   // ui/calendar.tsx — CalendarDayButton, `min-w-[--cell-size]` → `min-w-(--cell-size)`
   'calendar.day-button-extra':
     'data-[range-end=true]:bg-primary data-[range-middle=true]:bg-accent data-[range-start=true]:bg-primary data-[selected-single=true]:bg-primary data-[range-end=true]:text-primary-foreground data-[range-middle=true]:text-accent-foreground data-[range-start=true]:text-primary-foreground data-[selected-single=true]:text-primary-foreground group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-ring/50 flex aspect-square h-auto w-full min-w-(--cell-size) flex-col gap-1 font-normal leading-none data-[range-end=true]:rounded-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-[3px] [&>span]:text-xs [&>span]:opacity-70',

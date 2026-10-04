@@ -67,6 +67,14 @@ export const Field = forwardRef<HTMLDivElement, FieldProps>(function Field(
   )
 })
 
+/**
+ * Controls below a group control (an "Other" input inside a RadioGroup, the
+ * checkboxes inside a FieldGroup) must not claim the field's ids again.
+ */
+export function FieldReset({ children }: { children?: ReactNode }) {
+  return <FieldContext.Provider value={null}>{children}</FieldContext.Provider>
+}
+
 export type FieldControlProps = {
   id?: string
   'aria-describedby'?: string
@@ -168,10 +176,26 @@ export const FieldError = forwardRef<
       ref={ref}
       id={field?.errorId}
       data-slot="field-error"
-      className={cn('mbc:text-destructive mbc:text-sm', className)}
+      className={cn(
+        'mbc:text-destructive mbc:dark:text-red-400 mbc:text-sm',
+        className
+      )}
       {...props}
     >
       {children}
     </p>
+  )
+})
+
+/** A labelled set of controls (e.g. checkboxes) that share one Field. */
+export const FieldGroup = forwardRef<
+  HTMLDivElement,
+  HTMLAttributes<HTMLDivElement> & FieldControlProps
+>(function FieldGroup({ children, ...rest }, ref) {
+  const props = useFieldControl(rest, { group: true })
+  return (
+    <div ref={ref} role="group" data-mbc="" data-slot="field-group" {...props}>
+      <FieldReset>{children}</FieldReset>
+    </div>
   )
 })

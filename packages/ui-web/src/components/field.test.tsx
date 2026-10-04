@@ -4,13 +4,17 @@ import { describe, expect, it } from 'vitest'
 
 import { expectV0Classes } from '../../test/parity'
 import { V0 } from '../../test/v0-classes'
+import { Checkbox } from './checkbox'
 import {
   Field,
   FieldDescription,
   FieldError,
+  FieldGroup,
   FieldLabel,
   useFieldControl,
 } from './field'
+import { Input } from './input'
+import { RadioGroup, RadioGroupItem } from './radio-group'
 
 function Control(props: { id?: string; 'aria-describedby'?: string }) {
   const controlProps = useFieldControl(props)
@@ -120,5 +124,43 @@ describe('Field', () => {
     expect(container.firstElementChild).toHaveAttribute('data-mbc', '')
     expectV0Classes(screen.getByText('Hint'), V0['field.description'])
     expectV0Classes(screen.getByText('Bad'), V0['field.error'])
+  })
+
+  it('gives a RadioGroup the field ids but not the Input inside it', () => {
+    render(
+      <Field>
+        <FieldLabel>Fruit</FieldLabel>
+        <RadioGroup defaultValue="apple">
+          <RadioGroupItem value="apple" aria-label="Apple" />
+          <RadioGroupItem value="other" aria-label="Other" />
+          <Input aria-label="Other fruit" />
+        </RadioGroup>
+      </Field>
+    )
+    const group = screen.getByRole('radiogroup', { name: 'Fruit' })
+    const other = screen.getByRole('textbox', { name: 'Other fruit' })
+
+    expect(other.id).not.toBe(group.id)
+    expect(other).not.toHaveAttribute('aria-labelledby')
+  })
+
+  it('labels a set of checkboxes through FieldGroup without sharing ids', () => {
+    render(
+      <Field invalid>
+        <FieldLabel>Colours</FieldLabel>
+        <FieldGroup>
+          <Checkbox aria-label="Red" />
+          <Checkbox aria-label="Blue" />
+        </FieldGroup>
+        <FieldError>Pick one</FieldError>
+      </Field>
+    )
+    const group = screen.getByRole('group', { name: 'Colours' })
+    const [red, blue] = screen.getAllByRole('checkbox')
+
+    expect(group).toHaveAttribute('aria-invalid', 'true')
+    expect(group).toHaveAccessibleDescription('Pick one')
+    expect(red?.id).toBeFalsy()
+    expect(blue?.id).toBeFalsy()
   })
 })

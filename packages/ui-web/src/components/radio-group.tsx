@@ -9,7 +9,7 @@ import {
 } from 'react'
 
 import { cn } from '../lib/cn'
-import { useFieldControl } from './field'
+import { FieldReset, useFieldControl } from './field'
 
 export type RadioGroupProps = ComponentPropsWithoutRef<
   typeof RadioGroupPrimitive.Root
@@ -18,7 +18,7 @@ export type RadioGroupProps = ComponentPropsWithoutRef<
 export const RadioGroup = forwardRef<
   ComponentRef<typeof RadioGroupPrimitive.Root>,
   RadioGroupProps
->(function RadioGroup({ className, ...rest }, ref) {
+>(function RadioGroup({ className, children, ...rest }, ref) {
   const props = useFieldControl(rest, { group: true })
   return (
     <RadioGroupPrimitive.Root
@@ -27,7 +27,9 @@ export const RadioGroup = forwardRef<
       data-slot="radio-group"
       className={cn('mbc:grid mbc:gap-2', className)}
       {...props}
-    />
+    >
+      <FieldReset>{children}</FieldReset>
+    </RadioGroupPrimitive.Root>
   )
 })
 

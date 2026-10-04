@@ -4,6 +4,7 @@ export { defineMessages } from './i18n/catalog'
 export { mergeMessages } from './i18n/merge'
 export {
   MbcProvider,
+  type Direction,
   useLocale,
   useMessages,
   usePortalContainer,
@@ -89,6 +90,7 @@ export {
   Field,
   FieldDescription,
   FieldError,
+  FieldGroup,
   FieldLabel,
   useFieldControl,
   type FieldControlProps,
