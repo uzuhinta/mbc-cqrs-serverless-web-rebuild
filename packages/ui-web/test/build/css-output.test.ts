@@ -94,6 +94,24 @@ describe('styles.css (default)', () => {
     expect(unlayeredCss).toContain('--mbc-brand:')
     expect(unlayeredCss).toMatch(/\[data-mbc-theme=['"]?dark['"]?\]/)
   })
+  it('compiles the open/close animation utilities', () => {
+    expect(unlayeredCss).toContain(
+      '.mbc\\:data-\\[state\\=open\\]\\:animate-in'
+    )
+    expect(unlayeredCss).toMatch(/@keyframes\s+enter/)
+  })
+
+  it('compiles classes from every primitive', () => {
+    for (const selector of [
+      '.mbc\\:field-sizing-content',
+      '.mbc\\:size-\\[19px\\]',
+      '.mbc\\:origin-\\(--radix-select-content-transform-origin\\)',
+      '.mbc\\:h-\\(--cell-size\\)',
+      '.mbc\\:hover\\:border-brand-accent',
+    ]) {
+      expect(unlayeredCss, selector).toContain(selector)
+    }
+  })
 })
 
 describe('styles.layer.css (opt-in, layered)', () => {

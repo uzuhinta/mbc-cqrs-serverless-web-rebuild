@@ -27,12 +27,48 @@ describe('ui-web JavaScript output', () => {
     )
   })
 
+  const CLIENT_MODULES = [
+    'components/alert-dialog.js',
+    'components/badge.js',
+    'components/button.js',
+    'components/calendar.js',
+    'components/checkbox.js',
+    'components/dialog.js',
+    'components/dropdown-menu.js',
+    'components/field.js',
+    'components/input.js',
+    'components/label.js',
+    'components/pagination.js',
+    'components/popover.js',
+    'components/radio-group.js',
+    'components/select.js',
+    'components/separator.js',
+    'components/switch.js',
+    'components/tabs.js',
+    'components/textarea.js',
+    'i18n/provider.js',
+  ]
+  const SERVER_SAFE_MODULES = [
+    'components/alert.js',
+    'components/badge-variants.js',
+    'components/button-variants.js',
+    'components/input-variants.js',
+    'components/card.js',
+    'components/skeleton.js',
+    'i18n/catalog.js',
+    'i18n/merge.js',
+    'i18n/ui-messages.js',
+    'index.js',
+    'lib/cn.js',
+  ]
+
   it('keeps "use client" on client modules only', () => {
-    expect(hasUseClientDirective(readText(dist, 'components/button.js'))).toBe(
-      true
-    )
-    expect(hasUseClientDirective(readText(dist, 'lib/cn.js'))).toBe(false)
-    expect(hasUseClientDirective(readText(dist, 'index.js'))).toBe(false)
+    for (const file of CLIENT_MODULES) {
+      expect(hasUseClientDirective(readText(dist, file)), file).toBe(true)
+    }
+    for (const file of SERVER_SAFE_MODULES) {
+      expect(hasUseClientDirective(readText(dist, file)), file).toBe(false)
+    }
   })
 
   it('keeps variant helpers callable from Server Components', () => {
