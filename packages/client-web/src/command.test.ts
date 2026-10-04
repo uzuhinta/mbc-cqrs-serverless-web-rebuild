@@ -1,0 +1,268 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { FakeWebSocket } from '../test/fake-websocket'
+import { createCommand } from './command'
+import {
+  MbcAbortError,
+  MbcApiError,
+  MbcCommandError,
+  MbcTimeoutError,
+} from './errors'
+import { createHttp } from './http'
+import { createRealtimeClient } from './realtime/client'
+
+type Deferred = {
+  resolve: (body: unknown) => void
+  reject: (error: unknown) => void
+}
+
+function setup() {
+  const responses: Deferred[] = []
+  const fetch = vi.fn(
+    () =>
+      new Promise<Response>((resolve, reject) => {
+        responses.push({
+          resolve: (body) =>
+            resolve(
+              new Response(JSON.stringify(body), {
+                headers: { 'content-type': 'application/json' },
+              })
+            ),
+          reject,
+        })
+      })
+  ) as unknown as typeof globalThis.fetch
+  const http = createHttp({
+    apiUrl: 'https://api',
+    tenantCode: 'tenant-a',
+    fetch,
+  })
+  const realtime = createRealtimeClient({
+    url: 'https://abc.appsync-api.ap-northeast-1.amazonaws.com/graphql',
+    auth: { type: 'API_KEY', apiKey: 'k' },
+    WebSocket: FakeWebSocket,
+    random: () => 0,
+  })
+  return { http, realtime, responses, command: createCommand(http, realtime) }
+}
+
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
+
+function status(socket: FakeWebSocket, requestId: string, value: string) {
+  const start = socket.starts()[0]
+  socket.receive({
+    type: 'data',
+    id: start?.id,
+    payload: {
+      data: {
+        onMessage: {
+          id: requestId,
+          tenantCode: 'tenant-a',
+          action: 'command-status',
+          content: JSON.stringify({ status: value }),
+        },
+      },
+    },
+  })
+}
+
+async function connected() {
+  await flush()
+  const socket = FakeWebSocket.latest()
+  socket.accept()
+  socket.ackAll()
+  await flush()
+  return socket
+}
+
+beforeEach(() => {
+  FakeWebSocket.reset()
+})
+
+describe('command', () => {
+  it('subscribes before sending, then resolves on finish:FINISHED', async () => {
+    const { command, responses } = setup()
+    const phases: string[] = []
+    const pending = command<{ requestId: string; id: string }>(
+      { method: 'POST', path: '/api/survey-template', body: { name: 'A' } },
+      { onPhase: (phase) => phases.push(phase) }
+    )
+    const socket = await connected()
+
+    expect(responses).toHaveLength(1)
+    const variables = JSON.parse(
+      socket.starts()[0]?.payload?.data ?? '{}'
+    ).variables
+    expect(variables).toEqual({
+      tenantCode: 'tenant-a',
+      action: 'command-status',
+    })
+
+    responses[0]?.resolve({ requestId: 'req-1', id: 'x' })
+    await flush()
+    status(socket, 'req-1', 'sync_data:FINISHED')
+    status(socket, 'req-1', 'finish:FINISHED')
+
+    await expect(pending).resolves.toEqual({
+      data: { requestId: 'req-1', id: 'x' },
+      requestId: 'req-1',
+    })
+    expect(phases).toEqual(['sending', 'waiting'])
+    expect(socket.closedWith?.code).toBe(1000)
+  })
+
+  it('does not lose a finish message that arrives before the HTTP response', async () => {
+    const { command, responses } = setup()
+    const pending = command({ method: 'PUT', path: '/x' })
+    const socket = await connected()
+
+    status(socket, 'req-early', 'finish:FINISHED')
+    responses[0]?.resolve({ requestId: 'req-early' })
+
+    await expect(pending).resolves.toMatchObject({ requestId: 'req-early' })
+  })
+
+  it('ignores other commands’ messages and resolves each on its own id', async () => {
+    const { command, responses } = setup()
+    const first = command({ method: 'POST', path: '/a' })
+    const second = command({ method: 'POST', path: '/b' })
+    const socket = await connected()
+    responses[0]?.resolve({ requestId: 'req-a' })
+    responses[1]?.resolve({ requestId: 'req-b' })
+    await flush()
+
+    expect(FakeWebSocket.instances).toHaveLength(1)
+    // AppSync delivers each message to every subscription with a matching
+    // filter, so each command also sees the other command's id.
+    const settled: string[] = []
+    void first.then(() => settled.push('a'))
+    void second.then(() => settled.push('b'))
+    const [startA, startB] = socket.starts()
+    const deliver = (id: string) => {
+      for (const start of [startA, startB]) {
+        socket.receive({
+          type: 'data',
+          id: start?.id,
+          payload: {
+            data: {
+              onMessage: {
+                id,
+                tenantCode: 'tenant-a',
+                content: '{"status":"finish:FINISHED"}',
+              },
+            },
+          },
+        })
+      }
+    }
+
+    deliver('req-b')
+    await flush()
+    expect(settled).toEqual(['b'])
+    deliver('req-a')
+
+    await expect(first).resolves.toMatchObject({ requestId: 'req-a' })
+    await expect(second).resolves.toMatchObject({ requestId: 'req-b' })
+  })
+
+  it('rejects with MbcCommandError on a FAILED status', async () => {
+    const { command, responses } = setup()
+    const pending = command({ method: 'DELETE', path: '/x' })
+    const socket = await connected()
+    responses[0]?.resolve({ requestId: 'req-f' })
+    await flush()
+    status(socket, 'req-f', 'sync_data:FAILED')
+
+    const error = await pending.catch((e: unknown) => e)
+    expect(error).toBeInstanceOf(MbcCommandError)
+    expect(error).toMatchObject({
+      requestId: 'req-f',
+      status: 'sync_data:FAILED',
+    })
+  })
+
+  it('rejects when the response has no requestId, and unsubscribes', async () => {
+    const { command, responses } = setup()
+    const pending = command({ method: 'POST', path: '/x' })
+    const socket = await connected()
+    responses[0]?.resolve({ id: 'no-request-id' })
+
+    await expect(pending).rejects.toBeInstanceOf(MbcApiError)
+    expect(socket.closedWith?.code).toBe(1000)
+  })
+
+  it('times out across the whole command', async () => {
+    vi.useFakeTimers()
+    try {
+      const { command } = setup()
+      const pending = command(
+        { method: 'POST', path: '/x' },
+        { timeoutMs: 5_000 }
+      )
+      const rejection = expect(pending).rejects.toBeInstanceOf(MbcTimeoutError)
+      await vi.advanceTimersByTimeAsync(0)
+      FakeWebSocket.latest().accept()
+      FakeWebSocket.latest().ackAll()
+      await vi.advanceTimersByTimeAsync(5_000)
+      await rejection
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('rejects with MbcAbortError and releases the subscription on abort', async () => {
+    const { command } = setup()
+    const controller = new AbortController()
+    const pending = command(
+      { method: 'POST', path: '/x' },
+      { signal: controller.signal }
+    )
+    const socket = await connected()
+    controller.abort()
+
+    await expect(pending).rejects.toBeInstanceOf(MbcAbortError)
+    expect(socket.closedWith?.code).toBe(1000)
+  })
+
+  it('survives a dropped socket while waiting', async () => {
+    vi.useFakeTimers()
+    try {
+      const { command, responses } = setup()
+      const pending = command({ method: 'POST', path: '/x' })
+      await vi.advanceTimersByTimeAsync(0)
+      FakeWebSocket.latest().accept()
+      FakeWebSocket.latest().ackAll()
+      await vi.advanceTimersByTimeAsync(0)
+      responses[0]?.resolve({ requestId: 'req-d' })
+      await vi.advanceTimersByTimeAsync(0)
+
+      FakeWebSocket.latest().drop()
+      await vi.advanceTimersByTimeAsync(1_000)
+      const second = FakeWebSocket.latest()
+      expect(FakeWebSocket.instances).toHaveLength(2)
+      second.accept()
+      second.ackAll()
+      status(second, 'req-d', 'finish:FINISHED')
+
+      await expect(pending).resolves.toMatchObject({ requestId: 'req-d' })
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('resolves right after the HTTP call without real-time', async () => {
+    const fetch = vi.fn(
+      async () =>
+        new Response('{"requestId":"r"}', {
+          headers: { 'content-type': 'application/json' },
+        })
+    ) as unknown as typeof globalThis.fetch
+    const http = createHttp({ apiUrl: 'https://api', tenantCode: 't', fetch })
+    const command = createCommand(http, undefined)
+
+    await expect(command({ method: 'POST', path: '/x' })).resolves.toEqual({
+      data: { requestId: 'r' },
+      requestId: 'r',
+    })
+  })
+})

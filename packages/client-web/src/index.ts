@@ -32,3 +32,16 @@ export {
   type GraphQLOperation,
   type RealtimeAuth,
 } from './realtime/protocol'
+export {
+  createCommand,
+  type CommandOptions,
+  type CommandRequest,
+  type CommandResult,
+} from './command'
+export { createMbcClient, type MbcClient, type MbcClientConfig } from './client'
+export {
+  ON_MESSAGE,
+  parseMessage,
+  type MbcMessage,
+  type MessageFilter,
+} from './messages'
