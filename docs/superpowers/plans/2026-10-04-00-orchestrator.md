@@ -71,7 +71,7 @@ git status --porcelain                                        # must be empty af
   - Gate: standard gate; build-output tests prove `"use client"` survives, CSS is prefixed, `styles.css` is unlayered, `styles.layer.css` is fully layered.
   - Depends on: —
 
-- [ ] **SP2 — `ui-web`** (`02-sp2-ui-web`)
+- [x] **SP2 — `ui-web`** (`02-sp2-ui-web`)
   - Spec: §3.2 tokens, §3.3 provider + i18n, §3.4 primitives.
   - Builds: animation utilities for Radix open/close states, `MbcProvider`, `defineMessages` / `useMessages` / `MessagesFor`, `ui` namespace (`ja`, `en`), the 20 primitives + `Field*` helpers, `apps/playground` (Vite) with a primitives gallery and the Tailwind-v3-preflight fixture page.
   - Gate: standard gate; `vitest-axe` clean on the gallery primitives; every portal primitive renders `data-mbc` on its content.
@@ -88,12 +88,14 @@ git status --porcelain                                        # must be empty af
   - Spec: §5.1 (schema, types, aliases, `validateAnswers`), §6.1 registry shape, §6.2 engine, §7 schema-compat.
   - Builds: `survey-web` package scaffold (entries `.`, `/templates`, `/mbc` as empty barrels, CSS build scanning `ui-web` sources), zod 4 `SurveySchema`, `parseSurvey`, types + deprecated aliases, v0 compatibility fixtures, `buildPages`, `resolveNext`, `validateAnswer`, `collectAnswers`, `validateAnswers`, `survey` messages namespace (validation + form strings).
   - Gate: standard gate; v0 `schema.test.ts` cases ported and passing; engine tests for branching, jumps, dangling targets, abandoned-branch clearing.
+  - From the SP2 review: annotate `FieldLabel`'s type (TS2883 risk when survey-web wraps it); `useMessages`/Calendar must fall back to `ja` for an unknown locale; tie `defineMessages`' namespace to `MbcMessageRegistry` and allow interface-typed catalogs; update spec §3.3 (`useMessages(catalog)`, no `MessagesFor`); survey-web should re-export `MbcProvider`/`useMessages` (or take ui-web as a peer) so a host never gets two `MbcContext`s.
   - Depends on: SP1, SP2 (messages infrastructure).
 
 - [ ] **SP5 — `SurveyForm`** (`05-sp5-survey-form`)
   - Spec: §5.1 `SurveyForm` props, §6.1 renderers, §6.2 form wiring, §6.4–6.6.
   - Builds: nine question renderers + registry renderer entries, `SurveyForm` (sections, Back/Next/Submit, async submit, `onSubmitError`, `onSectionChange`, `components`, `className`), focus management, shuffle-after-mount, playground form page.
   - Gate: standard gate; ported `survey-form.test.tsx` behaviours; `renderToString` hydration test; `vitest-axe` clean.
+  - From the SP2 review: add a space before Label's sr-only required text; move focus to the first invalid field only after `FieldError` has registered (one commit later); use `FieldGroup`/`RadioGroup` for choice questions (they reset field ids for 'Other' inputs).
   - Depends on: SP4.
 
 - [ ] **SP6 — `SurveyCreator`** (`06-sp6-survey-creator`)
