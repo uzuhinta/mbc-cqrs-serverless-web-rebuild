@@ -25,4 +25,27 @@ export const V0 = {
     'shadow-xs focus-visible:border-ring focus-visible:ring-ring/50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input dark:data-[state=unchecked]:bg-input/80 peer inline-flex h-[1.15rem] w-8 shrink-0 cursor-pointer items-center rounded-full border border-transparent outline-none transition-all focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
   'switch.thumb':
     'bg-background dark:data-[state=checked]:bg-primary-foreground dark:data-[state=unchecked]:bg-foreground pointer-events-none block size-4 rounded-full ring-0 transition-transform data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0',
+  // ui/card.tsx — `[.border-b]`/`[.border-t]` target the prefixed class now
+  card: 'bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm',
+  'card.header':
+    '@container/card-header has-data-[slot=card-action]:grid-cols-[1fr_auto] [.mbc\\:border-b]:pb-6 grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6',
+  'card.title': 'font-semibold leading-none',
+  'card.description': 'text-muted-foreground text-sm',
+  'card.action':
+    'col-start-2 row-span-2 row-start-1 self-start justify-self-end',
+  'card.content': 'px-6',
+  'card.footer': '[.mbc\\:border-t]:pt-6 flex items-center px-6',
+  // ui/alert.tsx
+  'alert.destructive':
+    'relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive',
+  'alert.title': 'mb-1 font-medium leading-none tracking-tight',
+  'alert.description': 'text-sm [&_p]:leading-relaxed',
+  // ui/badge.tsx (secondary — the variant survey uses)
+  'badge.secondary':
+    'inline-flex items-center justify-center rounded-2xl border px-4 py-2 text-xs w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden font-bold border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
+  // ui/separator.tsx
+  separator:
+    'bg-border shrink-0 data-[orientation=horizontal]:h-px data-[orientation=vertical]:h-full data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-px',
+  // ui/skeleton.tsx
+  skeleton: 'bg-accent animate-pulse rounded-md',
 } as const
