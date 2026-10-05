@@ -34,6 +34,8 @@ export function Toolbar({
       >
         Tailwind v3 preflight fixture
       </a>
+      <a href="#">Gallery</a>
+      <a href="#survey">Survey form</a>
     </div>
   )
 }

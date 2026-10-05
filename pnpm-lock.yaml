@@ -98,6 +98,9 @@ importers:
 
   apps/playground:
     dependencies:
+      '@mbc-cqrs-serverless/survey-web':
+        specifier: workspace:*
+        version: link:../../packages/survey-web
       '@mbc-cqrs-serverless/ui-web':
         specifier: workspace:*
         version: link:../../packages/ui-web

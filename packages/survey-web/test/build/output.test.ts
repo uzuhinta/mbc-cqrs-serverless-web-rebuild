@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 import {
   distDir,
   FORBIDDEN_JS_PATTERNS,
+  hasUseClientDirective,
   listFiles,
   readText,
 } from '../../../../scripts/build-output'
@@ -62,6 +63,19 @@ describe('survey-web output', () => {
     }
     visit('core/index.js')
     expect([...external]).toEqual(['zod'])
+  })
+
+  it('marks component modules as client modules and keeps the engine free of React', () => {
+    for (const file of listFiles(dist, '.js')) {
+      const source = readText(dist, file)
+      if (/from\s*["']react\/jsx-runtime["']/.test(source)) {
+        expect(hasUseClientDirective(source), file).toBe(true)
+      }
+      if (/^(engine|schema|answers)\//.test(file)) {
+        expect(hasUseClientDirective(source), file).toBe(false)
+        expect(source, file).not.toMatch(/from\s*["']react/)
+      }
+    }
   })
 
   it('contains no host-framework references', () => {

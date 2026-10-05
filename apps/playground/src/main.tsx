@@ -1,13 +1,25 @@
-import '@mbc-cqrs-serverless/ui-web/styles.css'
+import '@mbc-cqrs-serverless/survey-web/styles.css'
 
 import { MbcProvider } from '@mbc-cqrs-serverless/ui-web'
 import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import { Gallery } from './gallery'
+import { SurveyFormPage } from './survey-form-page'
 import { Toolbar, type Settings } from './toolbar'
 
+function useHash() {
+  const [hash, setHash] = useState(location.hash)
+  useEffect(() => {
+    const update = () => setHash(location.hash)
+    window.addEventListener('hashchange', update)
+    return () => window.removeEventListener('hashchange', update)
+  }, [])
+  return hash
+}
+
 export function App() {
+  const hash = useHash()
   const [settings, setSettings] = useState<Settings>({
     locale: 'ja',
     dark: new URLSearchParams(location.search).has('dark'),
@@ -22,7 +34,7 @@ export function App() {
   return (
     <MbcProvider locale={settings.locale}>
       <Toolbar settings={settings} onChange={setSettings} />
-      <Gallery />
+      {hash === '#survey' ? <SurveyFormPage /> : <Gallery />}
     </MbcProvider>
   )
 }
