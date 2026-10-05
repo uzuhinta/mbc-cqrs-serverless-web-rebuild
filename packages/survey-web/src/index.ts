@@ -18,3 +18,5 @@ export {
   otherText,
   toOtherValue,
 } from './answers/choice'
+export { buildPages, START_SECTION_ID, type SurveyPage } from './engine/pages'
+export { resolveNext, resolvePath } from './engine/navigation'
