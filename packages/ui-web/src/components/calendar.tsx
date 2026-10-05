@@ -40,7 +40,7 @@ export function Calendar({
 
   return (
     <DayPicker
-      locale={DAY_PICKER_LOCALES[locale]}
+      locale={DAY_PICKER_LOCALES[locale] ?? ja}
       showOutsideDays={showOutsideDays}
       className={cn(
         'mbc:group/calendar mbc:bg-background mbc:p-3 mbc:[--cell-size:2rem] mbc:[[data-slot=card-content]_&]:bg-transparent mbc:[[data-slot=popover-content]_&]:bg-transparent',
@@ -51,7 +51,9 @@ export function Calendar({
       captionLayout={captionLayout}
       formatters={{
         formatMonthDropdown: (date) =>
-          date.toLocaleString(INTL_LOCALES[locale], { month: 'short' }),
+          date.toLocaleString(INTL_LOCALES[locale] ?? 'ja-JP', {
+            month: 'short',
+          }),
         ...formatters,
       }}
       classNames={{

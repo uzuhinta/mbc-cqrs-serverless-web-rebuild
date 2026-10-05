@@ -100,4 +100,12 @@ describe('MbcProvider', () => {
     )
     expect(element).toBeTruthy()
   })
+  it('falls back to Japanese for an unknown runtime locale', () => {
+    render(
+      <MbcProvider locale={'fr' as 'ja'}>
+        <Probe />
+      </MbcProvider>
+    )
+    expect(screen.getByText(/^fr\|閉じる\|/)).toBeInTheDocument()
+  })
 })

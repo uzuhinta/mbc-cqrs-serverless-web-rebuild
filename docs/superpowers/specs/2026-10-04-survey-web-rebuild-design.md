@@ -114,7 +114,7 @@ All React peer ranges: `^18.2.0 || ^19.0.0`.
 - Messages are typed dictionaries, namespaced per package: `ui` (owned by `ui-web`), `survey` (owned by `survey-web`). Built-in `ja` and `en`.
 - A message value is a string or a function of typed params: `({ count }) => \`${count}件\``.
 - Overrides are deep-partial: `messages={{ survey: { form: { submit: '送信' } } }}`. Overrides apply on top of the active locale.
-- Exports for feature packages: `defineMessages()`, `useMessages(namespace)`, `MessagesFor<T>` type.
+- Exports for feature packages: `defineMessages(namespace, { ja, en })` (`namespace` must be a key of the module-augmentable `MbcMessageRegistry`; catalogs may be typed with `type` or `interface`) and `useMessages(catalog)`. An unknown runtime locale falls back to `ja`. `dir` (`'ltr' | 'rtl'`) on `MbcProvider` sets Radix text direction.
 
 ### 3.4 Primitives
 

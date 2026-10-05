@@ -39,6 +39,8 @@ export const Label = forwardRef<
           <span aria-hidden="true" className="mbc:ml-1 mbc:text-red-500">
             *
           </span>
+          {/* Separates the words in the accessible name; a flex label does
+              not render whitespace-only text, so the look is unchanged. */}{' '}
           <span className="mbc:sr-only">{t.required}</span>
         </>
       )}

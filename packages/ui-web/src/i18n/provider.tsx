@@ -9,7 +9,6 @@ import type {
   MbcMessageRegistry,
   MessageCatalog,
   MessageOverrides,
-  MessageTree,
 } from './types'
 
 export type MbcMessageOverrides = {
@@ -78,13 +77,13 @@ export function usePortalContainer(): HTMLElement | undefined {
   return useContext(MbcContext).portalContainer ?? undefined
 }
 
-export function useMessages<T extends MessageTree>(
-  catalog: MessageCatalog<T>
-): T {
+export function useMessages<T>(catalog: MessageCatalog<T>): T {
   const { locale, messages } = useContext(MbcContext)
   const override = (messages as Record<string, unknown>)[catalog.namespace]
   return useMemo(
-    () => mergeMessages(catalog.locales[locale], override),
+    // An unknown runtime locale (an unchecked URL param) falls back to Japanese.
+    () =>
+      mergeMessages(catalog.locales[locale] ?? catalog.locales.ja, override),
     [catalog, locale, override]
   )
 }

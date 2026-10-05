@@ -11,6 +11,8 @@ import {
   type AriaAttributes,
   type HTMLAttributes,
   type ReactNode,
+  type ForwardRefExoticComponent,
+  type RefAttributes,
 } from 'react'
 
 import { cn } from '../lib/cn'
@@ -109,19 +111,21 @@ export function useFieldControl<P extends FieldControlProps>(
   }
 }
 
-export const FieldLabel = forwardRef<HTMLLabelElement, LabelProps>(
-  function FieldLabel(props, ref) {
-    const field = useContext(FieldContext)
-    return (
-      <Label
-        ref={ref}
-        id={field?.labelId}
-        {...props}
-        htmlFor={props.htmlFor ?? field?.controlId}
-      />
-    )
-  }
-)
+// Annotated: an inferred type would reference @radix-ui/react-label, which
+// packages wrapping FieldLabel cannot name in their own declarations.
+export const FieldLabel: ForwardRefExoticComponent<
+  LabelProps & RefAttributes<HTMLLabelElement>
+> = forwardRef<HTMLLabelElement, LabelProps>(function FieldLabel(props, ref) {
+  const field = useContext(FieldContext)
+  return (
+    <Label
+      ref={ref}
+      id={field?.labelId}
+      {...props}
+      htmlFor={props.htmlFor ?? field?.controlId}
+    />
+  )
+})
 
 function useRegister(
   setter: ((value: boolean) => void) | undefined,

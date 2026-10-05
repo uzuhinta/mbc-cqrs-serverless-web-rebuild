@@ -15,7 +15,7 @@ export type MessageOverrides<T> = {
       : MessageOverrides<T[K]>
 }
 
-export interface MessageCatalog<T extends MessageTree> {
+export interface MessageCatalog<T> {
   readonly namespace: string
   readonly locales: Readonly<Record<Locale, T>>
 }

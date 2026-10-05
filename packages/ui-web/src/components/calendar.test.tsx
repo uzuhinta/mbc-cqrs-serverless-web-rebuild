@@ -41,4 +41,12 @@ describe('Calendar', () => {
       expect(day).toHaveClass(`mbc:${name}`)
     }
   })
+  it('falls back to Japanese for an unknown runtime locale', () => {
+    render(
+      <MbcProvider locale={'fr' as 'ja'}>
+        <Calendar defaultMonth={OCTOBER} />
+      </MbcProvider>
+    )
+    expect(screen.getByText('2026年10月')).toBeInTheDocument()
+  })
 })

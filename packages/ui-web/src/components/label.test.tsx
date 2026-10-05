@@ -29,4 +29,17 @@ describe('Label', () => {
     render(<Label required>名前</Label>)
     expect(screen.getByText('必須')).toBeInTheDocument()
   })
+  it('separates the required text from the label in the accessible name', () => {
+    render(
+      <MbcProvider locale="en">
+        <Label required htmlFor="x">
+          Email
+        </Label>
+        <input id="x" />
+      </MbcProvider>
+    )
+    expect(
+      screen.getByRole('textbox', { name: 'Email required' })
+    ).toBeInTheDocument()
+  })
 })

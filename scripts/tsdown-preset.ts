@@ -2,7 +2,11 @@ import type { UserConfig } from 'tsdown'
 
 export function libraryConfig(overrides: UserConfig = {}): UserConfig {
   const config: UserConfig = {
-    entry: ['src/**/*.{ts,tsx}', '!src/**/*.test.{ts,tsx}'],
+    entry: [
+      'src/**/*.{ts,tsx}',
+      '!src/**/*.test.{ts,tsx}',
+      '!src/**/*.test-d.ts',
+    ],
     unbundle: true,
     format: 'esm',
     platform: 'neutral',
