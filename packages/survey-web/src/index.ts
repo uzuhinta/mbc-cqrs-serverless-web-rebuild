@@ -11,3 +11,10 @@ export {
   validateSurveyJson,
   type ParseSurveyResult,
 } from './schema/parse'
+export * from './answers/types'
+export {
+  isOtherValue,
+  OTHER_VALUE,
+  otherText,
+  toOtherValue,
+} from './answers/choice'
