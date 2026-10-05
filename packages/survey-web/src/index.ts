@@ -7,3 +7,4 @@ export {
 export * from './core'
 export { surveyMessages, type SurveyMessages } from './i18n/survey-messages'
 export type { QuestionRendererProps } from './question-types/types'
+export type { QuestionRenderers } from './question-types/registry'
