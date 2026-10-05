@@ -66,11 +66,11 @@ rebuild/
 
 Dependencies point one way: `survey-web → ui-web`, `survey-web/mbc → client-web`. No cycles.
 
-| Package      | Dependencies                                                                                                                                                                    | Peer dependencies                     | Entry points                                                                                                        |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `client-web` | none                                                                                                                                                                            | `react` (optional; only for `/react`) | `.` framework-agnostic client · `/react` hooks                                                                      |
-| `ui-web`     | `@radix-ui/react-*` (one per primitive), `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`, `react-day-picker` (v9)                                          | `react`, `react-dom`                  | `.` primitives, provider, i18n · `/styles.css` · `/styles.layer.css`                                                |
-| `survey-web` | `ui-web`, `client-web`, `react-hook-form`, `@hookform/resolvers`, `zod` (v4), `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/modifiers`, `@dnd-kit/utilities`, `date-fns` (v4) | `react`, `react-dom`                  | `.` core · `/templates` · `/mbc` · `/styles.css` · `/styles.layer.css` · deprecated `/SurveyForm`, `/SurveyCreator` |
+| Package      | Dependencies                                                                                                                                                                    | Peer dependencies                     | Entry points                                                                                                                               |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `client-web` | none                                                                                                                                                                            | `react` (optional; only for `/react`) | `.` framework-agnostic client · `/react` hooks                                                                                             |
+| `ui-web`     | `@radix-ui/react-*` (one per primitive), `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`, `react-day-picker` (v9)                                          | `react`, `react-dom`                  | `.` primitives, provider, i18n · `/styles.css` · `/styles.layer.css`                                                                       |
+| `survey-web` | `ui-web`, `client-web`, `react-hook-form`, `@hookform/resolvers`, `zod` (v4), `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/modifiers`, `@dnd-kit/utilities`, `date-fns` (v4) | `react`, `react-dom`                  | `.` core · `/core` (React-free) · `/templates` · `/mbc` · `/styles.css` · `/styles.layer.css` · deprecated `/SurveyForm`, `/SurveyCreator` |
 
 All React peer ranges: `^18.2.0 || ^19.0.0`.
 
@@ -190,7 +190,8 @@ Without `realtime` config, `command()` resolves right after the HTTP response (d
 - Schema: `SurveySchema` (zod 4) with the same JSON shape as v0, including the duplicate-id refinement. `parseSurvey(json)` returns a safe-parse result.
 - Types: `Survey`, `SurveyItem`, `SectionHeader`, `SurveyQuestion`, one type per question kind, `SurveyAnswers`, `SurveyAnswerMeta`.
 - Deprecated aliases through 1.x: `SurveySchemaType`, `SurveyItemType`, `SectionHeaderType`, `SurveyQuestionItemType`, the `*QuestionType` names, `validateSurveyJson`.
-- `validateAnswers(survey, answers)` — pure, usable on the server; returns per-question error keys and params.
+- `validateAnswers(survey, answers)` — pure, usable on the server; returns per-question error keys and params. Accepts untrusted JSON: `null` or a value of the wrong type for the kind counts as unanswered.
+- `/core` re-exports the schema, answer helpers and engine (everything above except components and messages) and imports only `zod`, so servers validate answers without loading React; `.` re-exports `/core`.
 
 **`<SurveyForm>`**
 

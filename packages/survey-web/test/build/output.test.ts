@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { posix } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
@@ -41,6 +42,26 @@ describe('survey-web output', () => {
       ])
     ).toEqual([])
     expect(elementOnlyRules(root)).toEqual([])
+  })
+
+  it('ships a ./core entry whose import graph reaches only zod', () => {
+    const seen = new Set<string>()
+    const external = new Set<string>()
+    const visit = (file: string) => {
+      if (seen.has(file)) return
+      seen.add(file)
+      const source = readText(dist, file)
+      for (const [, specifier] of source.matchAll(
+        /(?:from|import)\s*["']([^"']+)["']/g
+      )) {
+        if (!specifier) continue
+        if (specifier.startsWith('.'))
+          visit(posix.join(posix.dirname(file), specifier))
+        else external.add(specifier)
+      }
+    }
+    visit('core/index.js')
+    expect([...external]).toEqual(['zod'])
   })
 
   it('contains no host-framework references', () => {
