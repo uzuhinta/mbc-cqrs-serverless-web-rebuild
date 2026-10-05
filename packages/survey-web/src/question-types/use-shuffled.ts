@@ -16,6 +16,8 @@ function shuffle<T>(items: readonly T[], random: () => number): T[] {
 /**
  * The first render keeps the original order, so server HTML and hydration
  * agree; the shuffle happens once after mount (and when the items change).
+ * `items` must keep its identity between renders (memoise derived arrays),
+ * or every render reshuffles and re-renders again.
  */
 export function useShuffled<T>(
   items: readonly T[],
