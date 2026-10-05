@@ -18,4 +18,12 @@ export const V0 = {
   'choice.other-input': 'ml-2 min-w-0 flex-1',
   // single-choice RadioGroup — space-y-1 → gap-1 (flex column)
   'single.group': 'flex flex-col gap-1',
+  // linear-scale-renderer.tsx — flex-shrink-0/flex-grow (removed in Tailwind v4) → shrink-0/grow; space-y-2 → gap-2
+  'scale.row': 'flex items-center justify-between gap-4',
+  'scale.end-label': 'w-1/12 shrink-0 text-center text-sm',
+  'scale.options': 'flex grow justify-around',
+  'scale.option': 'flex flex-col items-center gap-2',
+  'scale.number': 'text-muted-foreground text-sm',
+  // rating-renderer.tsx icon
+  'rating.icon': 'h-7 w-7 transition-colors sm:h-8 sm:w-8',
 } as const

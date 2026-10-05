@@ -40,6 +40,8 @@
   "dependencies": {
     "@mbc-cqrs-serverless/client-web": "workspace:^",
     "@mbc-cqrs-serverless/ui-web": "workspace:^",
+    "@radix-ui/react-radio-group": "1.4.7",
+    "lucide-react": "^1.52.0",
     "react-hook-form": "^7.89.0",
     "zod": "^4.6.5"
   },
