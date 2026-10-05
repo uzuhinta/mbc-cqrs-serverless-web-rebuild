@@ -84,7 +84,7 @@ git status --porcelain                                        # must be empty af
   - Gate: standard gate; fake-WebSocket tests for handshake, keep-alive loss, reconnect + resubscribe, finish-before-response race, timeout, abort, StrictMode.
   - Depends on: SP1.
 
-- [ ] **SP4 — `survey-web` schema and engine** (`04-sp4-survey-core`)
+- [x] **SP4 — `survey-web` schema and engine** (`04-sp4-survey-core`)
   - Spec: §5.1 (schema, types, aliases, `validateAnswers`), §6.1 registry shape, §6.2 engine, §7 schema-compat.
   - Builds: `survey-web` package scaffold (entries `.`, `/templates`, `/mbc` as empty barrels, CSS build scanning `ui-web` sources), zod 4 `SurveySchema`, `parseSurvey`, types + deprecated aliases, v0 compatibility fixtures, `buildPages`, `resolveNext`, `validateAnswer`, `collectAnswers`, `validateAnswers`, `survey` messages namespace (validation + form strings).
   - Gate: standard gate; v0 `schema.test.ts` cases ported and passing; engine tests for branching, jumps, dangling targets, abandoned-branch clearing.
@@ -96,12 +96,14 @@ git status --porcelain                                        # must be empty af
   - Builds: nine question renderers + registry renderer entries, `SurveyForm` (sections, Back/Next/Submit, async submit, `onSubmitError`, `onSectionChange`, `components`, `className`), focus management, shuffle-after-mount, playground form page.
   - Gate: standard gate; ported `survey-form.test.tsx` behaviours; `renderToString` hydration test; `vitest-axe` clean.
   - From the SP2 review: add a space before Label's sr-only required text; move focus to the first invalid field only after `FieldError` has registered (one commit later); use `FieldGroup`/`RadioGroup` for choice questions (they reset field ids for 'Other' inputs).
+  - From the SP4 review: answers already allow `number` (rating, linear scale); `SurveyForm` should parse its `schema` prop with `SurveySchema.safeParse` (hosts pass unparsed backend JSON cast to `Survey`; defaults such as `levels` would be missing) and export `SurveyInput = z.input<typeof SurveySchema>`; `useLocale()` still returns an unknown locale such as `'fr'` — normalise it in `MbcProvider` before date formatting uses it.
   - Depends on: SP4.
 
 - [ ] **SP6 — `SurveyCreator`** (`06-sp6-survey-creator`)
   - Spec: §5.1 `SurveyCreator` props + handle, §6.1 editors, §6.3 creator state.
   - Builds: `creatorReducer` with all lock guards, `useSyncExternalStore` store, nine question editors, section header/action editors, floating action bar, section reorder dialog, dnd-kit (pointer + keyboard + announcements), preview dialog using `SurveyForm`, `ref` handle, playground creator page.
   - Gate: standard gate; ported `locked-question`, `section-locked`, `section-locked-question`, `question-creator-id`, `id` behaviours; keyboard drag test.
+  - From the SP4 review: the creator's zodResolver needs both `SurveyInput` and `Survey` types (SP5 exports `SurveyInput`).
   - Depends on: SP5.
 
 - [ ] **SP7 — `/templates` and `/mbc`** (`07-sp7-templates-mbc`)
@@ -114,6 +116,7 @@ git status --porcelain                                        # must be empty af
 - [ ] **SP8 — Release readiness** (`08-sp8-release`)
   - Spec: §5.4 migration, §7 remaining build-output checks, §8 CI/next-smoke/docs/release.
   - README must state the host requirements from spec §3.1: `styles.layer.css` import order, Tailwind v3 ≥ 3.4, and that `mbc:` overrides only work for shipped classes.
+  - From the SP4 review: survey-web's `styles.css` is compiled from the ui-web source it was built with — release the three packages as a Changesets `fixed` group and tell hosts in the README to upgrade them together; MIGRATION.md notes that `validateSurveyJson` returns a zod 4 `ZodError` (no `.errors`, different message text) and lists SP5's behaviour changes; README documents the server flow `parseSurvey` → `validateAnswers` → `collectAnswers` from `/core`.
   - Builds: `apps/next-smoke` (Next 16 App Router + Turbopack) importing every entry point in client and server components; CI job for it; READMEs for the three packages; `packages/survey-web/MIGRATION.md`; initial changesets (`major` for all three → `1.0.0`); final whole-repo review.
   - Gate: standard gate + `next build` in `apps/next-smoke` on React 18 and 19 + `changeset status` shows the three `1.0.0` releases.
   - Depends on: SP7.
