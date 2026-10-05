@@ -21,6 +21,20 @@ export type SurveyMessages = {
     back: string
     empty: string
     submitError: string
+    placeholder: string
+    otherPlaceholder: string
+    selectPlaceholder: string
+    datePlaceholder: string
+    datePlaceholderNoYear: string
+    dateTimePlaceholder: string
+    dateTimePlaceholderNoYear: string
+    hour: string
+    minute: string
+    hours: string
+    minutes: string
+    seconds: string
+    /** Accessible name of one rating level. */
+    rating: (params: { value: number; max: number }) => string
   }
 }
 
@@ -54,6 +68,19 @@ const ja: SurveyMessages = {
     back: '前へ',
     empty: 'このアンケートにはコンテンツがありません。',
     submitError: '送信に失敗しました。もう一度お試しください。',
+    placeholder: '回答を入力...',
+    otherPlaceholder: 'その他の回答を入力...',
+    selectPlaceholder: 'オプションを選択してください...',
+    datePlaceholder: '年月日を選択してください',
+    datePlaceholderNoYear: '月日を選択してください',
+    dateTimePlaceholder: '年月日時を選択してください',
+    dateTimePlaceholderNoYear: '月日時を選択してください',
+    hour: '時',
+    minute: '分',
+    hours: '時間',
+    minutes: '分',
+    seconds: '秒',
+    rating: ({ value, max }) => `${max}段階中${value}`,
   },
 }
 
@@ -81,6 +108,19 @@ const en: SurveyMessages = {
     back: 'Back',
     empty: 'This survey has no content.',
     submitError: 'Submission failed. Please try again.',
+    placeholder: 'Enter your answer...',
+    otherPlaceholder: 'Enter your other answer...',
+    selectPlaceholder: 'Choose an option...',
+    datePlaceholder: 'Select a date',
+    datePlaceholderNoYear: 'Select a month and day',
+    dateTimePlaceholder: 'Select a date and time',
+    dateTimePlaceholderNoYear: 'Select a month, day and time',
+    hour: 'h',
+    minute: 'min',
+    hours: 'Hours',
+    minutes: 'Minutes',
+    seconds: 'Seconds',
+    rating: ({ value, max }) => `${value} of ${max}`,
   },
 }
 

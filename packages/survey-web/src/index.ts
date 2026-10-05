@@ -6,3 +6,4 @@ export {
 } from '@mbc-cqrs-serverless/ui-web'
 export * from './core'
 export { surveyMessages, type SurveyMessages } from './i18n/survey-messages'
+export type { QuestionRendererProps } from './question-types/types'
