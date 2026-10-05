@@ -26,4 +26,13 @@ export const V0 = {
   'scale.number': 'text-muted-foreground text-sm',
   // rating-renderer.tsx icon
   'rating.icon': 'h-7 w-7 transition-colors sm:h-8 sm:w-8',
+  // forms/survey-form.tsx — space-y-8 → explicit margins with the same collapsed result
+  'form.root': 'mx-auto my-12 max-w-3xl',
+  'form.header': 'mb-10 text-center',
+  'form.title': 'text-4xl font-bold tracking-tight',
+  'form.description': 'text-muted-foreground mt-2 text-lg',
+  'form.section-title':
+    'mb-6 border-b border-border pb-2 text-2xl font-semibold outline-none',
+  'form.section-description': 'text-muted-foreground mb-6',
+  'form.actions': 'mt-8 flex justify-between pt-4',
 } as const

@@ -226,3 +226,5 @@ export type RatingQuestion = z.infer<typeof RatingQuestionSchema>
 export type DateQuestion = z.infer<typeof DateQuestionSchema>
 export type TimeQuestion = z.infer<typeof TimeQuestionSchema>
 export type ValidationRules = z.infer<typeof BaseValidationRulesSchema>
+/** A survey as stored (before defaults); `Survey` is assignable to it. */
+export type SurveyInput = z.input<typeof SurveySchema>
