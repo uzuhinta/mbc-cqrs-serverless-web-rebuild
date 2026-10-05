@@ -1,10 +1,5 @@
 import { isOtherValue, otherText } from '../answers/choice'
-import type {
-  DurationAnswer,
-  SurveyAnswers,
-  SurveyAnswerValue,
-  TimeAnswer,
-} from '../answers/types'
+import type { DurationAnswer, TimeAnswer } from '../answers/types'
 import type {
   CustomValidationRule,
   Survey,
@@ -38,15 +33,27 @@ function fail(key: AnswerErrorKey, customError?: string): AnswerError {
   return customError ? { key: 'custom', message: customError } : { key }
 }
 
-function isEmpty(value: SurveyAnswerValue): boolean {
-  if (value === undefined || value === '') return true
-  return Array.isArray(value) && value.length === 0
+/** Whether `value` is an answer of this kind; anything else (JSON `null`, a wrong type) is unanswered. */
+function isAnswered(question: SurveyQuestion, value: unknown): boolean {
+  switch (question.type) {
+    case 'multiple-choice':
+      return (
+        Array.isArray(value) &&
+        value.length > 0 &&
+        value.every((item) => typeof item === 'string')
+      )
+    case 'rating':
+    case 'linear-scale':
+      return (
+        (typeof value === 'number' && Number.isFinite(value)) ||
+        (typeof value === 'string' && value !== '')
+      )
+    default:
+      return typeof value === 'string' && value !== ''
+  }
 }
 
-function timeComplete(
-  question: SurveyQuestion,
-  value: SurveyAnswerValue
-): boolean {
+function timeComplete(question: SurveyQuestion, value: unknown): boolean {
   if (typeof value !== 'object' || value === null || Array.isArray(value))
     return false
   if (question.type === 'time' && question.answerType === 'duration') {
@@ -191,19 +198,20 @@ function checkCustom(
   }
 }
 
+/** Accepts `unknown` so servers can validate untrusted JSON. */
 export function validateAnswer(
   question: SurveyQuestion,
-  value: SurveyAnswerValue
+  value: unknown
 ): AnswerError | null {
   const required = question.validation?.required === true
 
   if (question.type === 'time') {
-    if (!required || value === undefined)
-      return required ? { key: 'required' } : null
+    if (!required) return null
     return timeComplete(question, value) ? null : { key: 'required' }
   }
 
-  if (isEmpty(value)) return required ? { key: requiredKey(question) } : null
+  if (!isAnswered(question, value))
+    return required ? { key: requiredKey(question) } : null
 
   if (
     required &&
@@ -251,8 +259,9 @@ export function validateAnswer(
 /** Errors by question id, for the questions these answers actually reach. */
 export function validateAnswers(
   survey: Survey,
-  answers: SurveyAnswers
+  answers: Readonly<Record<string, unknown>>
 ): Record<string, AnswerError> {
+  if (typeof answers !== 'object' || answers === null) answers = {}
   const pages = buildPages(survey)
   const visited = new Set(resolvePath(pages, answers))
   const errors: Record<string, AnswerError> = {}

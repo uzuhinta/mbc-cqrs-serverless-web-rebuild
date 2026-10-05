@@ -1,4 +1,3 @@
-import type { SurveyAnswers } from '../answers/types'
 import type { SurveyPage } from './pages'
 
 function nextInOrder(page: SurveyPage, pages: SurveyPage[]): string | null {
@@ -9,7 +8,7 @@ function nextInOrder(page: SurveyPage, pages: SurveyPage[]): string | null {
 /** The section after `page` for these answers; `null` means submit. */
 export function resolveNext(
   page: SurveyPage,
-  answers: SurveyAnswers,
+  answers: Readonly<Record<string, unknown>>,
   pages: SurveyPage[]
 ): string | null {
   const exists = (id: string) => pages.some((candidate) => candidate.id === id)
@@ -38,7 +37,7 @@ export function resolveNext(
 /** Section ids visited from the first section; stops at submit or a cycle. */
 export function resolvePath(
   pages: SurveyPage[],
-  answers: SurveyAnswers
+  answers: Readonly<Record<string, unknown>>
 ): string[] {
   const path: string[] = []
   let current = pages[0]

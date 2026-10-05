@@ -306,3 +306,110 @@ describe('validateAnswers', () => {
     })
   })
 })
+
+describe('validateAnswer — values of the wrong shape', () => {
+  const required = { required: true }
+  const options = [{ value: 'x', label: 'X' }]
+  const q = (question: Record<string, unknown>) =>
+    ({
+      id: 'q',
+      label: 'Q',
+      validation: required,
+      ...question,
+    }) as SurveyQuestion
+
+  it.each([
+    ['short-text', q({ type: 'short-text' }), null, 'required'],
+    ['short-text', q({ type: 'short-text' }), false, 'required'],
+    ['short-text', q({ type: 'short-text' }), 0, 'required'],
+    ['long-text', q({ type: 'long-text' }), {}, 'required'],
+    [
+      'date',
+      q({ type: 'date', includeTime: false, includeYear: true }),
+      {},
+      'requiredField',
+    ],
+    [
+      'single-choice',
+      q({ type: 'single-choice', options }),
+      ['x'],
+      'requiredChoice',
+    ],
+    ['dropdown', q({ type: 'dropdown', options }), 1, 'requiredChoice'],
+    [
+      'multiple-choice',
+      q({ type: 'multiple-choice', options }),
+      'x',
+      'requiredChoices',
+    ],
+    [
+      'multiple-choice',
+      q({ type: 'multiple-choice', options }),
+      [null],
+      'requiredChoices',
+    ],
+    [
+      'rating',
+      q({ type: 'rating', levels: 5, symbol: 'star' }),
+      null,
+      'required',
+    ],
+    [
+      'rating',
+      q({ type: 'rating', levels: 5, symbol: 'star' }),
+      Number.NaN,
+      'required',
+    ],
+    [
+      'linear-scale',
+      q({ type: 'linear-scale', min: 0, max: 10 }),
+      {},
+      'required',
+    ],
+    ['time', q({ type: 'time', answerType: 'time' }), null, 'required'],
+    ['time', q({ type: 'time', answerType: 'time' }), '09:30', 'required'],
+  ])('a required %s question rejects %o', (_kind, question, value, key) => {
+    expect(validateAnswer(question, value)).toEqual({ key })
+  })
+
+  it('accepts v0 numeric rating and scale answers, including 0', () => {
+    expect(
+      validateAnswer(q({ type: 'linear-scale', min: 0, max: 10 }), 0)
+    ).toBeNull()
+    expect(
+      validateAnswer(q({ type: 'rating', levels: 5, symbol: 'star' }), 4)
+    ).toBeNull()
+  })
+
+  it('lets an optional question hold a wrong-shaped value', () => {
+    expect(validateAnswer(text(), null)).toBeNull()
+  })
+})
+
+describe('validateAnswers — untrusted input', () => {
+  const survey: Survey = {
+    title: 'S',
+    items: [
+      {
+        id: 'name',
+        type: 'short-text',
+        label: 'N',
+        validation: { required: true },
+      },
+    ],
+  }
+
+  it('rejects null for a required question', () => {
+    expect(validateAnswers(survey, { name: null })).toEqual({
+      name: { key: 'required' },
+    })
+  })
+
+  it('treats a payload that is not an object as no answers', () => {
+    expect(
+      validateAnswers(survey, null as unknown as Record<string, unknown>)
+    ).toEqual({
+      name: { key: 'required' },
+    })
+  })
+})
