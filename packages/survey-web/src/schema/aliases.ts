@@ -1,0 +1,34 @@
+import type * as S from './survey-schema'
+
+/** @deprecated Use `Survey`. */
+export type SurveySchemaType = S.Survey
+/** @deprecated Use `SurveyItem`. */
+export type SurveyItemType = S.SurveyItem
+/** @deprecated Use `SectionHeader`. */
+export type SectionHeaderType = S.SectionHeader
+/** @deprecated Use `QuestionOption`. */
+export type QuestionOptionType = S.QuestionOption
+/** @deprecated Use `ValidationRules`. */
+export type ValidationRulesType = S.ValidationRules
+/** @deprecated Use `CustomValidationRule`. */
+export type CustomValidationRuleType = S.CustomValidationRule
+/** @deprecated Use `SurveyQuestion`. */
+export type SurveyQuestionItemType = S.SurveyQuestion
+/** @deprecated Use `ShortTextQuestion`. */
+export type ShortTextQuestionType = S.ShortTextQuestion
+/** @deprecated Use `LongTextQuestion`. */
+export type LongTextQuestionType = S.LongTextQuestion
+/** @deprecated Use `LinearScaleQuestion`. */
+export type LinearScaleQuestionType = S.LinearScaleQuestion
+/** @deprecated Use `SingleChoiceQuestion`. */
+export type SingleChoiceQuestionType = S.SingleChoiceQuestion
+/** @deprecated Use `MultipleChoiceQuestion`. */
+export type MultipleChoiceQuestionType = S.MultipleChoiceQuestion
+/** @deprecated Use `DropdownQuestion`. */
+export type DropdownQuestionType = S.DropdownQuestion
+/** @deprecated Use `RatingQuestion`. */
+export type RatingQuestionType = S.RatingQuestion
+/** @deprecated Use `DateQuestion`. */
+export type DateQuestionType = S.DateQuestion
+/** @deprecated Use `TimeQuestion`. */
+export type TimeQuestionType = S.TimeQuestion
