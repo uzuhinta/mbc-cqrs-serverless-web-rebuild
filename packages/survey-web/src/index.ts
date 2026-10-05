@@ -26,3 +26,4 @@ export {
   type AnswerError,
   type AnswerErrorKey,
 } from './engine/validate'
+export { collectAnswers } from './engine/collect'
