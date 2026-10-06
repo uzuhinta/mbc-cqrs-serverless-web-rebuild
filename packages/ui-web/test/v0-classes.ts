@@ -97,6 +97,20 @@ export const V0 = {
   'tabs.trigger':
     "data-[state=active]:border-b-primary data-[state=active]:text-primary dark:data-[state=active]:bg-input/30 inline-flex h-[calc(100%-1px)] flex-1 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap px-3 py-5 text-base font-normal transition-[color,box-shadow] disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-b-[2px] [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   'tabs.content': 'flex-1 outline-none',
+  // master v0 ui/table.tsx — `hsl(var(--x))` → token utilities; border colour
+  // stated (`border-border`), as for the other primitives.
+  'table.container': 'relative w-full overflow-auto',
+  table: 'w-full caption-bottom text-sm',
+  'table.header': '[&_tr]:border-b',
+  'table.body': '[&_tr:last-child]:border-0',
+  'table.footer':
+    'border-t border-border bg-muted/50 font-medium [&>tr]:last:border-b-0',
+  'table.row':
+    'border-b border-border transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted',
+  'table.head':
+    'px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0',
+  'table.cell': 'p-2.5 align-middle [&:has([role=checkbox])]:pr-0',
+  'table.caption': 'mt-4 text-sm text-muted-foreground',
   // ui/pagination.tsx — hover:border-[#369CA3] → hover:border-brand-accent (same colour, token)
   'pagination.nav': 'flex gap-2',
   'pagination.content': 'flex flex-row items-center gap-2',

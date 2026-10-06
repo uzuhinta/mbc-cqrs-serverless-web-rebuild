@@ -139,4 +139,14 @@ export { Separator } from './components/separator'
 export { Skeleton } from './components/skeleton'
 export { Switch, type SwitchProps } from './components/switch'
 export { Tabs, TabsContent, TabsList, TabsTrigger } from './components/tabs'
+export {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from './components/table'
 export { Textarea, type TextareaProps } from './components/textarea'

@@ -39,6 +39,13 @@ import {
   SelectTrigger,
   SelectValue,
   Switch,
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
   Tabs,
   TabsContent,
   TabsList,
@@ -107,6 +114,19 @@ describe('accessibility', () => {
             </TabsList>
             <TabsContent value="a">Panel</TabsContent>
           </Tabs>
+          <Table>
+            <TableCaption>Members</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell>Alice</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
           <Pagination>
             <PaginationContent>
               <PaginationItem>
