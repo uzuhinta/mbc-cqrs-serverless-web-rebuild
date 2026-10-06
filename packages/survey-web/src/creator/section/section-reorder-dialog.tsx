@@ -29,6 +29,7 @@ import {
 import { GripVertical } from 'lucide-react'
 import { useId, useState } from 'react'
 
+import { announcements } from '../dnd-announcements'
 import { creatorMessages } from '../i18n/creator-messages'
 import { isSection } from '../state/items'
 import { useCreatorStore } from '../state/store'
@@ -52,7 +53,10 @@ function SortableRow({
     setActivatorNodeRef,
     transform,
     transition,
-  } = useSortable({ id: row.id })
+  } = useSortable({
+    id: row.id,
+    attributes: { roleDescription: t.dnd.roleDescription },
+  })
   const title = row.title || t.section.untitled
   return (
     <div
@@ -116,6 +120,14 @@ function ReorderList({ onDone }: { onDone: () => void }) {
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={onDragEnd}
+          accessibility={{
+            announcements: announcements(
+              t,
+              (id) =>
+                rows.find((row) => row.id === id)?.title || t.section.untitled
+            ),
+            screenReaderInstructions: { draggable: t.dnd.instructions },
+          }}
         >
           <SortableContext
             items={rows.map((row) => row.id)}

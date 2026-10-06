@@ -194,6 +194,10 @@ describe('SectionReorderDialog', () => {
     first!.focus()
     await userEvent.keyboard(' ')
     await userEvent.keyboard('{ArrowDown}')
+    expect(first).toHaveAttribute('aria-roledescription', '並べ替え可能')
+    expect(
+      screen.getByText('「Locked」を「Open」の位置に移動しました。')
+    ).toBeInTheDocument()
     await userEvent.keyboard(' ')
     expect(within(dialog).getAllByText(/^セクション \d \/ 3$/)).toHaveLength(3)
     await userEvent.click(within(dialog).getByRole('button', { name: '保存' }))

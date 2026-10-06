@@ -256,6 +256,10 @@ describe('OptionsEditor', () => {
     handleA!.focus()
     await userEvent.keyboard(' ')
     await userEvent.keyboard('{ArrowDown}')
+    expect(handleA).toHaveAttribute('aria-roledescription', '並べ替え可能')
+    expect(
+      screen.getByText('「a」を「b」の位置に移動しました。')
+    ).toBeInTheDocument()
     await userEvent.keyboard(' ')
     expect(stored().options.map((o: { value: string }) => o.value)).toEqual([
       'b',

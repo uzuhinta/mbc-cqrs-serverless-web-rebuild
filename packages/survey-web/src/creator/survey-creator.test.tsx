@@ -103,6 +103,7 @@ describe('SurveyCreator', () => {
     const [handle] = screen.getAllByRole('button', {
       name: 'ドラッグして並べ替え',
     })
+    expect(handle).toHaveAttribute('aria-roledescription', '並べ替え可能')
     handle!.focus()
     // dnd-kit replaces the pick-up text at once with the first "moved over" text.
     await userEvent.keyboard(' ')

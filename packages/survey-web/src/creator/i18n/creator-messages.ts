@@ -149,6 +149,8 @@ export type CreatorMessages = {
     cancel: string
   }
   dnd: {
+    /** Replaces "button" in what screen readers say for a drag handle. */
+    roleDescription: string
     instructions: string
     pickedUp: (params: { label: string }) => string
     movedOver: (params: { label: string; over: string }) => string
@@ -333,6 +335,7 @@ const ja: CreatorMessages = {
     cancel: 'キャンセル',
   },
   dnd: {
+    roleDescription: '並べ替え可能',
     instructions:
       'スペースキーで項目を持ち上げ、矢印キーで移動し、もう一度スペースキーで置きます。Escape キーで取り消します。',
     pickedUp: ({ label }) => `「${label}」を持ち上げました。`,
@@ -514,6 +517,7 @@ const en: CreatorMessages = {
     cancel: 'Cancel',
   },
   dnd: {
+    roleDescription: 'sortable',
     instructions:
       'Press Space to pick up an item, use the arrow keys to move it, and press Space again to drop it. Press Escape to cancel.',
     pickedUp: ({ label }) => `Picked up "${label}".`,

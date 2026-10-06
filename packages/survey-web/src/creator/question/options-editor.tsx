@@ -37,6 +37,7 @@ import type {
   QuestionOption,
   SingleChoiceQuestion,
 } from '../../schema/survey-schema'
+import { announcements } from '../dnd-announcements'
 import { creatorMessages } from '../i18n/creator-messages'
 
 type ChoiceQuestion =
@@ -74,6 +75,7 @@ function OptionRow({
   } = useSortable({
     id: sortId,
     disabled: { draggable: isOther, droppable: isOther },
+    attributes: { roleDescription: t.dnd.roleDescription },
   })
 
   return (
@@ -237,6 +239,15 @@ export function OptionsEditor<Q extends ChoiceQuestion>({
         collisionDetection={closestCenter}
         onDragEnd={onDragEnd}
         modifiers={[restrictToParentElement]}
+        accessibility={{
+          announcements: announcements(t, (id) => {
+            const index = options.findIndex((_, i) => sortId(i) === id)
+            return (
+              options[index]?.label || t.options.placeholder({ n: index + 1 })
+            )
+          }),
+          screenReaderInstructions: { draggable: t.dnd.instructions },
+        }}
       >
         <SortableContext
           items={ordered
