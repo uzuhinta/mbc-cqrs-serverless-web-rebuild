@@ -25,8 +25,10 @@ export function RatingRenderer({
   const t = useMessages(surveyMessages)
   const [hover, setHover] = useState<number | null>(null)
   const groupProps = useFieldControl({}, { group: true })
-  const { Icon, filled } = SYMBOLS[question.symbol]
-  const levels = Array.from({ length: question.levels }, (_, i) => i + 1)
+  // v0's fallbacks, for stored items that failed validation.
+  const { Icon, filled } = SYMBOLS[question.symbol] ?? SYMBOLS.star
+  const max = question.levels || 5
+  const levels = Array.from({ length: max }, (_, i) => i + 1)
   const shown = hover ?? (typeof value === 'number' ? value : 0)
 
   return (
@@ -52,7 +54,7 @@ export function RatingRenderer({
           </span>
           <RadioGroupPrimitive.Item
             value={String(level)}
-            aria-label={t.form.rating({ value: level, max: question.levels })}
+            aria-label={t.form.rating({ value: level, max })}
             className="mbc:cursor-pointer mbc:rounded-md mbc:outline-none mbc:focus-visible:ring-[3px] mbc:focus-visible:ring-ring/50 mbc:disabled:cursor-not-allowed mbc:disabled:opacity-50"
           >
             <Icon

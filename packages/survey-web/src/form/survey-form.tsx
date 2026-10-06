@@ -28,11 +28,8 @@ import {
   type QuestionRenderers,
 } from '../question-types/registry'
 import type { QuestionRendererProps } from '../question-types/types'
-import {
-  SurveySchema,
-  type Survey,
-  type SurveyInput,
-} from '../schema/survey-schema'
+import { normalizeSurvey } from '../schema/parse'
+import type { SurveyInput } from '../schema/survey-schema'
 import { focusFirstInvalid } from './focus'
 import { QuestionField } from './question-field'
 import { createSectionResolver } from './resolver'
@@ -70,10 +67,7 @@ export function SurveyForm({
   className,
 }: SurveyFormProps) {
   const t = useMessages(surveyMessages)
-  const survey = useMemo(() => {
-    const parsed = SurveySchema.safeParse(schema)
-    return parsed.success ? parsed.data : (schema as Survey)
-  }, [schema])
+  const survey = useMemo(() => normalizeSurvey(schema), [schema])
   const pages = useMemo(() => buildPages(survey), [survey])
   const [history, setHistory] = useState<string[]>(() =>
     pages[0] ? [pages[0].id] : []
@@ -273,7 +267,15 @@ export function SurveyForm({
         </div>
         {/* One submit button: it is the form's default button, so Enter in any
             field goes through onFormSubmit (Next, or Submit on the last section). */}
-        <Button type="submit" disabled={busy} loading={status === 'submitting'}>
+        <Button
+          type="submit"
+          disabled={busy}
+          loading={status === 'submitting'}
+          // The second click of a double-click on Next would land on Submit.
+          onClick={(event) => {
+            if (event.detail > 1) event.preventDefault()
+          }}
+        >
           {isFinal ? (submitLabel ?? t.form.submit) : t.form.next}
         </Button>
       </div>

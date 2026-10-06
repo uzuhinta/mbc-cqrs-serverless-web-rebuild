@@ -11,8 +11,19 @@ export function readDate(
   if (typeof value !== 'string' || !value) return null
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return null
-  if (!includeYear) date.setFullYear(today.getFullYear())
+  if (!includeYear) {
+    let year = today.getFullYear()
+    // Feb 29 would roll over to Mar 1 in a non-leap year.
+    if (date.getMonth() === 1 && date.getDate() === 29) {
+      while (!isLeapYear(year)) year -= 1
+    }
+    date.setFullYear(year)
+  }
   return date
+}
+
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0
 }
 
 /** v0's storage format: ISO string, year 0 when the question has no year. */

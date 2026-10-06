@@ -29,12 +29,15 @@ export function DateRenderer({
 }: QuestionRendererProps<DateQuestion>) {
   const t = useMessages(surveyMessages)
   const locale = useLocale()
-  const date = readDate(value, question.includeYear)
-  const placeholder = question.includeTime
-    ? question.includeYear
+  // v0's reading (`!== false`), for stored items that failed validation.
+  const includeYear = question.includeYear !== false
+  const includeTime = question.includeTime === true
+  const date = readDate(value, includeYear)
+  const placeholder = includeTime
+    ? includeYear
       ? t.form.dateTimePlaceholder
       : t.form.dateTimePlaceholderNoYear
-    : question.includeYear
+    : includeYear
       ? t.form.datePlaceholder
       : t.form.datePlaceholderNoYear
 
@@ -45,14 +48,14 @@ export function DateRenderer({
     }
     const next = new Date(day)
     next.setHours(date?.getHours() ?? 0, date?.getMinutes() ?? 0, 0, 0)
-    onChange(writeDate(next, question.includeYear))
+    onChange(writeDate(next, includeYear))
   }
 
   const setTime = (part: 'hours' | 'minutes', text: string) => {
     const next = date ? new Date(date) : new Date()
     if (part === 'hours') next.setHours(Number(text))
     else next.setMinutes(Number(text))
-    onChange(writeDate(next, question.includeYear))
+    onChange(writeDate(next, includeYear))
   }
 
   const picker = (
@@ -64,12 +67,12 @@ export function DateRenderer({
           onBlur={onBlur}
           className={cn(
             'mbc:w-full mbc:pl-3 mbc:text-left mbc:font-normal',
-            question.includeTime && 'mbc:justify-start mbc:md:col-span-2',
+            includeTime && 'mbc:justify-start mbc:md:col-span-2',
             !date && 'mbc:text-muted-foreground'
           )}
         >
           {date ? (
-            formatDate(date, question.includeYear, locale)
+            formatDate(date, includeYear, locale)
           ) : (
             <span>{placeholder}</span>
           )}
@@ -92,7 +95,7 @@ export function DateRenderer({
     </Popover>
   )
 
-  if (!question.includeTime) return picker
+  if (!includeTime) return picker
 
   return (
     <div className="mbc:w-full">

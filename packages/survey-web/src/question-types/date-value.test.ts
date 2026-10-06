@@ -32,6 +32,14 @@ describe('date values (v0-compatible ISO strings)', () => {
     ]).toEqual([2026, 2, 3, 8])
   })
 
+  it('keeps a no-year Feb 29 answer in a non-leap current year', () => {
+    const stored = writeDate(new Date(2024, 1, 29, 9, 0), false)
+    const read = readDate(stored, false, today)
+    expect([read?.getMonth(), read?.getDate(), read?.getHours()]).toEqual([
+      1, 29, 9,
+    ])
+  })
+
   it('returns null for empty or invalid values', () => {
     expect(readDate(undefined, true, today)).toBeNull()
     expect(readDate('not a date', true, today)).toBeNull()

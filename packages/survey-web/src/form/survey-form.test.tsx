@@ -241,4 +241,65 @@ describe('SurveyForm', () => {
     expect(screen.getByRole('textbox', { name: /お名前/ })).toBeDisabled()
     expect(screen.getByRole('button', { name: '次へ' })).toBeDisabled()
   })
+
+  it('does not submit the next section when Next is double-clicked', async () => {
+    const onSubmit = vi.fn()
+    const twoSections: SurveyInput = {
+      title: 'T',
+      items: [
+        { id: 's1', type: 'section-header', title: 'One' },
+        { id: 'a', type: 'short-text', label: 'A' },
+        { id: 's2', type: 'section-header', title: 'Two' },
+        { id: 'b', type: 'short-text', label: 'B' },
+      ],
+    }
+    render(<SurveyForm schema={twoSections} onSubmit={onSubmit} />)
+    const user = userEvent.setup({ delay: 80 })
+    await user.dblClick(screen.getByRole('button', { name: '次へ' }))
+
+    expect(
+      await screen.findByRole('heading', { level: 2, name: 'Two' })
+    ).toBeInTheDocument()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('renders stored JSON that fails validation as a whole, with item defaults', () => {
+    const stored = {
+      title: '',
+      items: [
+        { id: 'r', type: 'rating', label: 'R' },
+        { id: 'd', type: 'date', label: 'D' },
+        { id: 's', type: 'linear-scale', label: 'S' },
+      ],
+    }
+    render(<SurveyForm schema={stored as SurveyInput} onSubmit={() => {}} />)
+    expect(screen.getAllByRole('radio', { name: /5段階中/ })).toHaveLength(5)
+    expect(
+      screen.getByRole('button', { name: /年月日を選択してください/ })
+    ).toBeInTheDocument()
+    expect(screen.getAllByRole('radio', { name: /^\d+$/ })).toHaveLength(11)
+  })
+
+  it('renders items that fail validation with v0’s fallbacks', () => {
+    const stored = {
+      title: 'T',
+      items: [
+        { id: 'r', type: 'rating', label: 'R', levels: 3, symbol: 'smile' },
+        { id: 'd', type: 'date', label: 'D', includeTime: 'no' },
+        { id: 's', type: 'linear-scale', label: 'S', minLabel: 3 },
+      ],
+    }
+    render(
+      <SurveyForm
+        schema={stored as unknown as SurveyInput}
+        onSubmit={() => {}}
+      />
+    )
+    expect(screen.getAllByRole('radio', { name: /3段階中/ })).toHaveLength(3)
+    expect(
+      screen.getByRole('button', { name: /年月日を選択してください/ })
+    ).toBeInTheDocument()
+    expect(screen.getAllByRole('radio', { name: /^\d+$/ })).toHaveLength(11)
+  })
 })

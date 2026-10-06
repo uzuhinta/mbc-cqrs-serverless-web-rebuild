@@ -35,4 +35,29 @@ describe('useShuffled', () => {
     enabled.rerender()
     expect(enabled.result.current).toBe(first)
   })
+
+  it('keeps its order when equal items arrive as a new array (host re-render)', () => {
+    let calls = 0
+    const random = () => {
+      calls += 1
+      return 0
+    }
+    const { result, rerender } = renderHook(
+      ({ items }) => useShuffled(items, true, random),
+      { initialProps: { items: [...ITEMS] } }
+    )
+    const first = result.current
+    rerender({ items: [...ITEMS] })
+    expect(result.current).toBe(first)
+    expect(calls).toBe(ITEMS.length - 1)
+  })
+
+  it('returns new items at once when shuffling is off', () => {
+    const { result, rerender } = renderHook(
+      ({ items }) => useShuffled(items, false),
+      { initialProps: { items: ['a'] } }
+    )
+    rerender({ items: ['b'] })
+    expect(result.current).toEqual(['b'])
+  })
 })

@@ -32,7 +32,7 @@ export function SingleChoiceRenderer({
 }: QuestionRendererProps<SingleChoiceQuestion>) {
   const t = useMessages(surveyMessages)
   const baseId = useId()
-  // useShuffled reshuffles when `items` changes identity: memoise the filter.
+  // Filtered once per options change.
   const regularOptions = useMemo(
     () => question.options.filter((option) => !option.isOther),
     [question.options]

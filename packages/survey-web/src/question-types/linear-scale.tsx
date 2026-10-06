@@ -14,8 +14,11 @@ export function LinearScaleRenderer({
   disabled,
 }: QuestionRendererProps<LinearScaleQuestion>) {
   const baseId = useId()
-  const count = Math.max(0, question.max - question.min + 1)
-  const options = Array.from({ length: count }, (_, i) => question.min + i)
+  // Schema defaults, for stored items that failed validation.
+  const min = typeof question.min === 'number' ? question.min : 0
+  const max = typeof question.max === 'number' ? question.max : 10
+  const count = Math.max(0, max - min + 1)
+  const options = Array.from({ length: count }, (_, i) => min + i)
 
   return (
     <RadioGroup

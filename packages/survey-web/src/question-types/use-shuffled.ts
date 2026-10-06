@@ -15,9 +15,9 @@ function shuffle<T>(items: readonly T[], random: () => number): T[] {
 
 /**
  * The first render keeps the original order, so server HTML and hydration
- * agree; the shuffle happens once after mount (and when the items change).
- * `items` must keep its identity between renders (memoise derived arrays),
- * or every render reshuffles and re-renders again.
+ * agree; the shuffle happens once after mount, and again only when the items'
+ * content changes — a host passing an equal schema as a new object (every
+ * render) does not make options jump.
  */
 export function useShuffled<T>(
   items: readonly T[],
@@ -25,13 +25,14 @@ export function useShuffled<T>(
   random: () => number = Math.random
 ): readonly T[] {
   const [order, setOrder] = useState<readonly T[]>(items)
+  const signature = JSON.stringify(items)
   useEffect(() => {
     // The one re-render after mount is the point: server HTML and hydration
     // must see the original order, so the shuffle cannot happen during render.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setOrder(enabled ? shuffle(items, random) : items)
-    // `random` is a test seam; reshuffling when it changes identity is not wanted.
+    // Keyed on content, not identity; `random` is a test seam.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, enabled])
-  return order
+  }, [signature, enabled])
+  return enabled ? order : items
 }
