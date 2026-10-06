@@ -2,10 +2,17 @@
   "$schema": "https://unpkg.com/@changesets/config@4.0.1/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "fixed": [],
+  "fixed": [
+    [
+      "@mbc-cqrs-serverless/ui-web",
+      "@mbc-cqrs-serverless/client-web",
+      "@mbc-cqrs-serverless/survey-web"
+    ]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": []
+  "ignore": [],
+  "privatePackages": { "version": false, "tag": false }
 }

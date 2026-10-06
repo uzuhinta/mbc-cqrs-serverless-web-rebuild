@@ -311,7 +311,7 @@ As built (SP4–SP6 rulings): renderers live in `src/question-types/` with a kin
 - **Toolchain versions (verified 2026-10-04):** Node 24 (≥ 24.13; tsdown needs ≥ 22.18), pnpm 10.29, TypeScript ~6.0 (typescript-eslint supports < 6.1, so not TS 7), Vitest 5, jsdom 29 (jsdom 30 needs Node ≥ 24.15), react-day-picker 9, Next 16 for `next-smoke`.
 - **Build:** tsdown `unbundle: true`, ESM-only, `.d.ts`, automatic JSX runtime; Tailwind v4 CLI per package for `styles.css` and `styles.layer.css`. `sideEffects: ["**/*.css"]`.
 - **Playground:** Vite, React 19 by default, `pnpm playground:react18`. Pages: form with sample surveys, creator, `/templates` with mock data, `/mbc` with a mock client (optional real backend through a playground-only `.env.local`), and a "host with Tailwind v3 preflight" fixture page. Theme, locale, and dark-mode toggles.
-- **Release:** Changesets, independent versions, all three packages start at `1.0.0`. Publishing is manual until `rebuild/` moves into the GitHub repo; the CI workflow is ready but inert until then.
+- **Release:** Changesets, one `fixed` group (survey-web's stylesheet is compiled from the ui-web source it was built with, so the three packages release and upgrade together); all three start at `1.0.0`. Publishing is manual until `rebuild/` moves into the GitHub repo; the CI workflow is ready but inert until then.
 - **Docs:** README per package; `packages/survey-web/MIGRATION.md`.
 - **Runtime:** Node 20+, pnpm 10 via corepack.
 
