@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@mbc-cqrs-serverless/client-web": "workspace:*",
+    "@mbc-cqrs-serverless/master-web": "workspace:*",
     "@mbc-cqrs-serverless/survey-web": "workspace:*",
     "@mbc-cqrs-serverless/ui-web": "workspace:*",
     "next": "^16.3.8",

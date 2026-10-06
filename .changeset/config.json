@@ -6,7 +6,8 @@
     [
       "@mbc-cqrs-serverless/ui-web",
       "@mbc-cqrs-serverless/client-web",
-      "@mbc-cqrs-serverless/survey-web"
+      "@mbc-cqrs-serverless/survey-web",
+      "@mbc-cqrs-serverless/master-web"
     ]
   ],
   "linked": [],

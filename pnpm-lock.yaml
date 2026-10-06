@@ -101,6 +101,9 @@ importers:
       '@mbc-cqrs-serverless/client-web':
         specifier: workspace:*
         version: link:../../packages/client-web
+      '@mbc-cqrs-serverless/master-web':
+        specifier: workspace:*
+        version: link:../../packages/master-web
       '@mbc-cqrs-serverless/survey-web':
         specifier: workspace:*
         version: link:../../packages/survey-web

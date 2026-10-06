@@ -46,7 +46,7 @@ Seen in a production host's integration of v0:
 ```
 rebuild/
   packages/
-    ui-web/        + Table, Accordion, Command, Combobox, MultiSelect
+    ui-web/        + Table, Accordion, Command, MultiSelect
     client-web/    + command({ expectedFinishes, onProgress })
     survey-web/    unchanged
     master-web/    new: @mbc-cqrs-serverless/master-web
@@ -70,8 +70,9 @@ rebuild/
 | `Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `TableCaption` | shadcn markup and classes (v0's `components/ui/table.tsx`)                                           |
 | `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent`                                     | Radix accordion; caret range like the other Radix packages                                           |
 | `Command` family                                                                                         | `cmdk`                                                                                               |
-| `Combobox`                                                                                               | single choice with search (Popover + Command)                                                        |
 | `MultiSelect`                                                                                            | v0's `multi-select-combobox` behaviour: search, chips, select all; keyboard and screen-reader tested |
+
+`Combobox` (single choice) was dropped in M1: no v0 master screen uses one.
 
 Each gets the ui-web standard: `ui` messages for its built-in text, axe test, SSR test, v0 class parity where v0 had it.
 
@@ -89,6 +90,8 @@ Each gets the ui-web standard: `ui` messages for its built-in text, axe test, SS
 | `…/mbc`                              | `createMasterApi`, hooks, connected pages, re-exports of `createMbcClient`, `MbcClientProvider`, client errors            |
 | `…/styles.css`, `…/styles.layer.css` | as survey-web (contains ui-web's styles)                                                                                  |
 | `…/editors.css`                      | the three editors' CSS, scoped (section 3.3)                                                                              |
+
+Entries ship with their content: `.` and `/core` from M1, `/editors` and `editors.css` from M6, `/mbc` from M7.
 
 v0's subpaths (`/MasterSetting`, `/MasterData`, `/EditMasterSettings`, `/EditMasterData`, `/AppProviders`, `/UrlProvider`, `/MsLayout`, `/styles`) are not kept: they read Next's router params, so the same import cannot keep its meaning. `MIGRATION.md` maps each one.
 
@@ -290,7 +293,7 @@ Sub-plans, each with its own detailed plan, executed in order:
 
 | #   | Sub-plan        | Delivers                                                                                                                                                                                                 |
 | --- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| M1  | Foundations     | ui-web `Table`, `Accordion`, `Command`, `Combobox`, `MultiSelect`; client-web `expectedFinishes` / `onProgress`; master-web scaffold, CSS build, test projects, playground and smoke wiring              |
+| M1  | Foundations     | ui-web `Table`, `Accordion`, `Command`, `MultiSelect`; client-web `expectedFinishes` / `onProgress`; master-web scaffold, CSS build, test projects, playground and smoke wiring                          |
 | M2  | `/core`         | types, parsers, `fieldTypes`, validators, payload builders, `parseBulkJson`, copy types, fixtures                                                                                                        |
 | M3  | Lists           | `DataTable`, `MasterSettingList`, `MasterDataList`, `BulkImportDialog`                                                                                                                                   |
 | M4  | Settings editor | fields table with reordering, field dialog, JSON dialog, view/edit, delete                                                                                                                               |

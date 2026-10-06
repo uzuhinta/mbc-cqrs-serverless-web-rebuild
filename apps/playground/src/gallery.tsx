@@ -69,6 +69,8 @@ import {
 } from '@mbc-cqrs-serverless/ui-web'
 import type { ReactNode } from 'react'
 
+import { MasterPrimitives } from './gallery-master'
+
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section style={{ display: 'grid', gap: 12, padding: 16 }}>
@@ -300,6 +302,7 @@ export function Gallery() {
           </PaginationContent>
         </Pagination>
       </Section>
+      <MasterPrimitives />
     </div>
   )
 }

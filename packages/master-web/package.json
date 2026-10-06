@@ -5,7 +5,9 @@
   "license": "MIT",
   "author": "Murakami Business Consulting, Inc.",
   "type": "module",
-  "sideEffects": ["**/*.css"],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -19,7 +21,10 @@
     "./styles.layer.css": "./dist/styles.layer.css",
     "./package.json": "./package.json"
   },
-  "files": ["dist", "CHANGELOG.md"],
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
   "scripts": {
     "build": "tsdown && node ../../scripts/build-css.ts",
     "prepack": "pnpm run build",

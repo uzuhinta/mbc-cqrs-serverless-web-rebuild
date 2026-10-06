@@ -4,7 +4,7 @@
 
 **Goal:** Ship `@mbc-cqrs-serverless/master-web` with full v0 0.0.50 parity, plus the ui-web and client-web additions it needs, and release all four packages together as 1.0.0.
 
-**Architecture:** A fourth ESM-only package in the `rebuild/` monorepo, built like survey-web (tsdown unbundled, Tailwind v4 `mbc:` prefix, `styles.css` + `styles.layer.css`). Layers: React-free `/core`, prop-driven screens at the root, opt-in rich editors in `/editors`, backend integration in `/mbc` on client-web. ui-web gains `Table`, `Accordion`, `Command`, `Combobox`, `MultiSelect`, `useHydrated`; client-web gains `command({ expectedFinishes, onProgress })` and a public `useQuery`.
+**Architecture:** A fourth ESM-only package in the `rebuild/` monorepo, built like survey-web (tsdown unbundled, Tailwind v4 `mbc:` prefix, `styles.css` + `styles.layer.css`). Layers: React-free `/core`, prop-driven screens at the root, opt-in rich editors in `/editors`, backend integration in `/mbc` on client-web. ui-web gains `Table`, `Accordion`, `Command`, `MultiSelect`, `useHydrated`; client-web gains `command({ expectedFinishes, onProgress })` and a public `useQuery`.
 
 **Tech Stack:** pnpm 10.29, Node 24.13 (fnm), TypeScript ~6.0, tsdown, Tailwind CSS 4, Vitest + jsdom + Testing Library + axe-core, ESLint 10, Radix, cmdk, react-hook-form 7, zod 4, `@tanstack/react-table` 8, dnd-kit, Changesets. Optional peers in `/editors`: `react-quill-new`, `@uiw/react-md-editor`, `jsoneditor`.
 
@@ -71,9 +71,9 @@ git status --porcelain                                        # must be empty af
 - [ ] **M1 — Foundations** (`m1-foundations`)
   - Spec: §2 (layout, boundaries, ui-web additions, client-web addition), §3 (entry table), §3.5 (namespaces).
   - Builds:
-    - ui-web: `Table` family, `Accordion` family (`@radix-ui/react-accordion`, caret range), `Command` family (`cmdk`), `Combobox`, `MultiSelect`; `useHydrated` moved from survey-web (survey-web imports it from ui-web); `ui` messages for their text; axe + SSR + v0 class parity tests; playground gallery entries.
+    - ui-web: `Table` family, `Accordion` family (`@radix-ui/react-accordion`, caret range), `Command` family (`cmdk`), `MultiSelect`; `useHydrated` moved from survey-web (survey-web imports it from ui-web); `ui` messages for their text; axe + SSR + v0 class parity tests; playground gallery entries.
     - client-web: `command(request, { expectedFinishes, onProgress })`; `useQuery` made public in `client-web/react` (moved from survey-web's private copy; survey-web uses it).
-    - master-web: package scaffold (`package.json` exports for `.`, `./core`, `./editors`, `./mbc`, `./styles.css`, `./styles.layer.css`, `./editors.css`), tsconfig, tsdown entries, CSS build, Vitest project, build-output tests (entries exist, `"use client"` banners, `/core` has no React import, optional peers only in `/editors`), message namespaces `master`, `masterSetting`, `masterData`, `masterCopy` registered (ja + en skeletons), Changesets `fixed` group extended, `apps/next-smoke` and playground wiring, CI unchanged except the new package.
+    - master-web: package scaffold (`package.json` exports for `.`, `./core`, `./styles.css`, `./styles.layer.css` (`/editors` added in M6, `/mbc` in M7)), tsconfig, tsdown entries, CSS build, Vitest project, build-output tests (entries exist, `"use client"` banners, `/core` has no React import, optional peers only in `/editors`), `master` namespace registered with the field-type labels (`masterSetting`/`masterData` in M3, `masterCopy` in M7), Changesets `fixed` group extended, `apps/next-smoke` and playground wiring, CI unchanged except the new package.
   - Gate: standard gate; `pnpm changeset status` lists four packages.
   - Depends on: —
 
