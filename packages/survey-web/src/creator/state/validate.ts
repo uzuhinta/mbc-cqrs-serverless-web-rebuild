@@ -7,6 +7,7 @@ export type CreatorIssueKey =
   | 'sectionTitle'
   | 'options'
   | 'optionLabel'
+  | 'optionValue'
   | 'validationRule'
   | 'duplicateId'
   | 'invalid'
@@ -26,8 +27,13 @@ function issueKey(path: Path, code: string): CreatorIssueKey {
   if (path.length === 1 && path[0] === 'title') return 'surveyTitle'
   if (field === 'title') return 'sectionTitle'
   if (field === 'id' && code === 'custom') return 'duplicateId'
-  if (field === 'options')
-    return optionField === undefined ? 'options' : 'optionLabel'
+  if (field === 'options') {
+    if (optionField === undefined) return 'options'
+    // A custom issue on a value is the uniqueness / reserved-value rule.
+    return optionField === 'value' && code === 'custom'
+      ? 'optionValue'
+      : 'optionLabel'
+  }
   if (field === 'validation') return 'validationRule'
   return 'invalid'
 }

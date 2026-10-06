@@ -9,6 +9,36 @@ const QuestionOptionSchema = z
   })
   .strict()
 
+/**
+ * Option values identify answers, so they are unique within a question, and
+ * `other` / `other:<text>` are reserved for the "Other" option (v0 0.0.49).
+ */
+function refineOptionValues(
+  options: readonly { value: string; isOther?: boolean }[],
+  ctx: z.RefinementCtx
+) {
+  const seen = new Set<string>()
+  options.forEach((option, index) => {
+    if (seen.has(option.value)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [index, 'value'],
+        message: 'Option values must be unique.',
+      })
+    } else if (
+      !option.isOther &&
+      (option.value === 'other' || option.value.startsWith('other:'))
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [index, 'value'],
+        message: "'other' is reserved for the Other option.",
+      })
+    }
+    seen.add(option.value)
+  })
+}
+
 const BaseValidationRulesSchema = z.object({
   required: z.boolean().optional(),
 })
@@ -130,7 +160,8 @@ export const SingleChoiceQuestionSchema = BaseQuestionSchema.extend({
   type: z.literal('single-choice'),
   options: z
     .array(QuestionOptionSchema)
-    .min(1, 'Single-choice questions must have at least one option.'),
+    .min(1, 'Single-choice questions must have at least one option.')
+    .superRefine(refineOptionValues),
   validation: ShuffleValidationSchema.optional(),
 })
 
@@ -138,7 +169,8 @@ export const MultipleChoiceQuestionSchema = BaseQuestionSchema.extend({
   type: z.literal('multiple-choice'),
   options: z
     .array(QuestionOptionSchema.omit({ nextSectionId: true }))
-    .min(1, 'Multiple-choice questions must have at least one option.'),
+    .min(1, 'Multiple-choice questions must have at least one option.')
+    .superRefine(refineOptionValues),
   validation: ShuffleValidationSchema.extend({
     custom: MultipleChoiceValidationRuleSchema.optional(),
   }).optional(),
@@ -148,7 +180,8 @@ export const DropdownQuestionSchema = BaseQuestionSchema.extend({
   type: z.literal('dropdown'),
   options: z
     .array(QuestionOptionSchema)
-    .min(1, 'Dropdown questions must have at least one option.'),
+    .min(1, 'Dropdown questions must have at least one option.')
+    .superRefine(refineOptionValues),
   validation: ShuffleValidationSchema.optional(),
 })
 

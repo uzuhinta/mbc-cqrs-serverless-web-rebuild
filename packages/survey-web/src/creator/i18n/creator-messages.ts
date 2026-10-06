@@ -163,6 +163,7 @@ export type CreatorMessages = {
     sectionTitle: string
     options: string
     optionLabel: string
+    optionValue: string
     validationRule: string
     duplicateId: string
     invalid: string
@@ -351,6 +352,7 @@ const ja: CreatorMessages = {
     sectionTitle: 'セクションのタイトルを入力してください',
     options: 'オプションを1つ以上追加してください',
     optionLabel: 'オプションのラベルを入力してください',
+    optionValue: 'オプションの値が重複しているか、予約された値（other）です',
     validationRule: '回答の検証ルールを完成させてください',
     duplicateId: 'IDが重複しています',
     invalid: '入力内容を確認してください',
@@ -533,6 +535,7 @@ const en: CreatorMessages = {
     sectionTitle: 'Enter a section title',
     options: 'Add at least one option',
     optionLabel: 'Enter a label for every option',
+    optionValue: 'Option values must be unique and cannot be "other"',
     validationRule: 'Complete the response validation rule',
     duplicateId: 'This id is used twice',
     invalid: 'Check this item',
