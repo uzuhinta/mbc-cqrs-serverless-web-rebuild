@@ -18,6 +18,7 @@
     "use-react": "node scripts/use-react.ts",
     "playground": "pnpm --filter @mbc-cqrs-serverless/playground dev",
     "playground:react18": "pnpm use-react 18 && pnpm build && pnpm playground",
+    "smoke": "pnpm --filter @mbc-cqrs-serverless/next-smoke build",
     "changeset": "changeset"
   },
   "devDependencies": {
