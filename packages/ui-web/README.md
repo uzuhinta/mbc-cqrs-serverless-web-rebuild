@@ -44,14 +44,14 @@ Tokens: `--mbc-background`, `--mbc-foreground`, `--mbc-card`, `--mbc-popover`, `
 ## Provider, locale and text
 
 ```tsx
+import type { ReactNode } from 'react'
 import { MbcProvider } from '@mbc-cqrs-serverless/ui-web'
 
-export function Providers({ children }: { children: React.ReactNode }) {
+const messages = { ui: { pagination: { next: 'Next' } } }
+
+export function Providers({ children }: { children: ReactNode }) {
   return (
-    <MbcProvider
-      locale="en"
-      messages={{ ui: { pagination: { next: 'Next' } } }}
-    >
+    <MbcProvider locale="en" messages={messages}>
       {children}
     </MbcProvider>
   )
@@ -59,7 +59,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 ```
 
 - `locale`: `'ja'` (default) or `'en'`; anything else is treated as `'ja'`.
-- `messages`: partial overrides per namespace (`ui` here; `survey`, `surveyCreator`, `surveyTemplates` in survey-web).
+- `messages`: partial overrides per namespace (`ui` here; `survey`, `surveyCreator`, `surveyTemplates` in survey-web). Keep the object stable — a module constant or `useMemo` — because a new object re-renders every component that shows text.
 - `dir`: `'ltr' | 'rtl'`; `portalContainer`: where dialogs, menus and popovers mount.
 
 Add your own namespace with `defineMessages` and read it with `useMessages`:

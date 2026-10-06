@@ -8,13 +8,17 @@ Surveys for MBC CQRS Serverless apps: the respondent form (`SurveyForm`), the su
 pnpm add @mbc-cqrs-serverless/survey-web react react-dom
 ```
 
-`@mbc-cqrs-serverless/ui-web` and `@mbc-cqrs-serverless/client-web` come with it. The three packages are released with one version — keep them on the same version, because survey-web's stylesheet is compiled from the ui-web it was built with.
+`@mbc-cqrs-serverless/ui-web` and `@mbc-cqrs-serverless/client-web` come with it, and everything a survey screen needs is re-exported (`MbcProvider` from the root, the client from `/mbc`). Add them yourself only to import them directly — and then at survey-web's exact version: the three packages are released together, and survey-web's stylesheet is compiled from the ui-web it was built with.
+
+```bash
+pnpm add @mbc-cqrs-serverless/ui-web@<survey-web's version>
+```
 
 ```ts
 import '@mbc-cqrs-serverless/survey-web/styles.css'
 ```
 
-(See ui-web's README for `styles.layer.css`, Tailwind v3 and theming.)
+If your app has its own CSS layers or Tailwind v3, import `@mbc-cqrs-serverless/survey-web/styles.layer.css` instead (it contains ui-web's styles too). See ui-web's README for layer order and theming.
 
 ## Entry points
 
@@ -72,15 +76,16 @@ import { useRef } from 'react'
 import {
   SurveyCreator,
   type SurveyCreatorHandle,
+  type SurveyInput,
 } from '@mbc-cqrs-serverless/survey-web'
 
-export function Editor({ stored }: { stored?: unknown }) {
+export function Editor({ stored }: { stored?: SurveyInput }) {
   const creator = useRef<SurveyCreatorHandle>(null)
   return (
     <>
       <SurveyCreator
         ref={creator}
-        defaultValue={stored as never}
+        defaultValue={stored}
         onChange={(survey, { isValid, isDirty }) =>
           console.info(isValid, isDirty)
         }
@@ -105,9 +110,15 @@ Prop-driven; bring your own data and navigation:
 
 ```tsx
 'use client'
-import { SurveyTemplateList } from '@mbc-cqrs-serverless/survey-web/templates'
+import {
+  SurveyTemplateList,
+  type SurveyTemplateSummary,
+} from '@mbc-cqrs-serverless/survey-web/templates'
 
-export function Templates(props: { items: []; total: number }) {
+export function Templates(props: {
+  items: SurveyTemplateSummary[]
+  total: number
+}) {
   return (
     <SurveyTemplateList
       items={props.items}
@@ -130,9 +141,9 @@ export function Templates(props: { items: []; total: number }) {
 
 ```tsx
 'use client'
-import { createMbcClient } from '@mbc-cqrs-serverless/client-web'
-import { MbcClientProvider } from '@mbc-cqrs-serverless/client-web/react'
 import {
+  createMbcClient,
+  MbcClientProvider,
   MbcSurveyTemplateEditorPage,
   MbcSurveyTemplateListPage,
 } from '@mbc-cqrs-serverless/survey-web/mbc'
@@ -215,17 +226,20 @@ import {
   parseSurvey,
   resolvePath,
   validateAnswers,
+  type SurveyAnswers,
 } from '@mbc-cqrs-serverless/survey-web/core'
 
 export function check(storedSurvey: unknown, answers: Record<string, unknown>) {
   const parsed = parseSurvey(storedSurvey)
   if (!parsed.success) throw parsed.error
-  const errors = validateAnswers(parsed.data, answers) // {} when valid
+  const errors = validateAnswers(parsed.data, answers)
+  if (Object.keys(errors).length > 0) return { errors }
+  // Valid answers have SurveyAnswers' shapes.
   const pages = buildPages(parsed.data)
   const { answers: clean } = collectAnswers(
     pages,
     resolvePath(pages, answers),
-    answers as never
+    answers as SurveyAnswers
   )
   return { errors, clean } // clean: unvisited sections' answers are undefined
 }
@@ -238,14 +252,16 @@ export function check(storedSurvey: unknown, answers: Record<string, unknown>) {
 Japanese by default; `<MbcProvider locale="en">` switches every screen. Override any string through `messages` — namespaces `survey` (form), `surveyCreator`, `surveyTemplates`, plus ui-web's `ui`:
 
 ```tsx
+import type { ReactNode } from 'react'
 import { MbcProvider } from '@mbc-cqrs-serverless/survey-web'
 
-export function Providers({ children }: { children: React.ReactNode }) {
+// Defined once, outside the component: a new object each render makes every
+// translated component re-render.
+const messages = { survey: { form: { submit: '回答する' } } }
+
+export function Providers({ children }: { children: ReactNode }) {
   return (
-    <MbcProvider
-      locale="ja"
-      messages={{ survey: { form: { submit: '回答する' } } }}
-    >
+    <MbcProvider locale="ja" messages={messages}>
       {children}
     </MbcProvider>
   )
