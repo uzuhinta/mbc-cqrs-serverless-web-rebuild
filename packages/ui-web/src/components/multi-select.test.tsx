@@ -13,7 +13,13 @@ const OPTIONS: MultiSelectOption[] = [
   { value: 't3', label: 'Osaka' },
 ]
 
-function Harness({ initial = [] as string[], locale = 'en' as const }) {
+function Harness({
+  initial = [] as string[],
+  locale = 'en' as 'en' | 'ja',
+}: {
+  initial?: string[]
+  locale?: 'en' | 'ja'
+}) {
   const [value, setValue] = useState<string[]>(initial)
   return (
     <MbcProvider locale={locale}>

@@ -16,7 +16,9 @@ describe('client-web output', () => {
   it('keeps "use client" on the React entry modules only', () => {
     for (const file of listFiles(dist, '.js')) {
       expect(hasUseClientDirective(readText(dist, file)), file).toBe(
-        file === 'react/provider.js' || file === 'react/use-command.js'
+        file === 'react/provider.js' ||
+          file === 'react/use-command.js' ||
+          file === 'react/use-query.js'
       )
     }
   })

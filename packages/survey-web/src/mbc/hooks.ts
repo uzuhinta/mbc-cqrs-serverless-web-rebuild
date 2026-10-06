@@ -1,7 +1,12 @@
 'use client'
 
-import { useCommand, useMbcClient } from '@mbc-cqrs-serverless/client-web/react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCommand,
+  useMbcClient,
+  useQuery,
+  type QueryState,
+} from '@mbc-cqrs-serverless/client-web/react'
+import { useMemo } from 'react'
 
 import type { Survey } from '../schema/survey-schema'
 import type { SurveyAnswers } from '../answers/types'
@@ -11,55 +16,7 @@ import {
   type SurveyTemplateListParams,
 } from './api'
 
-export type QueryState<T> = {
-  data: T | undefined
-  loading: boolean
-  error: unknown
-  refetch(): void
-}
-
-type Settled<T> = { key: string; data?: T; error?: unknown }
-
-/**
- * Fetch keyed by `key`; `load === null` means idle. Loading is derived (the
- * latest request has not settled), so no state is set synchronously in effects.
- */
-function useQuery<T>(
-  key: string,
-  load: ((signal: AbortSignal) => Promise<T>) | null
-): QueryState<T> {
-  const [nonce, setNonce] = useState(0)
-  const [settled, setSettled] = useState<Settled<T> | null>(null)
-  const loadRef = useRef(load)
-  useEffect(() => {
-    loadRef.current = load
-  })
-  const active = load !== null
-  const requestKey = `${nonce}\u0000${key}`
-
-  useEffect(() => {
-    const run = loadRef.current
-    if (!run) return
-    const controller = new AbortController()
-    run(controller.signal).then(
-      (data) => {
-        if (!controller.signal.aborted) setSettled({ key: requestKey, data })
-      },
-      (error: unknown) => {
-        if (!controller.signal.aborted) setSettled({ key: requestKey, error })
-      }
-    )
-    return () => controller.abort()
-  }, [requestKey, active])
-
-  const current = active && settled?.key === requestKey ? settled : null
-  return {
-    data: current?.data,
-    loading: active && current === null,
-    error: current?.error,
-    refetch: () => setNonce((n) => n + 1),
-  }
-}
+export type { QueryState }
 
 function useApi() {
   const client = useMbcClient()

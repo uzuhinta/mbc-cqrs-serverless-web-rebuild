@@ -10,6 +10,12 @@ interface InterfaceTyped {
     morePages: string
     page: (params: { page: number }) => string
   }
+  multiSelect: {
+    placeholder: string
+    search: string
+    empty: string
+    selected: string
+  }
 }
 
 const messages: InterfaceTyped = {
@@ -21,6 +27,12 @@ const messages: InterfaceTyped = {
     next: 'x',
     morePages: 'x',
     page: () => 'x',
+  },
+  multiSelect: {
+    placeholder: 'x',
+    search: 'x',
+    empty: 'x',
+    selected: 'x',
   },
 }
 
