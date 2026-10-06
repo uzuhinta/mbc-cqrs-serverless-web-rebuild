@@ -68,7 +68,8 @@ git status --porcelain                                        # must be empty af
 
 ## Sub-plans
 
-- [ ] **M1 — Foundations** (`m1-foundations`)
+- [x] **M1 — Foundations** (`m1-foundations`)
+  - Merged 2026-10-06 after the standard gate (React 19 and 18: 572/572, smoke passes). No ledger was kept and no fresh whole-branch review ran for M1; M2's review covers the M1 range as well.
   - Spec: §2 (layout, boundaries, ui-web additions, client-web addition), §3 (entry table), §3.5 (namespaces).
   - Builds:
     - ui-web: `Table` family, `Accordion` family (`@radix-ui/react-accordion`, caret range), `Command` family (`cmdk`), `MultiSelect`; `useHydrated` moved from survey-web (survey-web imports it from ui-web); `ui` messages for their text; axe + SSR + v0 class parity tests; playground gallery entries.
