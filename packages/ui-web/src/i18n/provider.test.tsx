@@ -7,6 +7,7 @@ import {
   useMessages,
   usePortalContainer,
 } from './provider'
+import type { Locale } from './types'
 import { uiMessages } from './ui-messages'
 
 function Probe() {
@@ -107,5 +108,17 @@ describe('MbcProvider', () => {
       </MbcProvider>
     )
     expect(screen.getByText(/^fr\|閉じる\|/)).toBeInTheDocument()
+  })
+
+  it('treats an unknown locale as Japanese everywhere, including useLocale', () => {
+    function LocaleProbe() {
+      return <p>locale:{useLocale()}</p>
+    }
+    render(
+      <MbcProvider locale={'fr' as Locale}>
+        <LocaleProbe />
+      </MbcProvider>
+    )
+    expect(screen.getByText('locale:ja')).toBeInTheDocument()
   })
 })

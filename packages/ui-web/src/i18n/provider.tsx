@@ -40,6 +40,11 @@ export type MbcProviderProps = {
   children?: ReactNode
 }
 
+/** Runtime guard: a locale outside the union (e.g. from a URL) falls back to Japanese. */
+function normalizeLocale(locale: Locale): Locale {
+  return locale === 'en' || locale === 'ja' ? locale : 'ja'
+}
+
 export function MbcProvider({
   dir,
   locale,
@@ -51,7 +56,7 @@ export function MbcProvider({
   const value = useMemo<MbcContextValue>(
     () => ({
       dir: dir ?? parent.dir,
-      locale: locale ?? parent.locale,
+      locale: locale === undefined ? parent.locale : normalizeLocale(locale),
       messages: messages
         ? mergeMessages(parent.messages, messages)
         : parent.messages,
