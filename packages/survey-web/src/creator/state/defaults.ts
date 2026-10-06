@@ -1,5 +1,5 @@
+import { normalizeSurvey } from '../../schema/parse'
 import {
-  SurveySchema,
   type QuestionKind,
   type QuestionOption,
   type SectionHeader,
@@ -64,8 +64,20 @@ export function changeQuestionType(
     case 'long-text':
       return { ...base, type: kind, validation: { required } }
     case 'single-choice':
-    case 'dropdown':
       return { ...base, type: kind, options, validation: choiceValidation }
+    case 'dropdown': {
+      // A dropdown cannot show or remove an "Other" option.
+      const regular = options.filter((option) => !option.isOther)
+      return {
+        ...base,
+        type: kind,
+        options:
+          regular.length > 0
+            ? regular
+            : [{ value: optionLabel, label: optionLabel }],
+        validation: choiceValidation,
+      }
+    }
     case 'multiple-choice':
       return {
         ...base,
@@ -105,13 +117,18 @@ export function changeQuestionType(
 
 function withUniqueIds(survey: Survey, newId: IdFactory): Survey {
   const seen = new Set<string>()
-  const items = survey.items.map((item) => {
-    if (!seen.has(item.id)) {
-      seen.add(item.id)
-      return item
+  const items = (Array.isArray(survey.items) ? survey.items : []).map(
+    (item) => {
+      if (!seen.has(item.id)) {
+        seen.add(item.id)
+        return item
+      }
+      return {
+        ...item,
+        id: newId(item.type === 'section-header' ? 'sec' : 'q'),
+      }
     }
-    return { ...item, id: newId(item.type === 'section-header' ? 'sec' : 'q') }
-  })
+  )
   return { ...survey, items }
 }
 
@@ -132,10 +149,8 @@ export function initialCreatorState(
       dirty: false,
     }
   }
-  const parsed = SurveySchema.safeParse(defaultValue)
-  const survey = withUniqueIds(
-    parsed.success ? parsed.data : (defaultValue as Survey),
-    newId
-  )
+  // Unique ids first: a duplicate fails the whole parse and would drop every
+  // default. What still fails is parsed item by item.
+  const survey = normalizeSurvey(withUniqueIds(defaultValue as Survey, newId))
   return { survey, selectedId: survey.items[0]?.id ?? TITLE_ID, dirty: false }
 }

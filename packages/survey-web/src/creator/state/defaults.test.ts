@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { SurveyQuestion } from '../../schema/survey-schema'
+import type { SurveyInput, SurveyQuestion } from '../../schema/survey-schema'
 import {
   changeQuestionType,
   createQuestion,
@@ -128,6 +128,49 @@ describe('initialCreatorState', () => {
       type: 'short-text',
       label: '',
       validation: { required: false },
+    })
+  })
+})
+
+describe('review fixes', () => {
+  it('keeps item defaults when ids are duplicated', () => {
+    const state = initialCreatorState(
+      {
+        title: 'T',
+        items: [
+          { id: 'dup', type: 'rating', label: 'R', extra: 1 },
+          { id: 'dup', type: 'linear-scale', label: 'S' },
+        ],
+      } as unknown as SurveyInput,
+      text,
+      ids
+    )
+    expect(state.survey.items[0]).toEqual({
+      id: 'dup',
+      type: 'rating',
+      label: 'R',
+      levels: 5,
+      symbol: 'star',
+    })
+    expect(state.survey.items[1]).toMatchObject({
+      type: 'linear-scale',
+      min: 0,
+      max: 10,
+    })
+  })
+
+  it('drops "Other" when the new kind is a dropdown, which cannot edit it', () => {
+    const single: SurveyQuestion = {
+      id: 'q',
+      type: 'single-choice',
+      label: 'Q',
+      options: [
+        { value: 'a', label: 'a' },
+        { value: 'other', label: 'その他', isOther: true },
+      ],
+    }
+    expect(changeQuestionType(single, 'dropdown', 'x')).toMatchObject({
+      options: [{ value: 'a', label: 'a' }],
     })
   })
 })
