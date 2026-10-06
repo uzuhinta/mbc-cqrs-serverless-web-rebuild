@@ -3,6 +3,10 @@ import { describe, expect, it } from 'vitest'
 import * as ui from '../src/index'
 
 const EXPECTED = [
+  'Accordion',
+  'AccordionContent',
+  'AccordionItem',
+  'AccordionTrigger',
   'Alert',
   'AlertDescription',
   'AlertDialog',

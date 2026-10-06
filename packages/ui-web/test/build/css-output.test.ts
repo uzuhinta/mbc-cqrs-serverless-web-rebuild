@@ -63,7 +63,7 @@ describe('styles.css (default)', () => {
   })
 
   it('names every keyframes rule with the mbc- prefix', () => {
-    const TW_ANIMATE = ['enter', 'exit']
+    const TW_ANIMATE = ['enter', 'exit', 'accordion-down', 'accordion-up']
     expect(
       keyframeNames(unlayered).filter(
         (name) => !name.startsWith('mbc-') && !TW_ANIMATE.includes(name)
@@ -99,6 +99,11 @@ describe('styles.css (default)', () => {
       '.mbc\\:data-\\[state\\=open\\]\\:animate-in'
     )
     expect(unlayeredCss).toMatch(/@keyframes\s+enter/)
+  })
+
+  it('ships the accordion open/close animations', () => {
+    expect(unlayeredCss).toContain('animate-accordion-down')
+    expect(unlayeredCss).toContain('animate-accordion-up')
   })
 
   it('compiles classes from every primitive', () => {

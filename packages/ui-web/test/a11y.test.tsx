@@ -3,6 +3,10 @@ import axe from 'axe-core'
 import { describe, expect, it } from 'vitest'
 
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
   Alert,
   AlertDescription,
   AlertTitle,
@@ -158,6 +162,24 @@ describe('accessibility', () => {
           <Badge>New</Badge>
           <Button>Save</Button>
           <Calendar mode="single" defaultMonth={new Date(2026, 9, 1)} />
+        </main>
+      </MbcProvider>
+    )
+    expect(await violations()).toEqual([])
+  })
+
+  it('has no axe violations on Accordion alone', async () => {
+    // Accordion Header is Radix's h3; AlertTitle is h5 — together they trip
+    // heading-order in the primitives suite, so Accordion is checked alone.
+    render(
+      <MbcProvider locale="en">
+        <main>
+          <Accordion type="single" collapsible defaultValue="a">
+            <AccordionItem value="a">
+              <AccordionTrigger>Details</AccordionTrigger>
+              <AccordionContent>Body</AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </main>
       </MbcProvider>
     )

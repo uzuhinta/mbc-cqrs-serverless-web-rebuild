@@ -111,6 +111,13 @@ export const V0 = {
     'px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0',
   'table.cell': 'p-2.5 align-middle [&:has([role=checkbox])]:pr-0',
   'table.caption': 'mt-4 text-sm text-muted-foreground',
+  // master v0 ui/accordion.tsx — border colour stated.
+  'accordion.item': 'border-b border-border',
+  'accordion.trigger':
+    'flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline [&[data-state=open]>svg]:rotate-180',
+  'accordion.content':
+    'data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm transition-all',
+  'accordion.content-inner': 'pb-4 pt-0',
   // ui/pagination.tsx — hover:border-[#369CA3] → hover:border-brand-accent (same colour, token)
   'pagination.nav': 'flex gap-2',
   'pagination.content': 'flex flex-row items-center gap-2',
