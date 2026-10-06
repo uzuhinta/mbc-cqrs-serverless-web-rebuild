@@ -91,7 +91,7 @@ git status --porcelain                                        # must be empty af
   - From the SP2 review: annotate `FieldLabel`'s type (TS2883 risk when survey-web wraps it); `useMessages`/Calendar must fall back to `ja` for an unknown locale; tie `defineMessages`' namespace to `MbcMessageRegistry` and allow interface-typed catalogs; update spec §3.3 (`useMessages(catalog)`, no `MessagesFor`); survey-web should re-export `MbcProvider`/`useMessages` (or take ui-web as a peer) so a host never gets two `MbcContext`s.
   - Depends on: SP1, SP2 (messages infrastructure).
 
-- [ ] **SP5 — `SurveyForm`** (`05-sp5-survey-form`)
+- [x] **SP5 — `SurveyForm`** (`05-sp5-survey-form`)
   - Spec: §5.1 `SurveyForm` props, §6.1 renderers, §6.2 form wiring, §6.4–6.6.
   - Builds: nine question renderers + registry renderer entries, `SurveyForm` (sections, Back/Next/Submit, async submit, `onSubmitError`, `onSectionChange`, `components`, `className`), focus management, shuffle-after-mount, playground form page.
   - Gate: standard gate; ported `survey-form.test.tsx` behaviours; `renderToString` hydration test; `vitest-axe` clean.
@@ -104,6 +104,7 @@ git status --porcelain                                        # must be empty af
   - Builds: `creatorReducer` with all lock guards, `useSyncExternalStore` store, nine question editors, section header/action editors, floating action bar, section reorder dialog, dnd-kit (pointer + keyboard + announcements), preview dialog using `SurveyForm`, `ref` handle, playground creator page.
   - Gate: standard gate; ported `locked-question`, `section-locked`, `section-locked-question`, `question-creator-id`, `id` behaviours; keyboard drag test.
   - From the SP4 review: the creator's zodResolver needs both `SurveyInput` and `Survey` types (SP5 exports `SurveyInput`).
+  - From the SP5 review: anything rendered from the browser's clock or time zone uses `useHydrated` (question-types/use-hydrated.ts); `useShuffled` is keyed on content; the creator's preview passes a fresh `schema` on every edit, which is fine now.
   - Depends on: SP5.
 
 - [ ] **SP7 — `/templates` and `/mbc`** (`07-sp7-templates-mbc`)
@@ -116,6 +117,7 @@ git status --porcelain                                        # must be empty af
 - [ ] **SP8 — Release readiness** (`08-sp8-release`)
   - Spec: §5.4 migration, §7 remaining build-output checks, §8 CI/next-smoke/docs/release.
   - README must state the host requirements from spec §3.1: `styles.layer.css` import order, Tailwind v3 ≥ 3.4, and that `mbc:` overrides only work for shipped classes.
+  - From the SP5 review: MIGRATION.md lists SP5's six behaviour changes plus "an untouched time question submits `undefined`" (v0 sent empty parts); the README states that question ids must not contain `.`, `[` or `]`; normalise unknown locales in `MbcProvider` (`useLocale()` still returns e.g. `'fr'`); SP5's deferred minors (ledger) are offered to the user as a polish list.
   - From the SP4 review: survey-web's `styles.css` is compiled from the ui-web source it was built with — release the three packages as a Changesets `fixed` group and tell hosts in the README to upgrade them together; MIGRATION.md notes that `validateSurveyJson` returns a zod 4 `ZodError` (no `.errors`, different message text) and lists SP5's behaviour changes; README documents the server flow `parseSurvey` → `validateAnswers` → `collectAnswers` from `/core`.
   - Builds: `apps/next-smoke` (Next 16 App Router + Turbopack) importing every entry point in client and server components; CI job for it; READMEs for the three packages; `packages/survey-web/MIGRATION.md`; initial changesets (`major` for all three → `1.0.0`); final whole-repo review.
   - Gate: standard gate + `next build` in `apps/next-smoke` on React 18 and 19 + `changeset status` shows the three `1.0.0` releases.
