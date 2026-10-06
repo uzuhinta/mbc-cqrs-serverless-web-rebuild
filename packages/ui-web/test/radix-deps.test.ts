@@ -49,10 +49,13 @@ function versionFrom(owner: string, shared: string): string {
 }
 
 describe('Radix dependencies', () => {
-  it('pins every @radix-ui package exactly', () => {
-    expect(radix.filter(([, range]) => !/^\d+\.\d+\.\d+$/.test(range))).toEqual(
-      []
-    )
+  // Caret ranges let a host on newer Radix (shadcn) dedupe to one copy;
+  // exact pins would give it two registries (Escape in our popover closing
+  // its dialog).
+  it('uses caret ranges for every @radix-ui package', () => {
+    expect(
+      radix.filter(([, range]) => !/^\^\d+\.\d+\.\d+$/.test(range))
+    ).toEqual([])
   })
 
   // Dismissable-layer / focus-scope keep module-level registries: two copies
