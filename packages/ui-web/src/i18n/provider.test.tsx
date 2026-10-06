@@ -107,7 +107,7 @@ describe('MbcProvider', () => {
         <Probe />
       </MbcProvider>
     )
-    expect(screen.getByText(/^fr\|閉じる\|/)).toBeInTheDocument()
+    expect(screen.getByText(/^ja\|閉じる\|/)).toBeInTheDocument()
   })
 
   it('treats an unknown locale as Japanese everywhere, including useLocale', () => {
