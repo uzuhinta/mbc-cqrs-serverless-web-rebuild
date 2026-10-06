@@ -29,7 +29,7 @@ import {
   useMessages,
 } from '@mbc-cqrs-serverless/ui-web'
 import { GripVertical, Trash2 } from 'lucide-react'
-import { useId } from 'react'
+import { useId, useState } from 'react'
 
 import type {
   DropdownQuestion,
@@ -179,49 +179,77 @@ export function OptionsEditor<Q extends ChoiceQuestion>({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
-  const write = (next: QuestionOption[]) =>
+  // Stable keys per option (not stored in the JSON): React keys and sortable
+  // ids follow the option, so focus stays on a moved option's handle.
+  const [keyState, setKeyState] = useState(() => ({
+    keys: options.map((_, i) => `${base}-${i}`),
+    next: options.length,
+  }))
+  if (keyState.keys.length !== options.length) {
+    // Options changed outside this editor (type change, reset): realign by count.
+    const keys = keyState.keys.slice(0, options.length)
+    let next = keyState.next
+    while (keys.length < options.length) keys.push(`${base}-${next++}`)
+    setKeyState({ keys, next })
+  }
+  const { keys } = keyState
+  const newKey = () => `${base}-${keyState.next}`
+
+  const write = (next: QuestionOption[], nextKeys: string[]) => {
+    setKeyState((current) => ({
+      keys: nextKeys,
+      next: Math.max(current.next, keyState.next + 1),
+    }))
     onChange({ ...question, options: next } as Q)
+  }
   const patch = (index: number, change: Partial<QuestionOption>) =>
-    write(
-      options.map((option, i) => {
+    onChange({
+      ...question,
+      options: options.map((option, i) => {
         if (i !== index) return option
         const next = { ...option, ...change }
         if ('nextSectionId' in change && change.nextSectionId === undefined)
           delete next.nextSectionId
         return next
-      })
-    )
-  const sortId = (index: number) => `${base}-${index}`
+      }),
+    } as Q)
+  const sortId = (index: number) => keys[index] ?? `${base}-${index}`
+  const without = <T,>(list: readonly T[], index: number) =>
+    list.filter((_, i) => i !== index)
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return
-    const from = options.findIndex((_, i) => sortId(i) === active.id)
-    const to = options.findIndex((_, i) => sortId(i) === over.id)
+    const from = keys.indexOf(String(active.id))
+    const to = keys.indexOf(String(over.id))
     if (from < 0 || to < 0 || options[to]?.isOther) return
-    const next = [...options]
-    const [moved] = next.splice(from, 1)
-    if (moved) next.splice(to, 0, moved)
-    write(next)
+    const move = <T,>(list: readonly T[]) => {
+      const next = [...list]
+      const [moved] = next.splice(from, 1)
+      if (moved !== undefined) next.splice(to, 0, moved)
+      return next
+    }
+    write(move(options), move(keys))
   }
 
   const addOption = () => {
     const label = t.options.placeholder({ n: regular.length + 1 })
     const added = { label, value: label }
+    const at = otherIndex < 0 ? options.length : otherIndex
     write(
-      otherIndex < 0
-        ? [...options, added]
-        : [...options.slice(0, otherIndex), added, ...options.slice(otherIndex)]
+      [...options.slice(0, at), added, ...options.slice(at)],
+      [...keys.slice(0, at), newKey(), ...keys.slice(at)]
     )
   }
   const toggleOther = () =>
-    write(
-      otherIndex >= 0
-        ? options.filter((_, i) => i !== otherIndex)
-        : [
+    otherIndex >= 0
+      ? write(without(options, otherIndex), without(keys, otherIndex))
+      : write(
+          [
             ...options,
             { label: t.options.other, value: 'other', isOther: true },
-          ]
-    )
+          ],
+          [...keys, newKey()]
+        )
 
   const rows = options.map((option, index) => ({ option, index }))
   const ordered = [
@@ -271,7 +299,9 @@ export function OptionsEditor<Q extends ChoiceQuestion>({
                   )
                 }
                 onTarget={(target) => patch(index, { nextSectionId: target })}
-                onRemove={() => write(options.filter((_, i) => i !== index))}
+                onRemove={() =>
+                  write(without(options, index), without(keys, index))
+                }
               />
             ))}
           </div>

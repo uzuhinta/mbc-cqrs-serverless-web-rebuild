@@ -266,6 +266,9 @@ describe('OptionsEditor', () => {
       'a',
       'c',
     ])
+    // Focus stays on the moved option's handle, so a second move moves the same option.
+    const focusedRow = document.activeElement?.closest('[data-option-row]')
+    expect(focusedRow?.querySelector('input')).toHaveValue('a')
   })
 
   it('has no "Other" button for dropdowns', () => {
