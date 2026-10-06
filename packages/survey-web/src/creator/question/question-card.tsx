@@ -25,7 +25,7 @@ import {
 } from 'react'
 
 import type { SurveyQuestion } from '../../schema/survey-schema'
-import { IssueList, useCreatorUi } from '../creator-ui'
+import { IssueList, useCreatorUi, useItemIssues } from '../creator-ui'
 import { creatorMessages } from '../i18n/creator-messages'
 import { sectionHeaders } from '../state/items'
 import { canDelete, canDrag, canDuplicate, canEdit } from '../state/locks'
@@ -130,19 +130,28 @@ function KindEditor({
   }
 }
 
+type FieldLink = {
+  /** aria-describedby for the main field when the card has issues. */
+  describedBy: string | undefined
+  invalid: boolean
+}
+
 function QuestionEditor({
   question,
   handle,
   duplicable,
   deletable,
+  link,
 }: {
   question: SurveyQuestion
   handle?: DragHandleProps
   duplicable: boolean
   deletable: boolean
+  link: FieldLink
 }) {
   const t = useMessages(creatorMessages)
-  const { dispatch } = useCreatorStore()
+  const store = useCreatorStore()
+  const { dispatch } = store
   const ui = useCreatorUi()
   const requiredId = useId()
   const labelRef = useRef<HTMLInputElement>(null)
@@ -178,6 +187,9 @@ function QuestionEditor({
       <div className="mbc:flex mbc:items-center mbc:gap-4">
         <Input
           ref={labelRef}
+          data-focus-target=""
+          aria-describedby={link.describedBy}
+          aria-invalid={link.invalid || undefined}
           placeholder={t.question.placeholder}
           aria-label={t.question.placeholder}
           className="mbc:h-12 mbc:grow mbc:rounded-none mbc:border-0 mbc:border-b mbc:px-1 mbc:text-lg mbc:font-semibold mbc:shadow-none mbc:focus-visible:ring-0"
@@ -223,7 +235,10 @@ function QuestionEditor({
           title={t.question.duplicate}
           aria-label={t.question.duplicate}
           disabled={!duplicable}
-          onClick={() => dispatch({ type: 'duplicate', id, copySuffix: '' })}
+          onClick={() => {
+            dispatch({ type: 'duplicate', id, copySuffix: '' })
+            ui.focusCard(store.getState().selectedId)
+          }}
         >
           <Copy aria-hidden className="mbc:h-4 mbc:w-4" />
         </Button>
@@ -235,7 +250,10 @@ function QuestionEditor({
           title={t.question.delete}
           aria-label={t.question.delete}
           disabled={!deletable}
-          onClick={() => dispatch({ type: 'remove', id })}
+          onClick={() => {
+            dispatch({ type: 'remove', id })
+            ui.focusCard(store.getState().selectedId)
+          }}
         >
           <Trash2 aria-hidden className="mbc:h-4 mbc:w-4" />
         </Button>
@@ -275,10 +293,12 @@ function QuestionView({
   question,
   handle,
   onSelect,
+  link,
 }: {
   question: SurveyQuestion
   handle?: DragHandleProps
   onSelect: (fromKeyboard: boolean) => void
+  link: FieldLink
 }) {
   const t = useMessages(creatorMessages)
   return (
@@ -294,6 +314,8 @@ function QuestionView({
         <p className="mbc:flex mbc:items-center mbc:gap-2 mbc:font-semibold">
           <button
             type="button"
+            data-focus-target=""
+            aria-describedby={link.describedBy}
             className="mbc:rounded-sm mbc:text-left mbc:outline-none mbc:focus-visible:ring-2 mbc:focus-visible:ring-ring"
             onClick={(event) => onSelect(event.detail === 0)}
           >
@@ -329,6 +351,8 @@ function QuestionCardImpl({
 }) {
   const { dispatch } = useCreatorStore()
   const ui = useCreatorUi()
+  const issuesId = useId()
+  const issues = useItemIssues(id)
   const item = useCreatorSelector((state) =>
     state.survey.items.find((entry) => entry.id === id)
   )
@@ -346,6 +370,11 @@ function QuestionCardImpl({
   ) as [boolean, boolean, boolean, boolean]
   const editing = selected && editable
   const visibleHandle = draggable ? handle : undefined
+  const link: FieldLink = {
+    describedBy:
+      issues.errors.length + issues.warnings.length > 0 ? issuesId : undefined,
+    invalid: issues.errors.length > 0,
+  }
 
   const select = (fromKeyboard = false) => {
     if (fromKeyboard) ui.requestFocus(id)
@@ -374,15 +403,17 @@ function QuestionCardImpl({
           handle={visibleHandle}
           duplicable={duplicable}
           deletable={deletable}
+          link={link}
         />
       ) : (
         <QuestionView
           question={item}
           handle={visibleHandle}
           onSelect={(fromKeyboard) => select(fromKeyboard)}
+          link={link}
         />
       )}
-      <IssueList id={id} />
+      <IssueList id={id} domId={issuesId} />
     </div>
   )
 }

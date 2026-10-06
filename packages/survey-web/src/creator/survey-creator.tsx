@@ -48,6 +48,7 @@ import {
   CreatorUiProvider,
   IssueList,
   useCreatorUi,
+  useItemIssues,
   type CreatorUi,
   type IssueState,
 } from './creator-ui'
@@ -123,6 +124,10 @@ function TitleCard() {
   const t = useMessages(creatorMessages)
   const { dispatch } = useCreatorStore()
   const ui = useCreatorUi()
+  const issuesId = useId()
+  const issues = useItemIssues(TITLE_ID)
+  const describedBy =
+    issues.errors.length + issues.warnings.length > 0 ? issuesId : undefined
   const titleRef = useRef<HTMLInputElement>(null)
   const selected = useCreatorSelector((state) => state.selectedId === TITLE_ID)
   const title = useCreatorSelector((state) => state.survey.title)
@@ -158,6 +163,9 @@ function TitleCard() {
         <div className="mbc:flex mbc:flex-col mbc:gap-2">
           <Input
             ref={titleRef}
+            data-focus-target=""
+            aria-describedby={describedBy}
+            aria-invalid={issues.errors.length > 0 || undefined}
             value={title}
             placeholder={t.shell.surveyTitlePlaceholder}
             aria-label={t.shell.surveyTitlePlaceholder}
@@ -184,6 +192,8 @@ function TitleCard() {
           <h2 className="mbc:text-3xl mbc:font-bold">
             <button
               type="button"
+              data-focus-target=""
+              aria-describedby={describedBy}
               className="mbc:rounded-sm mbc:text-left mbc:outline-none mbc:focus-visible:ring-2 mbc:focus-visible:ring-ring"
               onClick={(event) => select(event.detail === 0)}
             >
@@ -197,6 +207,7 @@ function TitleCard() {
       )}
       <IssueList
         id={TITLE_ID}
+        domId={issuesId}
         className="mbc:mt-2 mbc:flex mbc:flex-col mbc:gap-1"
       />
     </div>
@@ -395,15 +406,8 @@ function revealFirstIssue(
   const id = order.find((candidate) => report.errors[candidate]?.length)
   if (!id) return
   store.dispatch({ type: 'select', id })
-  setTimeout(() => {
-    const card = ui.getCard(id)
-    card?.scrollIntoView?.({ block: 'center' })
-    card
-      ?.querySelector<HTMLElement>(
-        'input:not([disabled]), button:not([disabled])'
-      )
-      ?.focus()
-  }, 0)
+  // The card's main field, which is described by its errors.
+  ui.focusCard(id)
 }
 
 export const SurveyCreator: ForwardRefExoticComponent<
@@ -422,9 +426,15 @@ export const SurveyCreator: ForwardRefExoticComponent<
       showErrors: false,
     })
   )
-  const [reorderOpen, setReorderOpen] = useState(false)
+  const [reorder, setReorder] = useState<{
+    open: boolean
+    from: string | null
+  }>({
+    open: false,
+    from: null,
+  })
   const [ui] = useState(() =>
-    createCreatorUi(issues, () => setReorderOpen(true))
+    createCreatorUi(issues, (from) => setReorder({ open: true, from }))
   )
   const [preview, setPreview] = useState<Survey | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -528,8 +538,11 @@ export const SurveyCreator: ForwardRefExoticComponent<
             </Tabs>
           </fieldset>
           <SectionReorderDialog
-            open={reorderOpen}
-            onOpenChange={setReorderOpen}
+            open={reorder.open}
+            onOpenChange={(open) =>
+              setReorder((current) => ({ ...current, open }))
+            }
+            returnFocusTo={reorder.from}
           />
         </div>
       </CreatorUiProvider>

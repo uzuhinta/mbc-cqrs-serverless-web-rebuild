@@ -181,10 +181,20 @@ describe('creatorReducer', () => {
     expect(run(state, { type: 'remove', id: 'sec_locked' })).toBe(state)
   })
 
-  it('clears the selection when the selected item is removed', () => {
+  it('selects the neighbour when the selected item is removed or merged away', () => {
     expect(
       run(start('q_last'), { type: 'remove', id: 'sec_last' }).selectedId
-    ).toBeNull()
+    ).toBe('q_locked')
+    expect(
+      run(start('q_open'), { type: 'remove', id: 'q_open' }).selectedId
+    ).toBe('sec_open')
+    expect(
+      run(start('sec_last'), { type: 'mergeSection', id: 'sec_last' })
+        .selectedId
+    ).toBe('q_locked')
+    expect(
+      run(start('q_open'), { type: 'remove', id: 'sec_last' }).selectedId
+    ).toBe('q_open')
   })
 
   it('merges a section into the one above, except into or from a locked one', () => {

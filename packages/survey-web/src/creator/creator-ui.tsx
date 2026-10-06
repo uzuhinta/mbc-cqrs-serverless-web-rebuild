@@ -42,13 +42,16 @@ export type CreatorUi = {
   getCard(id: string): HTMLElement | undefined
   requestFocus(id: string): void
   takeFocus(id: string): boolean
+  /** After the next commit, focuses the card's `[data-focus-target]` (its main field or label button). */
+  focusCard(id: string | null): void
   issues: ValueStore<IssueState>
-  openReorder(): void
+  /** `fromId`: the section whose menu opened it; focus returns there on close. */
+  openReorder(fromId: string): void
 }
 
 export function createCreatorUi(
   issues: ValueStore<IssueState>,
-  openReorder: () => void = () => {}
+  openReorder: (fromId: string) => void = () => {}
 ): CreatorUi {
   const cards = new Map<string, HTMLElement>()
   const refs = new Map<string, (element: HTMLElement | null) => void>()
@@ -68,6 +71,14 @@ export function createCreatorUi(
     getCard: (id) => cards.get(id),
     requestFocus: (id) => void focus.add(id),
     takeFocus: (id) => focus.delete(id),
+    focusCard(id) {
+      if (id === null) return
+      setTimeout(() => {
+        const card = cards.get(id)
+        card?.scrollIntoView?.({ block: 'nearest' })
+        card?.querySelector<HTMLElement>('[data-focus-target]')?.focus()
+      }, 0)
+    },
     issues,
     openReorder,
   }
@@ -118,9 +129,12 @@ export function useItemIssues(id: string) {
 
 export function IssueList({
   id,
+  domId,
   className,
 }: {
   id: string
+  /** DOM id, so the card's main field can point at it with aria-describedby. */
+  domId?: string
   className?: string
 }) {
   const t = useMessages(creatorMessages)
@@ -128,6 +142,7 @@ export function IssueList({
   if (errors.length === 0 && warnings.length === 0) return null
   return (
     <div
+      id={domId}
       data-issues=""
       className={
         className ?? 'mbc:flex mbc:flex-col mbc:gap-1 mbc:px-6 mbc:pb-4'

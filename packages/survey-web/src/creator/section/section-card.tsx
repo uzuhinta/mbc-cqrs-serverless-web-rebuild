@@ -31,9 +31,16 @@ import {
   MoreVertical,
   Trash2,
 } from 'lucide-react'
-import { memo, useEffect, useRef, useState, type MouseEvent } from 'react'
+import {
+  memo,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type MouseEvent,
+} from 'react'
 
-import { IssueList, useCreatorUi } from '../creator-ui'
+import { IssueList, useCreatorUi, useItemIssues } from '../creator-ui'
 import { creatorMessages } from '../i18n/creator-messages'
 import { isSection, sectionEndOf } from '../state/items'
 import { canDelete, canMerge } from '../state/locks'
@@ -44,9 +51,16 @@ const UNDERLINE =
 
 function SectionMenu({ id }: { id: string }) {
   const t = useMessages(creatorMessages)
-  const { dispatch } = useCreatorStore()
+  const store = useCreatorStore()
+  const { dispatch } = store
   const ui = useCreatorUi()
   const [deleteOpen, setDeleteOpen] = useState(false)
+  // Set when a menu action moves focus itself; Radix must not then return focus to the trigger.
+  const focusHandled = useRef(false)
+  const focusSelection = () => {
+    focusHandled.current = true
+    ui.focusCard(store.getState().selectedId)
+  }
   const flags = useCreatorSelector((state) => {
     const items = state.survey.items
     const index = items.findIndex((item) => item.id === id)
@@ -75,26 +89,47 @@ function SectionMenu({ id }: { id: string }) {
             <MoreVertical aria-hidden className="mbc:h-4 mbc:w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => ui.openReorder()}>
+        <DropdownMenuContent
+          align="end"
+          onCloseAutoFocus={(event) => {
+            if (focusHandled.current) event.preventDefault()
+            focusHandled.current = false
+          }}
+        >
+          <DropdownMenuItem
+            onSelect={() => {
+              focusHandled.current = true
+              ui.openReorder(id)
+            }}
+          >
             <ArrowUpDown aria-hidden className="mbc:mr-2 mbc:h-4 mbc:w-4" />
             <span>{t.section.move}</span>
           </DropdownMenuItem>
           <DropdownMenuItem
-            onSelect={() =>
+            onSelect={() => {
               dispatch({
                 type: 'duplicate',
                 id,
                 copySuffix: t.shell.copySuffix,
               })
-            }
+              focusSelection()
+            }}
           >
             <Copy aria-hidden className="mbc:mr-2 mbc:h-4 mbc:w-4" />
             <span>{t.section.duplicate}</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={!mergeable}
-            onSelect={() => dispatch({ type: 'mergeSection', id })}
+            onSelect={() => {
+              const index = store
+                .getState()
+                .survey.items.findIndex((item) => item.id === id)
+              dispatch({ type: 'mergeSection', id })
+              // Keep a place: the item that preceded the merged header.
+              const previous = store.getState().survey.items[index - 1]?.id
+              if (previous) dispatch({ type: 'select', id: previous })
+              focusSelection()
+            }}
           >
             <Combine aria-hidden className="mbc:mr-2 mbc:h-4 mbc:w-4" />
             <span>{t.section.merge}</span>
@@ -119,7 +154,13 @@ function SectionMenu({ id }: { id: string }) {
           </AlertDialogTrigger>
         </DropdownMenuContent>
       </DropdownMenu>
-      <AlertDialogContent>
+      <AlertDialogContent
+        // Its trigger lived in the closed menu: focus the section (or, after a delete, its neighbour).
+        onCloseAutoFocus={(event) => {
+          event.preventDefault()
+          ui.focusCard(store.getState().selectedId ?? id)
+        }}
+      >
         <AlertDialogHeader>
           <AlertDialogTitle>{t.section.deleteTitle}</AlertDialogTitle>
           <AlertDialogDescription>
@@ -131,7 +172,20 @@ function SectionMenu({ id }: { id: string }) {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t.section.cancel}</AlertDialogCancel>
-          <AlertDialogAction onClick={() => dispatch({ type: 'remove', id })}>
+          <AlertDialogAction
+            onClick={() => {
+              const index = store
+                .getState()
+                .survey.items.findIndex((item) => item.id === id)
+              dispatch({ type: 'remove', id })
+              // Keyboard users keep a place: the item before the deleted section.
+              const items = store.getState().survey.items
+              dispatch({
+                type: 'select',
+                id: items[index - 1]?.id ?? items[index]?.id ?? null,
+              })
+            }}
+          >
             {t.section.confirmDelete}
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -144,6 +198,10 @@ function SectionCardImpl({ id }: { id: string }) {
   const t = useMessages(creatorMessages)
   const { dispatch } = useCreatorStore()
   const ui = useCreatorUi()
+  const issuesId = useId()
+  const issues = useItemIssues(id)
+  const describedBy =
+    issues.errors.length + issues.warnings.length > 0 ? issuesId : undefined
   const titleRef = useRef<HTMLInputElement>(null)
   const section = useCreatorSelector((state) =>
     state.survey.items.find((item) => item.id === id)
@@ -191,6 +249,9 @@ function SectionCardImpl({ id }: { id: string }) {
             <div className="mbc:flex mbc:w-full mbc:flex-col mbc:gap-4">
               <Input
                 ref={titleRef}
+                data-focus-target=""
+                aria-describedby={describedBy}
+                aria-invalid={issues.errors.length > 0 || undefined}
                 placeholder={t.section.untitled}
                 aria-label={t.section.untitled}
                 className={`${UNDERLINE} mbc:text-xl mbc:font-semibold`}
@@ -216,6 +277,7 @@ function SectionCardImpl({ id }: { id: string }) {
                 onClick={(event) => {
                   event.stopPropagation()
                   dispatch({ type: 'select', id: null })
+                  ui.focusCard(id)
                 }}
               >
                 <ChevronUp
@@ -237,6 +299,8 @@ function SectionCardImpl({ id }: { id: string }) {
               <p className="mbc:flex mbc:items-center mbc:gap-2 mbc:font-semibold">
                 <button
                   type="button"
+                  data-focus-target=""
+                  aria-describedby={describedBy}
                   className="mbc:rounded-sm mbc:text-left mbc:outline-none mbc:focus-visible:ring-2 mbc:focus-visible:ring-ring"
                   onClick={(event) => select(event.detail === 0)}
                 >
@@ -279,7 +343,11 @@ function SectionCardImpl({ id }: { id: string }) {
           </div>
         </div>
       )}
-      <IssueList id={id} className="mbc:mt-2 mbc:flex mbc:flex-col mbc:gap-1" />
+      <IssueList
+        id={id}
+        domId={issuesId}
+        className="mbc:mt-2 mbc:flex mbc:flex-col mbc:gap-1"
+      />
     </div>
   )
 }

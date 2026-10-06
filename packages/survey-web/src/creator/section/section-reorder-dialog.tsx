@@ -30,6 +30,7 @@ import { GripVertical } from 'lucide-react'
 import { useId, useState } from 'react'
 
 import { announcements } from '../dnd-announcements'
+import { useCreatorUi } from '../creator-ui'
 import { creatorMessages } from '../i18n/creator-messages'
 import { isSection } from '../state/items'
 import { useCreatorStore } from '../state/store'
@@ -169,14 +170,24 @@ function ReorderList({ onDone }: { onDone: () => void }) {
 export function SectionReorderDialog({
   open,
   onOpenChange,
+  returnFocusTo,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** The section whose menu opened the dialog (the menu itself is gone). */
+  returnFocusTo?: string | null
 }) {
   const t = useMessages(creatorMessages)
+  const ui = useCreatorUi()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        onCloseAutoFocus={(event) => {
+          if (!returnFocusTo) return
+          event.preventDefault()
+          ui.focusCard(returnFocusTo)
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{t.reorder.title}</DialogTitle>
         </DialogHeader>

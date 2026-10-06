@@ -54,6 +54,14 @@ function withItems(
   return { survey: { ...state.survey, items }, selectedId, dirty: true }
 }
 
+/** What to select when the selection was removed at `index`: the item before it, else after. */
+function neighbourOf(
+  items: readonly SurveyItem[],
+  index: number
+): string | null {
+  return items[index - 1]?.id ?? items[index]?.id ?? null
+}
+
 function lockedContentChanged(item: SectionHeader, next: SurveyItem): boolean {
   return (
     !isSection(next) ||
@@ -181,11 +189,12 @@ export function creatorReducer(
       if (!item || !canDelete(items, index)) return state
       const end = isSection(item) ? sectionEndOf(items, index) : index + 1
       const removed = new Set(items.slice(index, end).map((entry) => entry.id))
+      const next = [...items.slice(0, index), ...items.slice(end)]
       return withItems(
         state,
-        [...items.slice(0, index), ...items.slice(end)],
+        next,
         state.selectedId !== null && removed.has(state.selectedId)
-          ? null
+          ? neighbourOf(next, index)
           : state.selectedId
       )
     }
@@ -193,10 +202,13 @@ export function creatorReducer(
     case 'mergeSection': {
       const index = indexOf(action.id)
       if (!canMerge(items, index)) return state
+      const next = items.filter((_, i) => i !== index)
       return withItems(
         state,
-        items.filter((_, i) => i !== index),
-        state.selectedId === action.id ? null : state.selectedId
+        next,
+        state.selectedId === action.id
+          ? neighbourOf(next, index)
+          : state.selectedId
       )
     }
 

@@ -170,6 +170,12 @@ describe('SurveyCreator', () => {
     expect(
       screen.getByText('セクションのタイトルを入力してください')
     ).toBeInTheDocument()
+    const sectionTitle = screen.getByPlaceholderText('未タイトルセクション')
+    await waitFor(() => expect(sectionTitle).toHaveFocus())
+    expect(sectionTitle).toHaveAttribute('aria-invalid', 'true')
+    expect(sectionTitle).toHaveAccessibleDescription(
+      'セクションのタイトルを入力してください'
+    )
 
     await userEvent.type(
       screen.getByPlaceholderText('未タイトルセクション'),
@@ -301,5 +307,68 @@ describe('SurveyCreator', () => {
     expect(screen.getByPlaceholderText('Survey title')).toHaveValue(
       'Untitled survey'
     )
+  })
+
+  it('keeps keyboard focus on a card after merge, collapse and the reorder dialog', async () => {
+    render(<SurveyCreator defaultValue={LOCKS} />)
+    // Merge the last section: focus lands on the item before it.
+    await userEvent.click(
+      screen.getAllByRole('button', { name: 'セクションのオプション' })[2]!
+    )
+    await userEvent.click(
+      await screen.findByRole('menuitem', { name: '上のセクションとマージ' })
+    )
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole('button', { name: 'Locked question' })
+      )
+    )
+
+    // Collapse an open section: focus returns to its title button.
+    await userEvent.click(screen.getByRole('button', { name: 'Open' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'セクションを閉じる' })
+    )
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole('button', { name: 'Open' })
+      )
+    )
+
+    // The reorder dialog gives focus back to the section that opened it.
+    await userEvent.click(
+      screen.getAllByRole('button', { name: 'セクションのオプション' })[1]!
+    )
+    await userEvent.click(
+      await screen.findByRole('menuitem', { name: 'セクションを移動' })
+    )
+    await userEvent.click(
+      within(await screen.findByRole('dialog')).getByRole('button', {
+        name: 'キャンセル',
+      })
+    )
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole('button', { name: 'Open' })
+      )
+    )
+  })
+
+  it('focuses the copy after duplicating and the neighbour after deleting', async () => {
+    const ref = createRef<SurveyCreatorHandle>()
+    render(<SurveyCreator ref={ref} defaultValue={LOCKS} />)
+    await userEvent.click(screen.getByRole('button', { name: 'Open question' }))
+    await userEvent.click(screen.getByRole('button', { name: '複製' }))
+    const label = () => screen.getByPlaceholderText('質問')
+    await waitFor(() => expect(label()).toHaveFocus())
+    expect(label()).toHaveValue('Open question')
+    expect(ref.current!.getValue().items.map((item) => item.id)[4]).not.toBe(
+      'q_open'
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: '削除' }))
+    // The neighbour (the original question) is selected and open for editing.
+    await waitFor(() => expect(label()).toHaveFocus())
+    expect(label()).toHaveValue('Open question')
   })
 })

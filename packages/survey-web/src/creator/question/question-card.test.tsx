@@ -217,4 +217,24 @@ describe('QuestionCard', () => {
     expect(document.body.innerHTML).not.toBe(before)
     expect(screen.getByText('Pick')).toBeInTheDocument()
   })
+
+  it('links the main field to the card’s errors', async () => {
+    const survey: Survey = {
+      ...LOCKS,
+      items: [
+        ...LOCKS.items,
+        { id: 'q_empty', type: 'dropdown', label: 'Empty', options: [] },
+      ],
+    }
+    renderCreator(card('q_empty'), {
+      survey,
+      selectedId: 'q_empty',
+      showErrors: true,
+    })
+    const label = screen.getByPlaceholderText('質問')
+    expect(label).toHaveAttribute('aria-invalid', 'true')
+    expect(label).toHaveAccessibleDescription(
+      'オプションを1つ以上追加してください'
+    )
+  })
 })
