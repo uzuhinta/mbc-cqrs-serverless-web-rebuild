@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { join, sep } from 'node:path'
+import { join, posix, sep } from 'node:path'
 
 const LEADING_USE_CLIENT =
   /^(?:\s|\/\/[^\n]*\n|\/\*[\s\S]*?\*\/)*(['"])use client\1/
@@ -34,4 +34,27 @@ export const FORBIDDEN_JS_PATTERNS: readonly RegExp[] = [
   /\bprocess\.env\b/,
   /from\s*["']next(?:\/[^"']*)?["']/,
   /from\s*["'](?:nuqs|sonner)["']/,
+  /from\s*["'](?:axios|swr|mobx|mobx-react-lite|react-draggable|react-resizable)["']/,
+  /from\s*["'](?:@apollo\/client|aws-amplify|aws-appsync-[^"']*)(?:\/[^"']*)?["']/,
 ]
+
+/** Bare module specifiers reachable from `entry` through relative imports. */
+export function externalsOf(dist: string, entry: string): Set<string> {
+  const seen = new Set<string>()
+  const external = new Set<string>()
+  const visit = (file: string) => {
+    if (seen.has(file)) return
+    seen.add(file)
+    const source = readText(dist, file)
+    for (const [, specifier] of source.matchAll(
+      /(?:from|import)\s*["']([^"']+)["']/g
+    )) {
+      if (!specifier) continue
+      if (specifier.startsWith('.'))
+        visit(posix.join(posix.dirname(file), specifier))
+      else external.add(specifier)
+    }
+  }
+  visit(entry)
+  return external
+}
