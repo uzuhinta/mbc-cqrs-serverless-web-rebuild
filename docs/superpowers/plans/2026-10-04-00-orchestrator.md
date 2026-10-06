@@ -114,7 +114,8 @@ git status --porcelain                                        # must be empty af
   - From the SP3 review: a save with unchanged data returns no `requestId` (backend `publishPartialUpdateAsync` → `null`); `command()` rejects with `MbcApiError` — `/mbc` mutations must treat that case as a no-op success, not an error.
   - Depends on: SP3, SP6.
 
-- [ ] **SP8 — Release readiness** (`08-sp8-release`)
+- [x] **SP8 — Release readiness** (`08-sp8-release`)
+  - Done 2026-10-06. Also tracked v0 to npm `0.0.50` (option-value rule, separate option values, per-request tenant); see the SP8 ledger rulings.
   - Spec: §5.4 migration, §7 remaining build-output checks, §8 CI/next-smoke/docs/release.
   - README must state the host requirements from spec §3.1: `styles.layer.css` import order, Tailwind v3 ≥ 3.4, and that `mbc:` overrides only work for shipped classes.
   - From the SP7 review: README notes the decoded id for `MbcSurveyTemplateEditorPage`, the throw-on-failure pattern for `useSubmitSurveyAnswer` with `SurveyForm`, and that `MbcTimeoutError` leaves the outcome unknown; MIGRATION.md lists SP7's behaviour changes plus "Back asks before discarding a changed new survey"; SP7's deferred minors join the polish list.
