@@ -57,6 +57,6 @@ describe('documentation imports', () => {
         for (const name of names)
           expect(name in mod, `${doc}: ${name} from ${from}`).toBe(true)
       }
-    })
+    }, 30_000) // cold imports of the built packages (Radix, lucide) take seconds
   }
 })
