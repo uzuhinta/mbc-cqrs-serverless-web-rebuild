@@ -156,10 +156,17 @@ describe('OptionsEditor', () => {
     { id: 'sec_2', title: '' },
   ]
 
-  it('mirrors the label into the value, adds options and "Other" (kept last)', async () => {
+  it('edits label and value separately, numbers new options, keeps "Other" last (v0 0.0.50)', async () => {
+    const numbered: SingleChoiceQuestion = {
+      ...single,
+      options: [
+        { value: '1', label: 'オプション 1' },
+        { value: '5', label: 'オプション 2' },
+      ],
+    }
     render(
       <Harness
-        initial={single}
+        initial={numbered}
         editor={(q, set) => (
           <OptionsEditor
             question={q}
@@ -173,20 +180,84 @@ describe('OptionsEditor', () => {
     const first = screen.getByDisplayValue('オプション 1')
     await userEvent.clear(first)
     await userEvent.type(first, '赤')
+    const [firstValue] = screen.getAllByRole('textbox', { name: '値' })
+    await userEvent.clear(firstValue!)
+    await userEvent.type(firstValue!, 'red')
     await userEvent.click(screen.getByRole('button', { name: 'その他を追加' }))
     await userEvent.click(
       screen.getByRole('button', { name: 'オプションを追加' })
     )
 
     expect(stored().options).toEqual([
-      { value: '赤', label: '赤' },
-      { value: 'オプション 2', label: 'オプション 2' },
+      { value: 'red', label: '赤' },
+      { value: '5', label: 'オプション 2' },
+      { value: '6', label: 'オプション 3' },
       { value: 'other', label: 'その他', isOther: true },
     ])
     expect(screen.getByDisplayValue('その他')).toBeDisabled()
+    const values = screen.getAllByRole('textbox', { name: '値' })
+    expect(values.at(-1)).toHaveValue('other')
+    expect(values.at(-1)).toBeDisabled()
 
     await userEvent.click(screen.getByRole('button', { name: 'その他を削除' }))
-    expect(stored().options).toHaveLength(2)
+    expect(stored().options).toHaveLength(3)
+  })
+
+  it('numbers the first added option 1 when no value is numeric', async () => {
+    render(
+      <Harness
+        initial={single}
+        editor={(q, set) => (
+          <OptionsEditor
+            question={q}
+            onChange={set}
+            showBranching={false}
+            sections={sections}
+          />
+        )}
+      />
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'オプションを追加' })
+    )
+    expect(stored().options[1]).toEqual({ value: '1', label: 'オプション 2' })
+  })
+
+  it('marks empty, repeated and reserved values once errors are shown', () => {
+    const bad: SingleChoiceQuestion = {
+      ...single,
+      options: [
+        { value: 'a', label: 'A' },
+        { value: 'a', label: 'B' },
+        { value: 'other', label: 'C' },
+        { value: '', label: 'D' },
+        { value: 'other', label: 'その他', isOther: true },
+      ],
+    }
+    const { rerender } = render(
+      <OptionsEditor
+        question={bad}
+        onChange={() => {}}
+        showBranching={false}
+        sections={sections}
+      />
+    )
+    const invalid = () =>
+      screen
+        .getAllByRole('textbox', { name: '値' })
+        .map((input) => input.getAttribute('aria-invalid') === 'true')
+    expect(invalid()).toEqual([false, false, false, false, false])
+
+    rerender(
+      <OptionsEditor
+        question={bad}
+        onChange={() => {}}
+        showBranching={false}
+        sections={sections}
+        showValueErrors
+      />
+    )
+    expect(invalid()).toEqual([false, true, true, true, false])
   })
 
   it('removes an option and sets a branch target per option', async () => {

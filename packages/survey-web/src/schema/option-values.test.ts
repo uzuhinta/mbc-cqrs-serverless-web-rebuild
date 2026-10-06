@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { validateDraft } from '../creator/state/validate'
+import { optionValueProblems } from './option-values'
 import { parseSurvey } from './parse'
 import type { Survey } from './survey-schema'
 
@@ -51,5 +52,22 @@ describe('option values (v0 0.0.49 rule)', () => {
       ])
     )
     expect(report.errors).toEqual({ q: ['optionValue'] })
+  })
+})
+
+describe('optionValueProblems', () => {
+  it('blames the option that misuses "other", not the fixed "Other" option', () => {
+    expect(
+      optionValueProblems([
+        { value: 'other' },
+        { value: 'other', isOther: true },
+      ])
+    ).toEqual(['reserved', undefined])
+  })
+
+  it('reports a repeat on the later option, and empty values', () => {
+    expect(
+      optionValueProblems([{ value: '1' }, { value: '1' }, { value: '' }])
+    ).toEqual([undefined, 'duplicate', 'empty'])
   })
 })

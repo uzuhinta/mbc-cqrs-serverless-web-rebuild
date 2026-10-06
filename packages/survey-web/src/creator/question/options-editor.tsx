@@ -29,7 +29,7 @@ import {
   useMessages,
 } from '@mbc-cqrs-serverless/ui-web'
 import { GripVertical, Trash2 } from 'lucide-react'
-import { useId, useState } from 'react'
+import { useId, useState, type ChangeEvent } from 'react'
 
 import type {
   DropdownQuestion,
@@ -37,6 +37,7 @@ import type {
   QuestionOption,
   SingleChoiceQuestion,
 } from '../../schema/survey-schema'
+import { optionValueProblems } from '../../schema/option-values'
 import { announcements } from '../dnd-announcements'
 import { creatorMessages } from '../i18n/creator-messages'
 
@@ -50,7 +51,9 @@ function OptionRow({
   index,
   branching,
   sections,
+  invalid,
   onLabel,
+  onValue,
   onTarget,
   onRemove,
 }: {
@@ -59,11 +62,14 @@ function OptionRow({
   index: number
   branching: boolean
   sections: readonly { id: string; title: string }[]
+  invalid: boolean
   onLabel: (label: string) => void
+  onValue: (value: string) => void
   onTarget: (target: string | undefined) => void
   onRemove: () => void
 }) {
   const t = useMessages(creatorMessages)
+  const valueId = useId()
   const isOther = option.isOther === true
   const {
     attributes,
@@ -111,6 +117,28 @@ function OptionRow({
           onChange={(event) => onLabel(event.target.value)}
         />
       </div>
+      <Label
+        htmlFor={valueId}
+        className="mbc:text-muted-foreground mbc:shrink-0 mbc:text-xs"
+      >
+        {t.options.value}
+      </Label>
+      {/* Input renders its own w-full wrapper, so the width lives out here (v0). */}
+      <div className="mbc:w-[90px] mbc:shrink-0">
+        <Input
+          id={valueId}
+          className="mbc:text-center"
+          aria-invalid={invalid || undefined}
+          // The "Other" option's value is always `other` (v0 0.0.50).
+          {...(isOther
+            ? { value: 'other', disabled: true, readOnly: true }
+            : {
+                value: option.value,
+                onChange: (event: ChangeEvent<HTMLInputElement>) =>
+                  onValue(event.target.value),
+              })}
+        />
+      </div>
       {branching && !isOther && (
         <div className="mbc:w-[180px]">
           <Select
@@ -139,7 +167,7 @@ function OptionRow({
         </div>
       )}
       {isOther ? (
-        <div className="mbc:w-[40px]" />
+        <div className="mbc:w-9 mbc:shrink-0" />
       ) : (
         <Button
           type="button"
@@ -162,11 +190,14 @@ export function OptionsEditor<Q extends ChoiceQuestion>({
   onChange,
   showBranching,
   sections,
+  showValueErrors = false,
 }: {
   question: Q
   onChange: (next: Q) => void
   showBranching: boolean
   sections: readonly { id: string; title: string }[]
+  /** Marks the values the schema rejects; on once the card shows its errors. */
+  showValueErrors?: boolean
 }) {
   const t = useMessages(creatorMessages)
   const base = useId()
@@ -233,7 +264,12 @@ export function OptionsEditor<Q extends ChoiceQuestion>({
 
   const addOption = () => {
     const label = t.options.placeholder({ n: regular.length + 1 })
-    const added = { label, value: label }
+    // One past the highest whole-number value, so deleting never causes a clash (v0 0.0.50).
+    const highest = Math.max(
+      0,
+      ...options.map((option) => Number(option.value)).filter(Number.isInteger)
+    )
+    const added = { label, value: String(highest + 1) }
     const at = otherIndex < 0 ? options.length : otherIndex
     write(
       [...options.slice(0, at), added, ...options.slice(at)],
@@ -251,6 +287,7 @@ export function OptionsEditor<Q extends ChoiceQuestion>({
           [...keys, newKey()]
         )
 
+  const problems = showValueErrors ? optionValueProblems(options) : []
   const rows = options.map((option, index) => ({ option, index }))
   const ordered = [
     ...rows.filter((row) => !row.option.isOther),
@@ -292,12 +329,9 @@ export function OptionsEditor<Q extends ChoiceQuestion>({
                 index={index}
                 branching={branching}
                 sections={sections}
-                onLabel={(label) =>
-                  patch(
-                    index,
-                    option.isOther ? { label } : { label, value: label }
-                  )
-                }
+                invalid={problems[index] !== undefined}
+                onLabel={(label) => patch(index, { label })}
+                onValue={(value) => patch(index, { value })}
                 onTarget={(target) => patch(index, { nextSectionId: target })}
                 onRemove={() =>
                   write(without(options, index), without(keys, index))

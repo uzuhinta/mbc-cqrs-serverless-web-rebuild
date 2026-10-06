@@ -44,7 +44,7 @@ describe('validateDraft', () => {
       [TITLE_ID]: ['surveyTitle'],
       sec_1: ['sectionTitle'],
       q_1: ['options'],
-      q_2: ['optionLabel'],
+      q_2: ['optionValueEmpty', 'optionLabel'],
       q_3: ['validationRule'],
     })
   })

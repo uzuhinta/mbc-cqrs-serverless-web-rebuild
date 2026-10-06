@@ -88,6 +88,9 @@ function KindEditor({
   showBranching: boolean
 }) {
   const items = useCreatorSelector((state) => state.survey.items)
+  const { errors } = useItemIssues(question.id)
+  const showValueErrors =
+    errors.includes('optionValue') || errors.includes('optionValueEmpty')
   const sections = useMemo(
     () => sectionHeaders(items).map(({ id, title }) => ({ id, title })),
     [items]
@@ -105,6 +108,7 @@ function KindEditor({
           onChange={set}
           showBranching={showBranching}
           sections={sections}
+          showValueErrors={showValueErrors}
         />
       )
     case 'multiple-choice':
@@ -115,6 +119,7 @@ function KindEditor({
             onChange={set}
             showBranching={false}
             sections={sections}
+            showValueErrors={showValueErrors}
           />
           <ChoiceCountEditor question={question} onChange={set} />
         </>

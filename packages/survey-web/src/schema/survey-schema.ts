@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { optionValueProblems } from './option-values'
+
 const QuestionOptionSchema = z
   .object({
     value: z.string().min(1, "Option 'value' cannot be empty."),
@@ -9,33 +11,23 @@ const QuestionOptionSchema = z
   })
   .strict()
 
-/**
- * Option values identify answers, so they are unique within a question, and
- * `other` / `other:<text>` are reserved for the "Other" option (v0 0.0.49).
- */
+const OPTION_VALUE_MESSAGES = {
+  duplicate: 'Option values must be unique.',
+  reserved: "'other' is reserved for the Other option.",
+} as const
+
+/** Duplicate and reserved values (v0 0.0.49); an empty value is `min(1)`'s. */
 function refineOptionValues(
   options: readonly { value: string; isOther?: boolean }[],
   ctx: z.RefinementCtx
 ) {
-  const seen = new Set<string>()
-  options.forEach((option, index) => {
-    if (seen.has(option.value)) {
+  optionValueProblems(options).forEach((problem, index) => {
+    if (problem === 'duplicate' || problem === 'reserved')
       ctx.addIssue({
         code: 'custom',
         path: [index, 'value'],
-        message: 'Option values must be unique.',
+        message: OPTION_VALUE_MESSAGES[problem],
       })
-    } else if (
-      !option.isOther &&
-      (option.value === 'other' || option.value.startsWith('other:'))
-    ) {
-      ctx.addIssue({
-        code: 'custom',
-        path: [index, 'value'],
-        message: "'other' is reserved for the Other option.",
-      })
-    }
-    seen.add(option.value)
   })
 }
 

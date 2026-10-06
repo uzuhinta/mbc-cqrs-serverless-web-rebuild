@@ -184,7 +184,8 @@ Saved surveys and answers keep their shapes. What behaves differently:
 
 **Creator**
 
-- Changing between choice types keeps the options; switching to multiple choice drops `nextSectionId`; switching to a dropdown drops "Other"; switching from a non-choice type adds one option.
+- Options have their own value field ("値"), as in 0.0.50: editing a label no longer rewrites the value, a new option's value is the next number, and "Other" is always `other`.
+- Changing between choice types keeps the options; switching to multiple choice drops `nextSectionId`; switching to a dropdown drops "Other"; switching from a non-choice type adds one option (value `1`).
 - "Submit form" after a section works.
 - Reordering sections keeps questions placed before the first section header.
 - Nothing can be added to a locked section, including duplicates of its questions.

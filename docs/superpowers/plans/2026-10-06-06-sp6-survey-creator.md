@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Commands: `fnm exec --using=v24.13.0 -- <command>` (`$N`), from `/Users/uzumakiruto017/Workspace/self/lib-web/rebuild`.
-- Saved surveys stay v0-compatible: same JSON shape, ids `q_…` / `sec_…`, option `value` mirrors its `label` (v0), "Other" option `{ value: 'other', label, isOther: true }` kept last.
+- Saved surveys stay v0-compatible: same JSON shape, ids `q_…` / `sec_…`, option `value` mirrors its `label` (v0 0.0.42; superseded in SP8 by 0.0.50's separate value field), "Other" option `{ value: 'other', label, isOther: true }` kept last.
 - Look: v0's classes with `mbc:`; no `space-x-*`/`space-y-*` — use `gap-*` (flex/grid) or margins with the same result; `flex-grow`/`flex-shrink-0` → `grow`/`shrink-0`; borders state a colour (`mbc:border-border` unless v0 names one).
 - No React-19-only APIs; `"use client"` on every component module; state modules (`src/creator/state/*`) import no React except `store.ts`; no `window`/`document` during render or at module scope; item ids never rendered into the DOM (server and client generate different ids for a new survey); DOM ids via `useId`.
 - All text from the `surveyCreator` messages (new namespace, `ja` = v0's strings, `en`). Prettier; Conventional Commits ending with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.

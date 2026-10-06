@@ -66,7 +66,7 @@ describe('QuestionCard', () => {
     )
     expect(itemById(store, 'q_open')).toMatchObject({
       type: 'dropdown',
-      options: [{ value: 'オプション 1', label: 'オプション 1' }],
+      options: [{ value: '1', label: 'オプション 1' }],
     })
     await userEvent.click(screen.getByRole('switch', { name: '必須' }))
     expect(itemById(store, 'q_open')).toMatchObject({
@@ -216,6 +216,37 @@ describe('QuestionCard', () => {
     renders()
     expect(document.body.innerHTML).not.toBe(before)
     expect(screen.getByText('Pick')).toBeInTheDocument()
+  })
+
+  it('marks the clashing option value and explains it on the card', () => {
+    const survey: Survey = {
+      ...LOCKS,
+      items: [
+        ...LOCKS.items,
+        {
+          id: 'q_dup',
+          type: 'single-choice',
+          label: 'Dup',
+          options: [
+            { value: '1', label: 'A' },
+            { value: '1', label: 'B' },
+          ],
+        },
+      ],
+    }
+    renderCreator(card('q_dup'), {
+      survey,
+      selectedId: 'q_dup',
+      showErrors: true,
+    })
+    const values = screen.getAllByRole('textbox', { name: '値' })
+    expect(values[0]).not.toHaveAttribute('aria-invalid', 'true')
+    expect(values[1]).toHaveAttribute('aria-invalid', 'true')
+    expect(
+      screen.getByText(
+        'オプションの値が重複しているか、予約された値（other）です'
+      )
+    ).toBeInTheDocument()
   })
 
   it('links the main field to the card’s errors', async () => {

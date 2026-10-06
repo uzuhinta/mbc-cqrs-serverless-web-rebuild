@@ -8,6 +8,7 @@ export type CreatorIssueKey =
   | 'options'
   | 'optionLabel'
   | 'optionValue'
+  | 'optionValueEmpty'
   | 'validationRule'
   | 'duplicateId'
   | 'invalid'
@@ -29,10 +30,9 @@ function issueKey(path: Path, code: string): CreatorIssueKey {
   if (field === 'id' && code === 'custom') return 'duplicateId'
   if (field === 'options') {
     if (optionField === undefined) return 'options'
+    if (optionField !== 'value') return 'optionLabel'
     // A custom issue on a value is the uniqueness / reserved-value rule.
-    return optionField === 'value' && code === 'custom'
-      ? 'optionValue'
-      : 'optionLabel'
+    return code === 'custom' ? 'optionValue' : 'optionValueEmpty'
   }
   if (field === 'validation') return 'validationRule'
   return 'invalid'

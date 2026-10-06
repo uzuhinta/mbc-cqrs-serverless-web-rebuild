@@ -49,9 +49,7 @@ export function changeQuestionType(
   const previous: readonly QuestionOption[] =
     'options' in question ? question.options : []
   const options =
-    previous.length > 0
-      ? [...previous]
-      : [{ value: optionLabel, label: optionLabel }]
+    previous.length > 0 ? [...previous] : [{ value: '1', label: optionLabel }]
   const shuffle =
     'options' in question ? question.validation?.shuffleOptions : undefined
   const choiceValidation = {
@@ -72,9 +70,7 @@ export function changeQuestionType(
         ...base,
         type: kind,
         options:
-          regular.length > 0
-            ? regular
-            : [{ value: optionLabel, label: optionLabel }],
+          regular.length > 0 ? regular : [{ value: '1', label: optionLabel }],
         validation: choiceValidation,
       }
     }

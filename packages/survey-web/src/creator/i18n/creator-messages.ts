@@ -103,6 +103,8 @@ export type CreatorMessages = {
     defaultNext: string
     remove: string
     reorder: string
+    /** The option's stored value, edited apart from its label (v0 0.0.50). */
+    value: string
   }
   scale: {
     to: string
@@ -164,6 +166,7 @@ export type CreatorMessages = {
     options: string
     optionLabel: string
     optionValue: string
+    optionValueEmpty: string
     validationRule: string
     duplicateId: string
     invalid: string
@@ -288,6 +291,7 @@ const ja: CreatorMessages = {
     defaultNext: 'デフォルト (次のセクション)',
     remove: 'オプションを削除',
     reorder: 'ドラッグしてオプションを並べ替え',
+    value: '値',
   },
   scale: {
     to: '〜',
@@ -353,6 +357,7 @@ const ja: CreatorMessages = {
     options: 'オプションを1つ以上追加してください',
     optionLabel: 'オプションのラベルを入力してください',
     optionValue: 'オプションの値が重複しているか、予約された値（other）です',
+    optionValueEmpty: 'オプションの値を入力してください',
     validationRule: '回答の検証ルールを完成させてください',
     duplicateId: 'IDが重複しています',
     invalid: '入力内容を確認してください',
@@ -471,6 +476,7 @@ const en: CreatorMessages = {
     defaultNext: 'Default (next section)',
     remove: 'Remove option',
     reorder: 'Drag to reorder options',
+    value: 'Value',
   },
   scale: {
     to: 'to',
@@ -536,6 +542,7 @@ const en: CreatorMessages = {
     options: 'Add at least one option',
     optionLabel: 'Enter a label for every option',
     optionValue: 'Option values must be unique and cannot be "other"',
+    optionValueEmpty: 'Enter a value for every option',
     validationRule: 'Complete the response validation rule',
     duplicateId: 'This id is used twice',
     invalid: 'Check this item',

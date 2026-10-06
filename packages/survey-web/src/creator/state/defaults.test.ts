@@ -58,7 +58,7 @@ describe('changeQuestionType', () => {
   it('adds one option when entering a choice kind, keeps options between choice kinds', () => {
     const single = changeQuestionType(short, 'single-choice', 'オプション 1')
     expect(single).toMatchObject({
-      options: [{ value: 'オプション 1', label: 'オプション 1' }],
+      options: [{ value: '1', label: 'オプション 1' }],
     })
     const branched: SurveyQuestion = {
       id: 'q2',

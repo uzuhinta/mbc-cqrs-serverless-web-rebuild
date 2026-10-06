@@ -2,7 +2,7 @@
 
 - **Date:** 2026-10-04
 - **Status:** Approved in conversation; awaiting written-spec review
-- **Replaces:** `mbc-cqrs-serverless-web/packages/survey` (`@mbc-cqrs-serverless/survey-web@0.0.42`)
+- **Replaces:** `mbc-cqrs-serverless-web/packages/survey` (`@mbc-cqrs-serverless/survey-web@0.0.42` in the repo; behaviour tracked to npm `0.0.50`: the option-value rule of 0.0.49, separate option values and the per-request tenant of 0.0.50)
 - **Backend:** `mbc-cqrs-serverless/packages/survey-template` (`/api/survey-template`, `/api/survey-answer`)
 
 ## 1. Goal
@@ -278,6 +278,7 @@ As built (SP4–SP6 rulings): renderers live in `src/question-types/` with a kin
 - Validation: `SurveySchema.safeParse` on every change (synchronous, so `onChange` can report `isValid`) and on submit; issues mapped to item cards by path. Dangling `nextSectionId` / `targetSectionId` show a warning, not an error.
 - Ids: `createId()` (`crypto.randomUUID` with fallback), stable for the item's life.
 - Drag and drop: dnd-kit with pointer + keyboard sensors and translated screen-reader announcements.
+- Options (v0 0.0.50): label and value are edited separately; a new option's value is one past the highest whole-number value; "Other" is always `other`. Values that are empty, repeated or reserved are marked on their input once the card shows errors; the message is on the card.
 
 ### 6.4 Error handling
 
