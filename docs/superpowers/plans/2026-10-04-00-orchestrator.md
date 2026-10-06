@@ -99,7 +99,7 @@ git status --porcelain                                        # must be empty af
   - From the SP4 review: answers already allow `number` (rating, linear scale); `SurveyForm` should parse its `schema` prop with `SurveySchema.safeParse` (hosts pass unparsed backend JSON cast to `Survey`; defaults such as `levels` would be missing) and export `SurveyInput = z.input<typeof SurveySchema>`; `useLocale()` still returns an unknown locale such as `'fr'` — normalise it in `MbcProvider` before date formatting uses it.
   - Depends on: SP4.
 
-- [ ] **SP6 — `SurveyCreator`** (`06-sp6-survey-creator`)
+- [x] **SP6 — `SurveyCreator`** (`06-sp6-survey-creator`)
   - Spec: §5.1 `SurveyCreator` props + handle, §6.1 editors, §6.3 creator state.
   - Builds: `creatorReducer` with all lock guards, `useSyncExternalStore` store, nine question editors, section header/action editors, floating action bar, section reorder dialog, dnd-kit (pointer + keyboard + announcements), preview dialog using `SurveyForm`, `ref` handle, playground creator page.
   - Gate: standard gate; ported `locked-question`, `section-locked`, `section-locked-question`, `question-creator-id`, `id` behaviours; keyboard drag test.
