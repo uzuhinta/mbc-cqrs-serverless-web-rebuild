@@ -1,0 +1,90 @@
+import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { useState } from 'react'
+import { describe, expect, it } from 'vitest'
+
+import { MbcProvider } from '../i18n/provider'
+import { Field, FieldLabel } from './field'
+import { MultiSelect, type MultiSelectOption } from './multi-select'
+
+const OPTIONS: MultiSelectOption[] = [
+  { value: 't1', label: 'Tokyo' },
+  { value: 't2', label: 'Osaka' },
+  { value: 't3', label: 'Osaka' },
+]
+
+function Harness({ initial = [] as string[], locale = 'en' as const }) {
+  const [value, setValue] = useState<string[]>(initial)
+  return (
+    <MbcProvider locale={locale}>
+      <Field>
+        <FieldLabel>Tenants</FieldLabel>
+        <MultiSelect options={OPTIONS} value={value} onValueChange={setValue} />
+      </Field>
+      <output>{JSON.stringify(value)}</output>
+    </MbcProvider>
+  )
+}
+
+const stored = () =>
+  JSON.parse(document.querySelector('output')?.textContent ?? '[]') as string[]
+
+describe('MultiSelect', () => {
+  it('is a labelled combobox with a translated placeholder', () => {
+    render(<Harness locale="ja" />)
+    const trigger = screen.getByRole('combobox', { name: 'Tenants' })
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    expect(trigger).toHaveTextContent('選択してください')
+    expect(trigger).toHaveClass(
+      'mbc:h-auto',
+      'mbc:w-full',
+      'mbc:justify-between'
+    )
+  })
+
+  it('searches and toggles options from the keyboard', async () => {
+    render(<Harness />)
+    const trigger = screen.getByRole('combobox', { name: 'Tenants' })
+    trigger.focus()
+    await userEvent.keyboard('{Enter}')
+    expect(trigger).toHaveAttribute('aria-expanded', 'true')
+
+    await userEvent.keyboard('tok{Enter}')
+    expect(stored()).toEqual(['t1'])
+    expect(within(trigger).getByText('Tokyo')).toBeInTheDocument()
+    expect(
+      screen.getByRole('option', { name: 'Tokyo selected' })
+    ).toBeInTheDocument()
+
+    await userEvent.keyboard('{Enter}')
+    expect(stored()).toEqual([])
+
+    await userEvent.keyboard('{Escape}')
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    expect(trigger).toHaveFocus()
+  })
+
+  it('toggles only the chosen value when labels repeat', async () => {
+    render(<Harness />)
+    await userEvent.click(screen.getByRole('combobox', { name: 'Tenants' }))
+    const [, second] = screen.getAllByRole('option', { name: 'Osaka' })
+    await userEvent.click(second!)
+    expect(stored()).toEqual(['t3'])
+  })
+
+  it('keeps values that are not in the options', async () => {
+    render(<Harness initial={['gone']} />)
+    const trigger = screen.getByRole('combobox', { name: 'Tenants' })
+    expect(within(trigger).getByText('gone')).toBeInTheDocument()
+    await userEvent.click(trigger)
+    await userEvent.click(screen.getByRole('option', { name: 'Tokyo' }))
+    expect(stored()).toEqual(['gone', 't1'])
+  })
+
+  it('shows the empty state when nothing matches', async () => {
+    render(<Harness />)
+    await userEvent.click(screen.getByRole('combobox', { name: 'Tenants' }))
+    await userEvent.keyboard('zzz')
+    expect(screen.getByText('No data')).toBeInTheDocument()
+  })
+})

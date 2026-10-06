@@ -68,6 +68,14 @@ export {
 } from './components/card'
 export { Checkbox, type CheckboxProps } from './components/checkbox'
 export {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from './components/command'
+export {
   Dialog,
   DialogClose,
   DialogContent,
@@ -106,6 +114,11 @@ export {
 export { Input, type InputProps } from './components/input'
 export { inputVariants } from './components/input-variants'
 export { Label, type LabelProps } from './components/label'
+export {
+  MultiSelect,
+  type MultiSelectOption,
+  type MultiSelectProps,
+} from './components/multi-select'
 export {
   Pagination,
   PaginationContent,

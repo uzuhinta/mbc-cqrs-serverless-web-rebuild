@@ -10,6 +10,13 @@ export type UiMessages = {
     morePages: string
     page: (params: { page: number }) => string
   }
+  multiSelect: {
+    placeholder: string
+    search: string
+    empty: string
+    /** Read by screen readers after a selected option. */
+    selected: string
+  }
 }
 
 const ja: UiMessages = {
@@ -22,6 +29,12 @@ const ja: UiMessages = {
     morePages: '省略されたページ',
     page: ({ page }) => `${page}ページ目`,
   },
+  multiSelect: {
+    placeholder: '選択してください',
+    search: '検索...',
+    empty: 'データがありません',
+    selected: '選択済み',
+  },
 }
 
 const en: UiMessages = {
@@ -33,6 +46,12 @@ const en: UiMessages = {
     next: 'Go to next page',
     morePages: 'More pages',
     page: ({ page }) => `Page ${page}`,
+  },
+  multiSelect: {
+    placeholder: 'Select options...',
+    search: 'Search...',
+    empty: 'No data',
+    selected: 'selected',
   },
 }
 

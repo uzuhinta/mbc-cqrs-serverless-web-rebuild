@@ -28,6 +28,7 @@ import {
   FieldLabel,
   Input,
   MbcProvider,
+  MultiSelect,
   Pagination,
   PaginationContent,
   PaginationEllipsis,
@@ -88,6 +89,14 @@ describe('accessibility', () => {
           <Field>
             <FieldLabel>Agree</FieldLabel>
             <Checkbox />
+          </Field>
+          <Field>
+            <FieldLabel>Tenants</FieldLabel>
+            <MultiSelect
+              options={[{ value: 'a', label: 'Alpha' }]}
+              value={['a']}
+              onValueChange={() => {}}
+            />
           </Field>
           <Field>
             <FieldLabel>Colour</FieldLabel>
