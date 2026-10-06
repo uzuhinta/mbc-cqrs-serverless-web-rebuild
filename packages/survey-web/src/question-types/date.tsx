@@ -21,6 +21,7 @@ import type { DateQuestion } from '../schema/survey-schema'
 import { formatDate, readDate, writeDate } from './date-value'
 import { CLOCK_TRIGGER, HOURS, SIXTY, TimeSelect } from './time-selects'
 import type { QuestionRendererProps } from './types'
+import { useHydrated } from './use-hydrated'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -36,7 +37,10 @@ export function DateRenderer({
   // v0's reading (`!== false`), for stored items that failed validation.
   const includeYear = question.includeYear !== false
   const includeTime = question.includeTime === true
-  const date = readDate(value, includeYear)
+  // A stored instant reads differently in the server's and the browser's time
+  // zone, so it is shown only once hydrated.
+  const hydrated = useHydrated()
+  const date = hydrated ? readDate(value, includeYear) : null
   const placeholder = includeTime
     ? includeYear
       ? t.form.dateTimePlaceholder

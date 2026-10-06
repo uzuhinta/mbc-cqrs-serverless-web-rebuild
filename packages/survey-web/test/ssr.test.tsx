@@ -58,4 +58,44 @@ describe('server rendering', () => {
     errors.mockRestore()
     container.remove()
   })
+
+  it('renders a saved date only after hydration, so server and browser time zones cannot disagree', async () => {
+    const dated: Survey = {
+      title: 'Dated',
+      items: [
+        {
+          id: 'd',
+          type: 'date',
+          label: 'D',
+          includeTime: true,
+          includeYear: true,
+        },
+      ],
+    }
+    const element = (
+      <MbcProvider>
+        <SurveyForm
+          schema={dated}
+          defaultValues={{ d: new Date(2026, 9, 4, 9, 30).toISOString() }}
+          onSubmit={() => {}}
+        />
+      </MbcProvider>
+    )
+    const html = renderToString(element)
+    expect(html).toContain('年月日時を選択してください')
+    expect(html).not.toContain('2026年10月4日')
+
+    const container = document.createElement('div')
+    container.innerHTML = html
+    document.body.appendChild(container)
+    const recoverable: string[] = []
+    await act(async () => {
+      hydrateRoot(container, element, {
+        onRecoverableError: (error) => recoverable.push(String(error)),
+      })
+    })
+    expect(recoverable).toEqual([])
+    expect(container).toHaveTextContent('2026年10月4日')
+    container.remove()
+  })
 })
