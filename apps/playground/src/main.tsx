@@ -5,6 +5,7 @@ import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import { Gallery } from './gallery'
+import { SurveyCreatorPage } from './survey-creator-page'
 import { SurveyFormPage } from './survey-form-page'
 import { Toolbar, type Settings } from './toolbar'
 
@@ -34,7 +35,13 @@ export function App() {
   return (
     <MbcProvider locale={settings.locale}>
       <Toolbar settings={settings} onChange={setSettings} />
-      {hash === '#survey' ? <SurveyFormPage /> : <Gallery />}
+      {hash === '#creator' ? (
+        <SurveyCreatorPage />
+      ) : hash === '#survey' ? (
+        <SurveyFormPage />
+      ) : (
+        <Gallery />
+      )}
     </MbcProvider>
   )
 }
