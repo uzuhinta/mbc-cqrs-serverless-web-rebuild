@@ -11,6 +11,7 @@ import {
   useFieldControl,
   useLocale,
   useMessages,
+  type FieldControlProps,
 } from '@mbc-cqrs-serverless/ui-web'
 import { CalendarIcon } from 'lucide-react'
 import { useId } from 'react'
@@ -64,7 +65,7 @@ export function DateRenderer({
   // Date only: the button is the question's control, named by the question
   // and its own text. Date and time: the group carries the question instead.
   const valueId = useId()
-  const control = useFieldControl({}, { group: true })
+  const control = useFieldControl<FieldControlProps>({}, { group: true })
   const controlProps = includeTime
     ? {}
     : {
