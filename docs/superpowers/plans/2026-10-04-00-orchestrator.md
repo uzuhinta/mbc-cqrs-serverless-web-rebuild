@@ -107,7 +107,7 @@ git status --porcelain                                        # must be empty af
   - From the SP5 review: anything rendered from the browser's clock or time zone uses `useHydrated` (question-types/use-hydrated.ts); `useShuffled` is keyed on content; the creator's preview passes a fresh `schema` on every edit, which is fine now.
   - Depends on: SP5.
 
-- [ ] **SP7 — `/templates` and `/mbc`** (`07-sp7-templates-mbc`)
+- [x] **SP7 — `/templates` and `/mbc`** (`07-sp7-templates-mbc`)
   - Spec: §5.2, §5.3, §5.4 deprecated subpaths.
   - Builds: `SurveyTemplateList`, `SurveyTemplateEditor`, `createSurveyTemplateApi`, `submitSurveyAnswer`, `useSurveyTemplates`, `useSurveyTemplate`, `useSurveyTemplateMutations`, `useSubmitSurveyAnswer`, `MbcSurveyTemplateListPage`, `MbcSurveyTemplateEditorPage`, `/SurveyForm` + `/SurveyCreator` alias entries, playground pages with a mock client.
   - Gate: standard gate; ported `get-pagination-item` behaviour; build-output test that `.` and `/templates` do not import `client-web`.
@@ -117,6 +117,7 @@ git status --porcelain                                        # must be empty af
 - [ ] **SP8 — Release readiness** (`08-sp8-release`)
   - Spec: §5.4 migration, §7 remaining build-output checks, §8 CI/next-smoke/docs/release.
   - README must state the host requirements from spec §3.1: `styles.layer.css` import order, Tailwind v3 ≥ 3.4, and that `mbc:` overrides only work for shipped classes.
+  - From the SP7 review: README notes the decoded id for `MbcSurveyTemplateEditorPage`, the throw-on-failure pattern for `useSubmitSurveyAnswer` with `SurveyForm`, and that `MbcTimeoutError` leaves the outcome unknown; MIGRATION.md lists SP7's behaviour changes plus "Back asks before discarding a changed new survey"; SP7's deferred minors join the polish list.
   - From the SP6 review: MIGRATION.md also lists SP6's nine behaviour changes plus "turning branching off clears every option's `nextSectionId`", "turning the description off removes the key" and "removing or merging the selected item selects the item before it"; SP6's deferred minors (ledger) join the polish list.
   - From the SP5 review: MIGRATION.md lists SP5's six behaviour changes plus "an untouched time question submits `undefined`" (v0 sent empty parts); the README states that question ids must not contain `.`, `[` or `]`; normalise unknown locales in `MbcProvider` (`useLocale()` still returns e.g. `'fr'`); SP5's deferred minors (ledger) are offered to the user as a polish list.
   - From the SP4 review: survey-web's `styles.css` is compiled from the ui-web source it was built with — release the three packages as a Changesets `fixed` group and tell hosts in the README to upgrade them together; MIGRATION.md notes that `validateSurveyJson` returns a zod 4 `ZodError` (no `.errors`, different message text) and lists SP5's behaviour changes; README documents the server flow `parseSurvey` → `validateAnswers` → `collectAnswers` from `/core`.
