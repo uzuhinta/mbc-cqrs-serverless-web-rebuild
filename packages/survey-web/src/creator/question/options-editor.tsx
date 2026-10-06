@@ -71,7 +71,10 @@ function OptionRow({
     setActivatorNodeRef,
     transform,
     transition,
-  } = useSortable({ id: sortId, disabled: isOther })
+  } = useSortable({
+    id: sortId,
+    disabled: { draggable: isOther, droppable: isOther },
+  })
 
   return (
     <div

@@ -13,3 +13,8 @@ export {
   creatorMessages,
   type CreatorMessages,
 } from './creator/i18n/creator-messages'
+export {
+  SurveyCreator,
+  type SurveyCreatorHandle,
+  type SurveyCreatorProps,
+} from './creator/survey-creator'
