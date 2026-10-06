@@ -9,6 +9,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@mbc-cqrs-serverless/client-web": "workspace:*",
     "@mbc-cqrs-serverless/survey-web": "workspace:*",
     "@mbc-cqrs-serverless/ui-web": "workspace:*",
     "react": "19.3.0",

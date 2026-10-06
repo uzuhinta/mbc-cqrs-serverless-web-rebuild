@@ -7,6 +7,7 @@ import { createRoot } from 'react-dom/client'
 import { Gallery } from './gallery'
 import { SurveyCreatorPage } from './survey-creator-page'
 import { SurveyFormPage } from './survey-form-page'
+import { TemplatesPage } from './templates-page'
 import { Toolbar, type Settings } from './toolbar'
 
 function useHash() {
@@ -35,7 +36,9 @@ export function App() {
   return (
     <MbcProvider locale={settings.locale}>
       <Toolbar settings={settings} onChange={setSettings} />
-      {hash === '#creator' ? (
+      {hash.startsWith('#templates') ? (
+        <TemplatesPage route={hash.slice(1)} />
+      ) : hash === '#creator' ? (
         <SurveyCreatorPage />
       ) : hash === '#survey' ? (
         <SurveyFormPage />

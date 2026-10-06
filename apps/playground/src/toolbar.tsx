@@ -37,6 +37,7 @@ export function Toolbar({
       <a href="#">Gallery</a>
       <a href="#survey">Survey form</a>
       <a href="#creator">Survey creator</a>
+      <a href="#templates">Templates</a>
     </div>
   )
 }
