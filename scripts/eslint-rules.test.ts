@@ -59,6 +59,52 @@ describe('library rules in packages/*/src', () => {
     )
   })
 
+  it('forbids the HTTP, GraphQL and state libraries v0 master-web used', async () => {
+    for (const code of [
+      "import axios from 'axios'\nexport const a = axios\n",
+      "import { gql } from '@apollo/client'\nexport const g = gql\n",
+      "import { fetchAuthSession } from 'aws-amplify/auth'\nexport const f = fetchAuthSession\n",
+      "import { createAuthLink } from 'aws-appsync-auth-link'\nexport const c = createAuthLink\n",
+      "import useSWR from 'swr'\nexport const s = useSWR\n",
+      "import { observer } from 'mobx-react-lite'\nexport const o = observer\n",
+      "import Draggable from 'react-draggable'\nexport const d = Draggable\n",
+      "import { Resizable } from 'react-resizable'\nexport const r = Resizable\n",
+    ]) {
+      expect(await ruleIds(code), code).toContain('no-restricted-imports')
+    }
+  })
+
+  it('allows the rich editors only as dynamic imports in master-web/src/editors', async () => {
+    const staticImport =
+      "import ReactQuill from 'react-quill-new'\nexport const q = ReactQuill\n"
+    const dynamicImport = "export const load = () => import('jsoneditor')\n"
+    const editors = 'packages/master-web/src/editors/json-editor.tsx'
+    const elsewhere = 'packages/master-web/src/data/editor.tsx'
+
+    expect(await ruleIds(staticImport, editors)).toContain(
+      'no-restricted-imports'
+    )
+    expect(await ruleIds(dynamicImport, elsewhere)).toContain(
+      'no-restricted-syntax'
+    )
+    expect(await ruleIds(dynamicImport, editors)).toEqual([])
+    expect(
+      await ruleIds(
+        "export const load = () => import('@uiw/react-md-editor')\n",
+        'packages/survey-web/src/lint-fixture.tsx'
+      )
+    ).toContain('no-restricted-syntax')
+  })
+
+  it('still applies the process.env rule next to the editor rule', async () => {
+    expect(
+      await ruleIds(
+        'export const url = process.env.API_URL\n',
+        'packages/master-web/src/editors/json-editor.tsx'
+      )
+    ).toContain('no-restricted-syntax')
+  })
+
   it('accepts clean library code', async () => {
     const code =
       "import { useState } from 'react'\nexport function useFlag(): boolean {\n  const [flag] = useState(false)\n  return flag\n}\n"
