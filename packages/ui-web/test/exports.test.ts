@@ -97,6 +97,7 @@ const EXPECTED = [
   'mergeMessages',
   'uiMessages',
   'useFieldControl',
+  'useHydrated',
   'useLocale',
   'useMessages',
   'usePortalContainer',

@@ -1,4 +1,5 @@
 export { cn } from './lib/cn'
+export { useHydrated } from './lib/use-hydrated'
 
 export { defineMessages } from './i18n/catalog'
 export { mergeMessages } from './i18n/merge'

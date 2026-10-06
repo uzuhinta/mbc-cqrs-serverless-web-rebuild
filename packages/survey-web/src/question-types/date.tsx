@@ -9,6 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
   useFieldControl,
+  useHydrated,
   useLocale,
   useMessages,
   type FieldControlProps,
@@ -21,7 +22,6 @@ import type { DateQuestion } from '../schema/survey-schema'
 import { formatDate, readDate, writeDate } from './date-value'
 import { CLOCK_TRIGGER, HOURS, SIXTY, TimeSelect } from './time-selects'
 import type { QuestionRendererProps } from './types'
-import { useHydrated } from '../lib/use-hydrated'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 

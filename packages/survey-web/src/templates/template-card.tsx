@@ -7,13 +7,13 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  useHydrated,
   useLocale,
   useMessages,
 } from '@mbc-cqrs-serverless/ui-web'
 import { FileText, Layers } from 'lucide-react'
 import { memo } from 'react'
 
-import { useHydrated } from '../lib/use-hydrated'
 import { templateMessages } from './i18n/template-messages'
 import type { SurveyTemplateSummary } from './types'
 
