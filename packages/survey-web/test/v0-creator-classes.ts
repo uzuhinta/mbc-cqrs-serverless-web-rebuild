@@ -5,7 +5,7 @@ export const V0C = {
     'rounded-lg border transition-all border-primary bg-card shadow-lg',
   'question.idle':
     'rounded-lg border transition-all hover:bg-muted/50 border-transparent bg-white',
-  'question.view': 'relative cursor-pointer p-6',
+  'question.view': 'group relative cursor-pointer p-6',
   'question.label-input':
     'h-12 grow rounded-none border-0 border-b px-1 text-lg font-semibold shadow-none focus-visible:ring-0',
   'question.footer': 'flex items-center justify-end gap-2',
