@@ -18,3 +18,15 @@ pnpm playground        # Vite gallery, survey form, creator, templates
 pnpm smoke             # Next 16 build importing every entry point
 pnpm changeset         # describe a change for the next release
 ```
+
+## Release
+
+Publishing is manual until this repository moves into the GitHub repo:
+
+```bash
+pnpm changeset version   # applies the pending changesets (the three packages share one version)
+pnpm install             # refreshes the lockfile for the new versions
+pnpm release             # verify + Next smoke build, then changeset publish
+```
+
+Each package also builds itself before `pack`/`publish` (`prepack`), so an empty package cannot be published.

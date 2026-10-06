@@ -25,10 +25,14 @@ NEXT_PUBLIC_AWS_APPSYNC_APIKEY=…
 'use client'
 import { createMbcClient } from '@mbc-cqrs-serverless/client-web'
 import { MbcClientProvider } from '@mbc-cqrs-serverless/client-web/react'
+import { fetchAuthSession } from 'aws-amplify/auth'
 
 const client = createMbcClient({
   apiUrl: process.env.NEXT_PUBLIC_API_URL!,
   tenantCode: process.env.NEXT_PUBLIC_TENANT_CODE!,
+  // 0.0.x sent the Amplify id token on every request; say so explicitly now.
+  getAuthToken: async () =>
+    (await fetchAuthSession()).tokens?.idToken?.toString(),
   realtime: {
     url: process.env.NEXT_PUBLIC_AWS_APPSYNC_GRAPHQLENDPOINT!,
     auth: {
@@ -43,7 +47,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 }
 ```
 
-The package reads no environment variables; your app does.
+The package reads no environment variables; your app does. 0.0.50's `setTenantCodeResolver` (`/tenant`) becomes `tenantCode: () => …` in `createMbcClient`. The `./styles` JS subpath is gone; import `styles.css`.
 
 ## 3. Template pages
 
@@ -81,7 +85,8 @@ export function Edit() {
   const { id } = useParams<{ id?: string }>()
   return (
     <MbcSurveyTemplateEditorPage
-      id={id}
+      // Next's useParams() returns the URL-encoded segment; the page encodes ids itself.
+      id={id === undefined ? undefined : decodeURIComponent(id)}
       onSaved={() => {
         toast.success('保存しました')
         router.push('/admin/survey-management')
@@ -161,6 +166,11 @@ Saved surveys and answers keep their shapes. What behaves differently:
 - Answers in sections the respondent did not reach (an abandoned branch) are submitted as `undefined`.
 - An untouched time or duration question is submitted as `undefined` (0.0.x sent empty parts).
 - Linear scale starts at the schema's `min` (default 0); 0.0.x used `min || 1`.
+
+- Multiple-choice count rules (at least / at most / exactly) are enforced; 0.0.x never checked them.
+- Number rules parse strictly (`Number()`): `"12abc"` is no longer a number.
+- A jump or `nextSectionId` to a missing section goes to the next section.
+- Option values must be unique, and `other` / `other:…` are reserved for the "Other" option (as in 0.0.49).
 
 **Form**
 

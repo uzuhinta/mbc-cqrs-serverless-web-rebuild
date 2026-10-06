@@ -42,6 +42,7 @@
   ],
   "scripts": {
     "build": "tsdown && node ../../scripts/build-css.ts",
+    "prepack": "pnpm run build",
     "typecheck": "tsc -p tsconfig.json",
     "check:package": "publint --strict && attw --pack . --profile esm-only --exclude-entrypoints ./styles.css ./styles.layer.css ./package.json"
   },
