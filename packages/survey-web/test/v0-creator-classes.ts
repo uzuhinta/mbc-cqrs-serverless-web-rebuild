@@ -3,8 +3,9 @@ export const V0C = {
   // question-creator.tsx
   'question.selected':
     'rounded-lg border transition-all border-primary bg-card shadow-lg',
+  // + dark:bg-card (review: v0's white card was unreadable in dark mode)
   'question.idle':
-    'rounded-lg border transition-all hover:bg-muted/50 border-transparent bg-white',
+    'rounded-lg border transition-all hover:bg-muted/50 border-transparent bg-white dark:bg-card',
   'question.view': 'group relative cursor-pointer p-6',
   'question.label-input':
     'h-12 grow rounded-none border-0 border-b px-1 text-lg font-semibold shadow-none focus-visible:ring-0',

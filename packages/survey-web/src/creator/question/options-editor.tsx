@@ -231,6 +231,8 @@ export function OptionsEditor<Q extends ChoiceQuestion>({
     <div className="mbc:flex mbc:flex-col mbc:gap-3 mbc:pt-2">
       <Label>{t.options.title}</Label>
       <DndContext
+        // A stable id: dnd-kit's own counter differs between server and client.
+        id={base}
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={onDragEnd}

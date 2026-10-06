@@ -365,7 +365,7 @@ function QuestionCardImpl({
         'mbc:rounded-lg mbc:border mbc:transition-all',
         selected
           ? 'mbc:border-primary mbc:bg-card mbc:shadow-lg'
-          : 'mbc:hover:bg-muted/50 mbc:border-transparent mbc:bg-white'
+          : 'mbc:hover:bg-muted/50 mbc:border-transparent mbc:bg-white mbc:dark:bg-card'
       )}
     >
       {editing ? (

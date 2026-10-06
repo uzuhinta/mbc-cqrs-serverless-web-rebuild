@@ -46,4 +46,29 @@ describe('SurveyCreator server rendering', () => {
       )
     ).toEqual({ recoverable: [], logged: 0 })
   })
+
+  it('hydrates a loaded survey whose first item (selected) is a choice question', async () => {
+    const choiceFirst = {
+      title: 'Choice first',
+      items: [
+        {
+          id: 'q_pick',
+          type: 'single-choice',
+          label: 'Pick',
+          options: [
+            { value: 'a', label: 'a' },
+            { value: 'b', label: 'b' },
+          ],
+        },
+        { id: 'sec_1', type: 'section-header', title: 'S' },
+      ],
+    } as const
+    expect(
+      await hydrate(
+        <MbcProvider>
+          <SurveyCreator defaultValue={choiceFirst} />
+        </MbcProvider>
+      )
+    ).toEqual({ recoverable: [], logged: 0 })
+  })
 })

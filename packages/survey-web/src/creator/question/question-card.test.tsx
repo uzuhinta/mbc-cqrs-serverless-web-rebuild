@@ -21,6 +21,8 @@ describe('QuestionCard', () => {
     const { store, container } = renderCreator(card('q_open'))
     const root = container.firstElementChild
     expect(classesOf(root)).toEqual(v0c('question.idle'))
+    // v0's bg-white needs a dark variant; the library sets no text colour.
+    expect(classesOf(root)).toContain('dark:bg-card')
     expect(classesOf(root?.firstElementChild ?? null)).toEqual(
       v0c('question.view')
     )
