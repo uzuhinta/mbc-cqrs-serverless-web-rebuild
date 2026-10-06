@@ -223,7 +223,7 @@ Without `realtime` config, `command()` resolves right after the HTTP response (d
 
 - `<SurveyTemplateList>` — `items`, `total`, `page`, `pageSize`, `keyword`, `loading`, `error`; `onPageChange`, `onPageSizeChange`, `onKeywordChange`, `onCreate`, `onSelect(item)`, `onRetry`.
 - `<SurveyTemplateEditor>` — `mode: 'create' | 'edit'`, `defaultValue`, `loading`, `error`, `saving`, `deleting`; `onSave(survey)`, `onDelete()`, `onCancel()`, `onRetry()`. Includes the save/delete bar, delete confirmation, and save disabled while unchanged in edit mode.
-- Item type: `SurveyTemplateSummary { id, name, description?, updatedAt?, version }` — the editor and list do not depend on backend entity shapes.
+- Item type: `SurveyTemplateSummary { id, name, description?, version, createdAt?, updatedAt?, questionCount?, sectionCount? }` (counts and `createdAt` keep v0's card) — the editor and list do not depend on backend entity shapes.
 
 ### 5.3 `/mbc` (mbc-cqrs-serverless integration)
 

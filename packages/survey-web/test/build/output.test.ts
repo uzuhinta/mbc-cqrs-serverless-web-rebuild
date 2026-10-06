@@ -20,10 +20,37 @@ import {
 const dist = distDir(fileURLToPath(new URL('../..', import.meta.url)))
 const css = readText(dist, 'styles.css')
 
+/** Bare module specifiers reachable from `entry` through relative imports. */
+function externalsOf(entry: string): Set<string> {
+  const seen = new Set<string>()
+  const external = new Set<string>()
+  const visit = (file: string) => {
+    if (seen.has(file)) return
+    seen.add(file)
+    const source = readText(dist, file)
+    for (const [, specifier] of source.matchAll(
+      /(?:from|import)\s*["']([^"']+)["']/g
+    )) {
+      if (!specifier) continue
+      if (specifier.startsWith('.'))
+        visit(posix.join(posix.dirname(file), specifier))
+      else external.add(specifier)
+    }
+  }
+  visit(entry)
+  return external
+}
+
 describe('survey-web output', () => {
   it('ships every entry point', () => {
     expect(listFiles(dist, '.js')).toEqual(
-      expect.arrayContaining(['index.js', 'templates/index.js', 'mbc/index.js'])
+      expect.arrayContaining([
+        'index.js',
+        'templates/index.js',
+        'mbc/index.js',
+        'SurveyForm/index.js',
+        'SurveyCreator/index.js',
+      ])
     )
     expect(listFiles(dist, '.css')).toEqual(['styles.css', 'styles.layer.css'])
   })
@@ -46,23 +73,26 @@ describe('survey-web output', () => {
   })
 
   it('ships a ./core entry whose import graph reaches only zod', () => {
-    const seen = new Set<string>()
-    const external = new Set<string>()
-    const visit = (file: string) => {
-      if (seen.has(file)) return
-      seen.add(file)
-      const source = readText(dist, file)
-      for (const [, specifier] of source.matchAll(
-        /(?:from|import)\s*["']([^"']+)["']/g
-      )) {
-        if (!specifier) continue
-        if (specifier.startsWith('.'))
-          visit(posix.join(posix.dirname(file), specifier))
-        else external.add(specifier)
-      }
+    expect([...externalsOf('core/index.js')]).toEqual(['zod'])
+  })
+
+  it('keeps . , /templates, /core and the aliases free of client-web; /mbc uses it', () => {
+    const CLIENT = '@mbc-cqrs-serverless/client-web'
+    for (const entry of [
+      'index.js',
+      'templates/index.js',
+      'core/index.js',
+      'SurveyForm/index.js',
+      'SurveyCreator/index.js',
+    ]) {
+      expect(
+        [...externalsOf(entry)].some((name) => name.startsWith(CLIENT)),
+        entry
+      ).toBe(false)
     }
-    visit('core/index.js')
-    expect([...external]).toEqual(['zod'])
+    expect(
+      [...externalsOf('mbc/index.js')].some((name) => name.startsWith(CLIENT))
+    ).toBe(true)
   })
 
   it('marks component modules as client modules and keeps the engine free of React', () => {

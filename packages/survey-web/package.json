@@ -25,6 +25,14 @@
       "types": "./dist/mbc/index.d.ts",
       "default": "./dist/mbc/index.js"
     },
+    "./SurveyForm": {
+      "types": "./dist/SurveyForm/index.d.ts",
+      "default": "./dist/SurveyForm/index.js"
+    },
+    "./SurveyCreator": {
+      "types": "./dist/SurveyCreator/index.d.ts",
+      "default": "./dist/SurveyCreator/index.js"
+    },
     "./styles.css": "./dist/styles.css",
     "./styles.layer.css": "./dist/styles.layer.css",
     "./package.json": "./package.json"
