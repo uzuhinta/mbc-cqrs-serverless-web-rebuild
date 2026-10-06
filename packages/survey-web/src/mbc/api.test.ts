@@ -1,4 +1,8 @@
-import { MbcApiError, MbcCommandError } from '@mbc-cqrs-serverless/client-web'
+import {
+  createMbcClient,
+  MbcApiError,
+  MbcCommandError,
+} from '@mbc-cqrs-serverless/client-web'
 import { describe, expect, it } from 'vitest'
 
 import { createFakeClient } from '../../test/fake-mbc-client'
@@ -144,5 +148,17 @@ describe('submitSurveyAnswer', () => {
       },
       undefined
     )
+  })
+
+  it('treats a real client’s no-requestId update as saved (cross-package contract)', async () => {
+    const client = createMbcClient({
+      apiUrl: 'https://api.example.test',
+      tenantCode: 't',
+      fetch: async () =>
+        new Response('{}', { headers: { 'content-type': 'application/json' } }),
+    })
+    await expect(
+      createSurveyTemplateApi(client).update('x', survey)
+    ).resolves.toBeUndefined()
   })
 })

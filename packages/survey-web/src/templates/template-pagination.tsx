@@ -107,7 +107,7 @@ export function TemplatePagination({
         <PaginationItem>
           <PaginationNext
             href="#"
-            aria-disabled={page === lastPage || undefined}
+            aria-disabled={page >= lastPage || undefined}
             className={cn(ARROW, 'mbc:rounded-l-none')}
             onClick={go(page + 1, page < lastPage)}
           />

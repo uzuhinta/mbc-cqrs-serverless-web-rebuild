@@ -139,4 +139,11 @@ describe('SurveyTemplateList', () => {
     expect(screen.getByText('Oct 04, 2026')).toBeInTheDocument()
     expect(screen.getByText('5 questions')).toBeInTheDocument()
   })
+
+  it('keeps the pagination when the page is past the last one (e.g. after a delete)', async () => {
+    const onPageChange = vi.fn()
+    list({ items: [], total: 15, page: 3, onPageChange })
+    await userEvent.click(screen.getByRole('link', { name: '1' }))
+    expect(onPageChange).toHaveBeenCalledWith(1)
+  })
 })

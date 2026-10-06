@@ -207,4 +207,38 @@ describe('MbcSurveyTemplateEditorPage', () => {
       path: '/api/survey-template',
     })
   })
+
+  it('reports every failed command, not only the first', async () => {
+    const client = createFakeClient()
+    client.get.mockResolvedValue(entity('SURVEY#1', 'Old'))
+    client.command
+      .mockRejectedValueOnce(new MbcApiError(500, null))
+      .mockRejectedValueOnce(new MbcApiError(503, null))
+    const onError = vi.fn()
+    renderWith(
+      client,
+      <MbcSurveyTemplateEditorPage
+        id="SURVEY#1"
+        onCancel={() => {}}
+        onError={onError}
+      />
+    )
+    await userEvent.click(await screen.findByRole('button', { name: 'Old' }))
+    await userEvent.type(
+      screen.getByPlaceholderText('アンケートのタイトル'),
+      '2'
+    )
+    await userEvent.click(screen.getByRole('button', { name: '更新' }))
+    await waitFor(() => expect(onError).toHaveBeenCalledTimes(1))
+    await userEvent.click(screen.getByRole('button', { name: '削除' }))
+    await userEvent.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', {
+        name: '削除する',
+      })
+    )
+    await waitFor(() => expect(onError).toHaveBeenCalledTimes(2))
+    expect(
+      onError.mock.calls.map(([error]) => (error as MbcApiError).status)
+    ).toEqual([500, 503])
+  })
 })

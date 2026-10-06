@@ -85,17 +85,16 @@ export function MbcSurveyTemplateEditorPage({
   useEffect(() => {
     onErrorRef.current = onError
   })
-  const failure =
-    create.status === 'error'
-      ? create.error
-      : update.status === 'error'
-        ? update.error
-        : remove.status === 'error'
-          ? remove.error
-          : undefined
+  // One effect per command: a later failure of another command is still reported.
   useEffect(() => {
-    if (failure !== undefined) onErrorRef.current?.(failure)
-  }, [failure])
+    if (create.status === 'error') onErrorRef.current?.(create.error)
+  }, [create.status, create.error])
+  useEffect(() => {
+    if (update.status === 'error') onErrorRef.current?.(update.error)
+  }, [update.status, update.error])
+  useEffect(() => {
+    if (remove.status === 'error') onErrorRef.current?.(remove.error)
+  }, [remove.status, remove.error])
 
   return (
     <SurveyTemplateEditor

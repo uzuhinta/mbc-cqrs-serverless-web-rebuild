@@ -20,26 +20,34 @@ export function TemplateSearch({
   const t = useMessages(templateMessages)
   const [draft, setDraft] = useState(value)
   const [given, setGiven] = useState(value)
+  // The last keyword reported to the host; its (possibly late) echo must not undo newer typing.
+  const [reported, setReported] = useState<string | null>(null)
   const onChangeRef = useRef(onChange)
   useEffect(() => {
     onChangeRef.current = onChange
   })
 
-  // A new value from the host replaces the draft (React's "adjust state on prop change").
+  // A new value from the host replaces the draft (React's "adjust state on prop change"),
+  // unless it is the echo of what this input reported.
   if (value !== given) {
     setGiven(value)
-    setDraft(value)
+    if (value !== reported) setDraft(value)
   }
 
   useEffect(() => {
-    if (draft === value) return
-    const timer = setTimeout(() => onChangeRef.current(draft), delay)
+    if (draft === value || draft === reported) return
+    const timer = setTimeout(() => {
+      setReported(draft)
+      onChangeRef.current(draft)
+    }, delay)
     return () => clearTimeout(timer)
-  }, [draft, value, delay])
+  }, [draft, value, reported, delay])
 
   return (
     <Input
-      type="search"
+      // type="text": a search input's native clear button would cover the icon.
+      type="text"
+      role="searchbox"
       aria-label={t.list.searchPlaceholder}
       placeholder={t.list.searchPlaceholder}
       showSearchIcon

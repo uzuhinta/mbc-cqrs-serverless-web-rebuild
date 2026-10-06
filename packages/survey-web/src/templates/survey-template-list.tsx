@@ -121,18 +121,32 @@ export function SurveyTemplateList({
     )
   } else if (items.length === 0) {
     body = (
-      <div className="mbc:flex mbc:flex-col mbc:items-center mbc:justify-center mbc:py-12 mbc:text-center">
-        <Search
-          aria-hidden
-          className="mbc:text-muted-foreground mbc:mb-4 mbc:h-12 mbc:w-12"
-        />
-        <h3 className="mbc:mb-2 mbc:text-lg mbc:font-semibold">
-          {t.list.emptyTitle}
-        </h3>
-        <p className="mbc:text-muted-foreground mbc:mb-4">
-          {t.list.emptyDescription}
-        </p>
-      </div>
+      <>
+        <div className="mbc:flex mbc:flex-col mbc:items-center mbc:justify-center mbc:py-12 mbc:text-center">
+          <Search
+            aria-hidden
+            className="mbc:text-muted-foreground mbc:mb-4 mbc:h-12 mbc:w-12"
+          />
+          <h3 className="mbc:mb-2 mbc:text-lg mbc:font-semibold">
+            {t.list.emptyTitle}
+          </h3>
+          <p className="mbc:text-muted-foreground mbc:mb-4">
+            {t.list.emptyDescription}
+          </p>
+        </div>
+        {total > 0 && (
+          // The page is past the last one (e.g. after a delete): keep a way back.
+          <div className="mbc:flex mbc:items-center mbc:justify-center">
+            <TemplatePagination
+              page={page}
+              pageSize={pageSize}
+              total={total}
+              onPageChange={onPageChange}
+              onPageSizeChange={onPageSizeChange}
+            />
+          </div>
+        )}
+      </>
     )
   } else {
     body = (

@@ -41,4 +41,33 @@ describe('TemplateSearch', () => {
     await new Promise((resolve) => setTimeout(resolve, 400))
     expect(onChange).not.toHaveBeenCalled()
   })
+
+  it('keeps typing that continues while the host echoes the keyword late (URL sync)', async () => {
+    const onChange = vi.fn()
+    function Host() {
+      const [value, setValue] = useState('')
+      return (
+        <TemplateSearch
+          value={value}
+          onChange={(keyword) => {
+            onChange(keyword)
+            setTimeout(() => setValue(keyword), 250) // e.g. a router round trip
+          }}
+        />
+      )
+    }
+    render(<Host />)
+    const input = screen.getByRole('searchbox')
+    await userEvent.type(input, 'ab')
+    await new Promise((resolve) => setTimeout(resolve, 350))
+    await userEvent.type(input, 'c')
+    await new Promise((resolve) => setTimeout(resolve, 700))
+    expect(input).toHaveValue('abc')
+    expect(onChange.mock.calls).toEqual([['ab'], ['abc']])
+  })
+
+  it('is a plain text input (no native clear button over the search icon)', () => {
+    render(<TemplateSearch value="" onChange={() => {}} />)
+    expect(screen.getByRole('searchbox')).toHaveAttribute('type', 'text')
+  })
 })
