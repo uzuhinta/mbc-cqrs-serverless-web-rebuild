@@ -28,16 +28,19 @@ describe('ui-web JavaScript output', () => {
   })
 
   const CLIENT_MODULES = [
+    'components/accordion.js',
     'components/alert-dialog.js',
     'components/badge.js',
     'components/button.js',
     'components/calendar.js',
     'components/checkbox.js',
+    'components/command.js',
     'components/dialog.js',
     'components/dropdown-menu.js',
     'components/field.js',
     'components/input.js',
     'components/label.js',
+    'components/multi-select.js',
     'components/pagination.js',
     'components/popover.js',
     'components/radio-group.js',
@@ -47,6 +50,7 @@ describe('ui-web JavaScript output', () => {
     'components/tabs.js',
     'components/textarea.js',
     'i18n/provider.js',
+    'lib/use-hydrated.js',
   ]
   const SERVER_SAFE_MODULES = [
     'components/alert.js',
@@ -55,12 +59,25 @@ describe('ui-web JavaScript output', () => {
     'components/input-variants.js',
     'components/card.js',
     'components/skeleton.js',
+    'components/table.js',
     'i18n/catalog.js',
     'i18n/merge.js',
     'i18n/ui-messages.js',
     'index.js',
     'lib/cn.js',
   ]
+
+  it('covers every M1 module in the use-client allowlists', () => {
+    for (const file of [
+      'components/accordion.js',
+      'components/command.js',
+      'components/multi-select.js',
+      'lib/use-hydrated.js',
+    ]) {
+      expect(CLIENT_MODULES, file).toContain(file)
+    }
+    expect(SERVER_SAFE_MODULES).toContain('components/table.js')
+  })
 
   it('keeps "use client" on client modules only', () => {
     for (const file of CLIENT_MODULES) {
