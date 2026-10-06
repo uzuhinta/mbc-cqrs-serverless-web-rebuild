@@ -6,6 +6,7 @@ import { renderToString } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
 import { SurveyCreator } from '../src/creator/survey-creator'
+import type { SurveyInput } from '../src/schema/survey-schema'
 import { LOCKS } from './fixtures/creator-surveys'
 
 async function hydrate(element: ReactElement) {
@@ -48,7 +49,7 @@ describe('SurveyCreator server rendering', () => {
   })
 
   it('hydrates a loaded survey whose first item (selected) is a choice question', async () => {
-    const choiceFirst = {
+    const choiceFirst: SurveyInput = {
       title: 'Choice first',
       items: [
         {
@@ -62,7 +63,7 @@ describe('SurveyCreator server rendering', () => {
         },
         { id: 'sec_1', type: 'section-header', title: 'S' },
       ],
-    } as const
+    }
     expect(
       await hydrate(
         <MbcProvider>
