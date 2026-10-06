@@ -259,7 +259,7 @@ Requires `<MbcClientProvider>` from `client-web/react`.
 
 ### 6.1 Question-type registry
 
-One folder per kind (`short-text`, `long-text`, `single-choice`, `multiple-choice`, `dropdown`, `linear-scale`, `rating`, `date`, `time`), each with `renderer.tsx`, `editor.tsx`, `validate.ts`, `defaults.ts`. A `registry` maps kind → `{ renderer, editor, create, validate, icon, labelKey }`. Adding a kind is a one-folder change. Target: no file over ~300 lines.
+As built (SP4–SP6 rulings): renderers live in `src/question-types/` with a kind → renderer `registry`; editors in `src/creator/question/` (`KindEditor` switches on the kind, `KIND_ICONS` / `kinds` messages name it); validation stays in `engine/validate.ts` so `/core` remains one React-free module; creation defaults are in `creator/state/defaults.ts`. Adding a kind touches those four places. Target: no file over ~300 lines (the shell `survey-creator.tsx` and the editors' option/rule builders are the exceptions).
 
 ### 6.2 Form engine (pure)
 
@@ -273,7 +273,7 @@ One folder per kind (`short-text`, `long-text`, `single-choice`, `multiple-choic
 ### 6.3 Creator state
 
 - `creatorReducer(state, action)` — pure. Actions: `addQuestion`, `addSection`, `duplicate`, `remove`, `move`, `changeType`, `updateItem`, `mergeSection`, `reorderSections`, `select`.
-- Lock rules (v0 behaviour, from README) live only in the reducer's guards: `canEdit`, `canDelete`, `canDuplicate`, `canDrag`, `canInsertInto`, `canMerge`. Locked question: no edit/delete/duplicate/drag. Locked section: no title/description edit, no delete, no merge in either direction, nothing added into it, floating bar hidden when it or its question is selected, questions cannot be dragged in or out; it can still be moved; duplicating it yields an unlocked copy. A section containing a locked question cannot be deleted. Adding a section _after_ a locked section is allowed.
+- Lock rules (v0 behaviour, from README) live only in the reducer's guards: `canEdit`, `canDelete`, `canDuplicate`, `canDrag`, `canMerge`, plus `questionInsertIndex` / `sectionInsertIndex` for insertion. Locked question: no edit/delete/duplicate/drag. Locked section: no title/description edit, no delete, no merge in either direction, nothing added into it (the floating bar stays, with add-question disabled, when it or its question is selected — v0's tests), questions in it are neither draggable nor drop targets; it can still be moved; duplicating it yields an unlocked copy. A section containing a locked question cannot be deleted. Adding a section _after_ a locked section is allowed.
 - Store: a small `useSyncExternalStore` store with per-item selectors so editing one card re-renders only that card.
 - Validation: `SurveySchema.safeParse` on change (debounced) and on submit; issues mapped to item cards by path. Dangling `nextSectionId` / `targetSectionId` show a warning, not an error.
 - Ids: `createId()` (`crypto.randomUUID` with fallback), stable for the item's life.
