@@ -285,4 +285,78 @@ describe('command', () => {
       requestId: 'r',
     })
   })
+
+  it('waits for expectedFinishes finish messages and reports progress', async () => {
+    const { command, responses } = setup()
+    const progress: [number, number][] = []
+    let settled = false
+    const pending = command<{ requestId: string }>(
+      { method: 'POST', path: '/api/master-bulk', body: { items: [] } },
+      {
+        expectedFinishes: 3,
+        onProgress: (done, expected) => progress.push([done, expected]),
+      }
+    )
+    void pending.then(() => {
+      settled = true
+    })
+    const socket = await connected()
+
+    status(socket, 'req-other', 'finish:FINISHED')
+    status(socket, 'req-1', 'finish:FINISHED') // before the HTTP response: buffered
+    responses[0]?.resolve({ requestId: 'req-1' })
+    await flush()
+    status(socket, 'req-1', 'finish:FINISHED')
+    await flush()
+    expect(settled).toBe(false)
+
+    status(socket, 'req-1', 'finish:FINISHED')
+    await expect(pending).resolves.toMatchObject({ requestId: 'req-1' })
+    expect(progress).toEqual([
+      [1, 3],
+      [2, 3],
+      [3, 3],
+    ])
+  })
+
+  it('rejects on a FAILED status after some items finished', async () => {
+    const { command, responses } = setup()
+    const pending = command(
+      { method: 'POST', path: '/api/master-bulk' },
+      { expectedFinishes: 2 }
+    )
+    const socket = await connected()
+    responses[0]?.resolve({ requestId: 'req-1' })
+    await flush()
+    status(socket, 'req-1', 'finish:FINISHED')
+    status(socket, 'req-1', 'import:FAILED')
+    await expect(pending).rejects.toBeInstanceOf(MbcCommandError)
+  })
+
+  it('counts expectedFinishes below 1 as 1', async () => {
+    const { command, responses } = setup()
+    const pending = command(
+      { method: 'POST', path: '/api/x' },
+      { expectedFinishes: 0 }
+    )
+    const socket = await connected()
+    responses[0]?.resolve({ requestId: 'req-1' })
+    await flush()
+    status(socket, 'req-1', 'finish:FINISHED')
+    await expect(pending).resolves.toMatchObject({ requestId: 'req-1' })
+  })
+
+  it('resolves after the HTTP response without realtime, with no progress', async () => {
+    const { http, responses } = setup()
+    const command = createCommand(http, undefined)
+    const onProgress = vi.fn()
+    const pending = command(
+      { method: 'POST', path: '/api/master-bulk' },
+      { expectedFinishes: 5, onProgress }
+    )
+    await flush()
+    responses[0]?.resolve({ requestId: 'req-1' })
+    await expect(pending).resolves.toMatchObject({ requestId: 'req-1' })
+    expect(onProgress).not.toHaveBeenCalled()
+  })
 })

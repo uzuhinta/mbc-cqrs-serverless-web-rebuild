@@ -19,6 +19,13 @@ export type CommandOptions = {
   timeoutMs?: number
   signal?: AbortSignal
   onPhase?: (phase: 'sending' | 'waiting') => void
+  /**
+   * How many `finish:FINISHED` messages complete the command; bulk commands
+   * send one per item. Default 1; values below 1 count as 1.
+   */
+  expectedFinishes?: number
+  /** Called on each `finish:FINISHED` with the number finished so far. */
+  onProgress?: (done: number, expected: number) => void
 }
 
 export type CommandResult<T> = { data: T; requestId: string }
@@ -40,6 +47,8 @@ export function createCommand(
     options: CommandOptions = {}
   ): Promise<CommandResult<T>> {
     const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS
+    const expected = Math.max(1, Math.floor(options.expectedFinishes ?? 1))
+    let finished = 0
     const controller = new AbortController()
     const cleanups: (() => void)[] = []
 
@@ -64,8 +73,11 @@ export function createCommand(
           const { requestId, data } = sent
           if (requestId === undefined || message.id !== requestId) return
           const status = statusOf(message)
-          if (status === FINISHED) resolve({ data: data as T, requestId })
-          else if (status?.endsWith(':FAILED'))
+          if (status === FINISHED) {
+            finished += 1
+            options.onProgress?.(finished, expected)
+            if (finished >= expected) resolve({ data: data as T, requestId })
+          } else if (status?.endsWith(':FAILED'))
             reject(new MbcCommandError(requestId, status))
         }
 
