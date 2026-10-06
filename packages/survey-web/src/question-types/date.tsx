@@ -4,13 +4,16 @@ import {
   Button,
   Calendar,
   cn,
+  FieldGroup,
   Popover,
   PopoverContent,
   PopoverTrigger,
+  useFieldControl,
   useLocale,
   useMessages,
 } from '@mbc-cqrs-serverless/ui-web'
 import { CalendarIcon } from 'lucide-react'
+import { useId } from 'react'
 
 import { surveyMessages } from '../i18n/survey-messages'
 import type { DateQuestion } from '../schema/survey-schema'
@@ -58,10 +61,24 @@ export function DateRenderer({
     onChange(writeDate(next, includeYear))
   }
 
+  // Date only: the button is the question's control, named by the question
+  // and its own text. Date and time: the group carries the question instead.
+  const valueId = useId()
+  const control = useFieldControl({}, { group: true })
+  const controlProps = includeTime
+    ? {}
+    : {
+        ...control,
+        'aria-labelledby': control['aria-labelledby']
+          ? `${control['aria-labelledby']} ${valueId}`
+          : undefined,
+      }
+
   const picker = (
     <Popover modal>
       <PopoverTrigger asChild>
         <Button
+          {...controlProps}
           variant="outline"
           disabled={disabled}
           onBlur={onBlur}
@@ -71,11 +88,9 @@ export function DateRenderer({
             !date && 'mbc:text-muted-foreground'
           )}
         >
-          {date ? (
-            formatDate(date, includeYear, locale)
-          ) : (
-            <span>{placeholder}</span>
-          )}
+          <span id={valueId}>
+            {date ? formatDate(date, includeYear, locale) : placeholder}
+          </span>
           <CalendarIcon
             aria-hidden
             className="mbc:ml-auto mbc:h-4 mbc:w-4 mbc:opacity-50"
@@ -98,7 +113,7 @@ export function DateRenderer({
   if (!includeTime) return picker
 
   return (
-    <div className="mbc:w-full">
+    <FieldGroup className="mbc:w-full">
       <div className="mbc:grid mbc:grid-cols-1 mbc:gap-8 mbc:md:grid-cols-4">
         {picker}
         <div className="mbc:flex mbc:items-center mbc:gap-2 mbc:md:col-span-1">
@@ -126,6 +141,6 @@ export function DateRenderer({
           </span>
         </div>
       </div>
-    </div>
+    </FieldGroup>
   )
 }

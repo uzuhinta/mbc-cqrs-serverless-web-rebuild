@@ -302,4 +302,42 @@ describe('SurveyForm', () => {
     ).toBeInTheDocument()
     expect(screen.getAllByRole('radio', { name: /^\d+$/ })).toHaveLength(11)
   })
+
+  it('labels date and time controls by their question, with unique ids', async () => {
+    const schema: SurveyInput = {
+      title: 'T',
+      items: [
+        {
+          id: 'd',
+          type: 'date',
+          label: '誕生日',
+          validation: { required: true },
+        },
+        { id: 'dt', type: 'date', label: '来店', includeTime: true },
+        { id: 't', type: 'time', label: '時刻Q' },
+        { id: 'u', type: 'time', label: '期間Q', answerType: 'duration' },
+      ],
+    }
+    const { container } = render(
+      <SurveyForm schema={schema} onSubmit={() => {}} />
+    )
+    expect(
+      screen.getByRole('button', { name: /誕生日.*年月日を選択してください/ })
+    ).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: '来店' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: '時刻Q' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: '期間Q' })).toBeInTheDocument()
+    const ids = [...container.querySelectorAll('[id]')].map(
+      (element) => element.id
+    )
+    expect(ids.length - new Set(ids).size).toBe(0)
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'アンケートを送信' })
+    )
+    const date = screen.getByRole('button', { name: /誕生日/ })
+    await waitFor(() => expect(date).toHaveFocus())
+    expect(date).toHaveAttribute('aria-invalid', 'true')
+    expect(date).toHaveAccessibleDescription('この項目は必須です')
+  })
 })

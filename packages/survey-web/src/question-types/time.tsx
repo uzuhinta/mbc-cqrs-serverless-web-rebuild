@@ -1,6 +1,6 @@
 'use client'
 
-import { useMessages } from '@mbc-cqrs-serverless/ui-web'
+import { FieldGroup, useMessages } from '@mbc-cqrs-serverless/ui-web'
 
 import type { DurationAnswer, TimeAnswer } from '../answers/types'
 import { surveyMessages } from '../i18n/survey-messages'
@@ -34,7 +34,7 @@ export function TimeRenderer({
         [part]: text,
       } as DurationAnswer)
     return (
-      <div
+      <FieldGroup
         className="mbc:flex mbc:max-w-sm mbc:items-center mbc:gap-2"
         onBlur={onBlur}
       >
@@ -70,14 +70,14 @@ export function TimeRenderer({
             className="mbc:w-full"
           />
         </div>
-      </div>
+      </FieldGroup>
     )
   }
 
   const update = (part: keyof TimeAnswer, text: string) =>
     onChange({ hour: '', minute: '', ...current, [part]: text } as TimeAnswer)
   return (
-    <div
+    <FieldGroup
       className="mbc:flex mbc:max-w-sm mbc:items-center mbc:gap-2"
       onBlur={onBlur}
     >
@@ -105,6 +105,6 @@ export function TimeRenderer({
         />
       </div>
       <span className="mbc:font-normal mbc:text-gray-500">{t.form.minute}</span>
-    </div>
+    </FieldGroup>
   )
 }
