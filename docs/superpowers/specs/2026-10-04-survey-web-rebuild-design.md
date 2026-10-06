@@ -275,7 +275,7 @@ As built (SP4–SP6 rulings): renderers live in `src/question-types/` with a kin
 - `creatorReducer(state, action)` — pure. Actions: `addQuestion`, `addSection`, `duplicate`, `remove`, `move`, `changeType`, `updateItem`, `mergeSection`, `reorderSections`, `select`.
 - Lock rules (v0 behaviour, from README) live only in the reducer's guards: `canEdit`, `canDelete`, `canDuplicate`, `canDrag`, `canMerge`, plus `questionInsertIndex` / `sectionInsertIndex` for insertion. Locked question: no edit/delete/duplicate/drag. Locked section: no title/description edit, no delete, no merge in either direction, nothing added into it (the floating bar stays, with add-question disabled, when it or its question is selected — v0's tests), questions in it are neither draggable nor drop targets; it can still be moved; duplicating it yields an unlocked copy. A section containing a locked question cannot be deleted. Adding a section _after_ a locked section is allowed.
 - Store: a small `useSyncExternalStore` store with per-item selectors so editing one card re-renders only that card.
-- Validation: `SurveySchema.safeParse` on change (debounced) and on submit; issues mapped to item cards by path. Dangling `nextSectionId` / `targetSectionId` show a warning, not an error.
+- Validation: `SurveySchema.safeParse` on every change (synchronous, so `onChange` can report `isValid`) and on submit; issues mapped to item cards by path. Dangling `nextSectionId` / `targetSectionId` show a warning, not an error.
 - Ids: `createId()` (`crypto.randomUUID` with fallback), stable for the item's life.
 - Drag and drop: dnd-kit with pointer + keyboard sensors and translated screen-reader announcements.
 
