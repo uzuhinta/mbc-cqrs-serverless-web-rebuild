@@ -9,3 +9,7 @@ export { surveyMessages, type SurveyMessages } from './i18n/survey-messages'
 export type { QuestionRendererProps } from './question-types/types'
 export type { QuestionRenderers } from './question-types/registry'
 export { SurveyForm, type SurveyFormProps } from './form/survey-form'
+export {
+  creatorMessages,
+  type CreatorMessages,
+} from './creator/i18n/creator-messages'
