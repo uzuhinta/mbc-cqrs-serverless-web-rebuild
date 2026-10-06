@@ -16,7 +16,7 @@ type Deferred = {
   reject: (error: unknown) => void
 }
 
-function setup() {
+function setup(tenantCode: string | (() => string) = 'tenant-a') {
   const responses: Deferred[] = []
   const fetch = vi.fn(
     () =>
@@ -34,7 +34,7 @@ function setup() {
   ) as unknown as typeof globalThis.fetch
   const http = createHttp({
     apiUrl: 'https://api',
-    tenantCode: 'tenant-a',
+    tenantCode,
     fetch,
   })
   const realtime = createRealtimeClient({
@@ -80,6 +80,26 @@ beforeEach(() => {
 })
 
 describe('command', () => {
+  it('subscribes with the tenant current at each command (v0 0.0.50)', async () => {
+    let tenant = 'tenant-a'
+    const { command } = setup(() => tenant)
+    void command({ method: 'POST', path: '/a' }).catch(() => {})
+    const socket = await connected()
+    tenant = 'tenant-b'
+    void command({ method: 'POST', path: '/b' }).catch(() => {})
+    await flush()
+    socket.ackAll()
+    await flush()
+    expect(
+      socket
+        .starts()
+        .map(
+          (start) =>
+            JSON.parse(start.payload?.data ?? '{}').variables.tenantCode
+        )
+    ).toEqual(['tenant-a', 'tenant-b'])
+  })
+
   it('subscribes before sending, then resolves on finish:FINISHED', async () => {
     const { command, responses } = setup()
     const phases: string[] = []

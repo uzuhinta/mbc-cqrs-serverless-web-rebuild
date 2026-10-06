@@ -91,6 +91,22 @@ describe('createHttp', () => {
     expect(headers.get('x-app')).toBe('survey')
   })
 
+  it('resolves the tenant on every request (v0 0.0.50 tenant resolver)', async () => {
+    const { fetch, calls } = fakeFetch(() => json({}))
+    let tenant = 'tenant-a'
+    const http = createHttp({
+      apiUrl: 'https://api.example.com',
+      tenantCode: () => tenant,
+      fetch,
+    })
+    await http.request('GET', '/a')
+    tenant = 'tenant-b'
+    await http.request('GET', '/b')
+    expect(
+      calls.map((call) => new Headers(call.init.headers).get('x-tenant-code'))
+    ).toEqual(['tenant-a', 'tenant-b'])
+  })
+
   it('omits authorization without a token and content-type without a body', async () => {
     const { fetch, calls } = fakeFetch(() => json([]))
     const http = createHttp({
