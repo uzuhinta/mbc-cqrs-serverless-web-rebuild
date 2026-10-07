@@ -83,6 +83,7 @@ git status --porcelain                                        # must be empty af
   - Depends on: —
 
 - [ ] **M2 — `/core`** (`m2-core`)
+  - Plan: `docs/superpowers/plans/2026-10-07-m2-core.md` — written for an implementer without this conversation's context; its code was replayed task by task on `main` (5b8a2c9) and passes the full gate.
   - Spec: §3.1, §5 (auto-number type code note), Review Focus 1.
   - Builds: types (`MasterFieldType`, `MasterField`, `MasterSetting`, `MasterData`), `parseMasterSetting`, `parseMasterData` (tolerant, passthrough), `fieldTypes` table (options, defaults, `toFormValue`, `fromFormValue`, `validate`), `validateMasterData`, `toDataPayload`, `validateFieldDefinition`, `defaultSettingFields`, `parseBulkJson` + v0's `MapResult` / `MappedSetting` / `MappedData` / `mapResultToBulkItem`, `MasterCopyRequest`; error keys with ja/en messages in `master`; fixtures with all ten field types and unknown keys.
   - Gate: standard gate; `/core` build has no React import.
