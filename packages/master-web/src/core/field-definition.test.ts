@@ -67,6 +67,14 @@ describe('validateFieldDefinition', () => {
         field({ physicalName: 'price' }),
       ]).physicalName
     ).toEqual({ key: 'duplicate' })
+    expect(
+      validateFieldDefinition(field({ physicalName: 'constructor' }), [])
+        .physicalName
+    ).toEqual({ key: 'reserved' })
+    expect(
+      validateFieldDefinition(field({ physicalName: '__proto__' }), [])
+        .physicalName
+    ).toEqual({ key: 'reserved' })
   })
 
   it('allows auto_number only on code, and asks code for its format', () => {

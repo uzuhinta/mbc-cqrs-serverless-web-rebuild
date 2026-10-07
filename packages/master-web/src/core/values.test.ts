@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { V0_DATA, V0_DATA_ODD, V0_SETTING } from '../../test/fixtures/v0-master'
 import { parseMasterData, parseMasterSetting } from './parse'
-import type { MasterData, MasterSetting } from './types'
+import type { MasterData, MasterField, MasterSetting } from './types'
 import {
   dataFields,
   ENTITY_CODE_FIELD,
@@ -113,6 +113,47 @@ describe('fromFormValues', () => {
     expect(fromFormValues(dataFields(bare), { code: 'X', name: 'Y' })).toEqual(
       {}
     )
+  })
+
+  it('does not treat inherited object properties as stored attributes', () => {
+    const fields: MasterField[] = [
+      {
+        physicalName: 'constructor',
+        name: '構築',
+        dataType: 'string',
+        isRequired: false,
+        isShowedOnList: false,
+      },
+    ]
+    const data: MasterData = {
+      id: 'i',
+      pk: 'p',
+      sk: 's',
+      code: 'c',
+      name: 'n',
+      version: 1,
+      attributes: { other: 1 },
+    }
+    expect(toFormValues(fields, data)['constructor']).toBe('')
+    expect(
+      fromFormValues(fields, toFormValues(fields, data), data.attributes)
+    ).toEqual({ other: 1 })
+  })
+
+  it('writes an off switch when the field’s default is on', () => {
+    const fields: MasterField[] = [
+      {
+        physicalName: 'active',
+        name: '有効',
+        dataType: 'boolean',
+        defaultValue: 'true',
+        isRequired: false,
+        isShowedOnList: false,
+      },
+    ]
+    expect(fromFormValues(fields, { active: false })).toEqual({
+      active: false,
+    })
   })
 })
 

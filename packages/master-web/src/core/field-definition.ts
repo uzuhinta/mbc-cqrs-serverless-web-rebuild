@@ -67,6 +67,7 @@ export type FieldDefinitionError =
   | { key: 'tooLong'; params: { max: number } }
   | { key: 'nameChars' }
   | { key: 'duplicate' }
+  | { key: 'reserved' }
   | { key: 'typeNotAllowed' }
   | { key: 'numeric' }
   | { key: 'lengthRange' }
@@ -86,6 +87,12 @@ export type FieldDefinitionErrors = Partial<
 const INTEGER = /^-?[0-9]+$/
 const DIGITS = /^[0-9]+$/
 const MAX_TEXT = 255
+
+/** Names that collide with Object.prototype or poison plain-object lookups. */
+const RESERVED_PHYSICAL_NAMES = new Set([
+  ...Object.getOwnPropertyNames(Object.prototype),
+  '__proto__',
+])
 
 const isSet = (value: unknown) =>
   value !== undefined && value !== null && String(value).trim() !== ''
@@ -112,6 +119,9 @@ export function validateFieldDefinition(
     textInput(field.physicalName) ??
     (/[.[\]]/.test(field.physicalName)
       ? { key: 'nameChars' as const }
+      : undefined) ??
+    (RESERVED_PHYSICAL_NAMES.has(field.physicalName)
+      ? { key: 'reserved' as const }
       : undefined) ??
     (siblings.some((other) => other.physicalName === field.physicalName)
       ? { key: 'duplicate' as const }

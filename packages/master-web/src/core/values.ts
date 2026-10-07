@@ -56,7 +56,11 @@ export function toFormValues(
   }
   const values: MasterFormValues = {}
   for (const field of fields) {
-    const source = stored ? stored[field.physicalName] : field.defaultValue
+    const source = stored
+      ? Object.hasOwn(stored, field.physicalName)
+        ? stored[field.physicalName]
+        : undefined
+      : field.defaultValue
     values[field.physicalName] = fieldTypeOf(field).toFormValue(source)
   }
   return values
@@ -84,10 +88,15 @@ export function fromFormValues(
     const form = values[name]
     if (form === undefined || isEntityField(field)) continue
     const type = fieldTypeOf(field)
-    const before = previous[name]
-    const stored = name in previous
-    // An empty input does not add a key the record never had.
-    if (!stored && sameFormValue(form, type.toFormValue(undefined))) continue
+    const stored = Object.hasOwn(previous, name)
+    const before = stored ? previous[name] : undefined
+    // An empty input does not add a key the record never had — unless the
+    // field's default is non-empty (e.g. a switch defaulting to on that the
+    // user turned off), in which case the answer must be written.
+    if (!stored && sameFormValue(form, type.toFormValue(undefined))) {
+      const defaultForm = type.toFormValue(field.defaultValue)
+      if (sameFormValue(defaultForm, type.toFormValue(undefined))) continue
+    }
     const next =
       stored && sameFormValue(form, type.toFormValue(before))
         ? before

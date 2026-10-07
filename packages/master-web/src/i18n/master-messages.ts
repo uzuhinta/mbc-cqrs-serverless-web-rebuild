@@ -22,6 +22,7 @@ export type MasterMessages = {
     tooLong: (params: { max: number }) => string
     nameChars: string
     duplicate: string
+    reserved: string
     typeNotAllowed: string
     numeric: string
     lengthRange: string
@@ -84,6 +85,7 @@ const ja: MasterMessages = {
     tooLong: ({ max }) => `${max}文字以内で入力してください。`,
     nameChars: '物理名に「.」「[」「]」は使えません。',
     duplicate: '同じ物理名の項目が既にあります。',
+    reserved: 'この物理名は使えません。',
     typeNotAllowed: 'この項目では選択できないデータ型です。',
     numeric: '数字で入力してください。',
     lengthRange: '1〜255の範囲で入力してください。',
@@ -145,6 +147,7 @@ const en: MasterMessages = {
     tooLong: ({ max }) => `Enter at most ${max} characters.`,
     nameChars: 'A physical name cannot contain ".", "[" or "]".',
     duplicate: 'Another field already has this physical name.',
+    reserved: 'This physical name is reserved.',
     typeNotAllowed: 'This data type is not available for this field.',
     numeric: 'Enter a number.',
     lengthRange: 'Enter a number from 1 to 255.',
