@@ -6,6 +6,8 @@ import { forwardRef, useState, type ButtonHTMLAttributes } from 'react'
 import { useMessages } from '../i18n/provider'
 import { uiMessages } from '../i18n/ui-messages'
 import { cn } from '../lib/cn'
+import { Badge } from './badge'
+import { Button } from './button'
 import {
   Command,
   CommandEmpty,
@@ -29,13 +31,6 @@ export type MultiSelectProps = Omit<
   placeholder?: string
 }
 
-// master v0's outline Button and secondary Badge; ui-web's Button and Badge
-// carry survey v0's look, so they are not used here.
-const TRIGGER =
-  'mbc:inline-flex mbc:items-center mbc:whitespace-nowrap mbc:rounded-md mbc:text-sm mbc:font-medium mbc:ring-offset-background mbc:transition-colors mbc:focus-visible:outline-none mbc:focus-visible:ring-2 mbc:focus-visible:ring-ring mbc:focus-visible:ring-offset-2 mbc:disabled:pointer-events-none mbc:disabled:opacity-50 mbc:border mbc:border-input mbc:bg-background mbc:hover:bg-accent mbc:hover:text-accent-foreground mbc:px-4 mbc:py-2 mbc:h-auto mbc:w-full mbc:justify-between'
-const CHIP =
-  'mbc:inline-flex mbc:items-center mbc:rounded-full mbc:px-2.5 mbc:py-0.5 mbc:text-xs mbc:font-semibold mbc:transition-colors mbc:focus:outline-none mbc:focus:ring-2 mbc:focus:ring-ring mbc:focus:ring-offset-2 mbc:border-transparent mbc:bg-secondary mbc:text-secondary-foreground mbc:hover:bg-secondary/80 mbc:mr-1'
-
 /** v0's multi-select combobox: chips in the trigger, search and a check list in a popover. */
 export const MultiSelect = forwardRef<HTMLButtonElement, MultiSelectProps>(
   function MultiSelect(
@@ -58,20 +53,24 @@ export const MultiSelect = forwardRef<HTMLButtonElement, MultiSelectProps>(
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <button
+          <Button
             ref={ref}
             type="button"
+            variant="outline"
             role="combobox"
             aria-expanded={open}
             {...control}
-            className={cn(TRIGGER, className)}
+            className={cn(
+              'mbc:h-auto mbc:w-full mbc:justify-between',
+              className
+            )}
           >
             <span className="mbc:flex mbc:flex-wrap mbc:gap-1">
               {value.length > 0 ? (
                 value.map((item) => (
-                  <span key={item} className={CHIP}>
+                  <Badge key={item} variant="secondary" className="mbc:mr-1">
                     {labelOf(item)}
-                  </span>
+                  </Badge>
                 ))
               ) : (
                 <span className="mbc:text-muted-foreground mbc:font-normal">
@@ -83,7 +82,7 @@ export const MultiSelect = forwardRef<HTMLButtonElement, MultiSelectProps>(
               aria-hidden
               className="mbc:h-4 mbc:w-4 mbc:shrink-0 mbc:opacity-50"
             />
-          </button>
+          </Button>
         </PopoverTrigger>
         <PopoverContent
           aria-label={t.multiSelect.options}

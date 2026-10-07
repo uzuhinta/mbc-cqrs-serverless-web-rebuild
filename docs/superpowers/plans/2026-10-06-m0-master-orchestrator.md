@@ -54,9 +54,9 @@ Screens and new primitives (M1, M3–M7) also use the `evon:ui-ux` skill in **ke
 
 v0 reference source: `../mbc-cqrs-serverless-web/packages/master/src` (identical to npm 0.0.50).
 
-### Look precedence (ruling after the M1 review)
+### Look: one shared look (user decision, 2026-10-07)
 
-ui-web's primitives keep survey v0's look (their defaults are not changed for master-web). Where master v0's classes differ — its Button (`h-10`, neutral outline: `border-input bg-background hover:bg-accent`), Badge (`rounded-full px-2.5 py-0.5 font-semibold`) and others — master-web's components and screens set master v0's classes explicitly and pin them in master-web's own `test/v0-classes.ts` parity entries. `MultiSelect` (ui-web, used only by master-web) already does this.
+Master screens use ui-web's controls as they are (Button, Input, Select, Switch, Badge, Dialog, Accordion, Table, MultiSelect, pagination), so survey and master screens look the same in one app. What master-web keeps from master v0: page layouts, section structure (e.g. the data list's accordion sections and their dark section headers), the table's structure, colour roles and the Japanese text. Parity tests pin master-web's own layout markup, not ui-web's controls. (Replaces the M1-review ruling that master screens copy master v0's control classes.)
 
 ### Standard gate (every sub-plan)
 

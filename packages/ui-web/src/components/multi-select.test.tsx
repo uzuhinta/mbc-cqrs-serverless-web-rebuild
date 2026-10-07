@@ -3,8 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { createRef, useState } from 'react'
 import { describe, expect, it } from 'vitest'
 
-import { expectV0Classes } from '../../test/parity'
-import { V0 } from '../../test/v0-classes'
+import { cn } from '../lib/cn'
+import { badgeVariants } from './badge-variants'
+import { buttonVariants } from './button-variants'
 
 import { MbcProvider } from '../i18n/provider'
 import { Field, FieldLabel } from './field'
@@ -73,11 +74,22 @@ describe('MultiSelect', () => {
     expect(trigger).toHaveFocus()
   })
 
-  it('keeps master v0’s trigger and chip classes', () => {
+  it('uses ui-web’s outline button and secondary badges (one shared look)', () => {
     render(<Harness initial={['t1']} />)
     const trigger = screen.getByRole('combobox', { name: 'Tenants' })
-    expectV0Classes(trigger, V0['multi-select.trigger'])
-    expectV0Classes(within(trigger).getByText('Tokyo'), V0['multi-select.chip'])
+    const classes = (value: string) =>
+      new Set(value.split(/\s+/).filter(Boolean))
+    expect(classes(trigger.className)).toEqual(
+      classes(
+        cn(
+          buttonVariants({ variant: 'outline' }),
+          'mbc:h-auto mbc:w-full mbc:justify-between'
+        )
+      )
+    )
+    expect(classes(within(trigger).getByText('Tokyo').className)).toEqual(
+      classes(cn(badgeVariants({ variant: 'secondary' }), 'mbc:mr-1'))
+    )
   })
 
   it('forwards its ref and takes button props such as aria-label', () => {

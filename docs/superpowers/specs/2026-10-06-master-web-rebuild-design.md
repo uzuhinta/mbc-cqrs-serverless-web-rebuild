@@ -14,7 +14,7 @@ Rewrite master-web as a real UI library on top of `ui-web` and `client-web`, wit
 
 1. Every v0 0.0.50 feature is reachable through the `/mbc` connected pages: settings list and editor, data list and editor, bulk JSON import, copy to tenants with task status.
 2. Settings and data saved by v0 load and save unchanged (unknown attribute keys included).
-3. The screens keep v0's look (shadcn/slate) and Japanese text.
+3. The screens keep v0's layouts, section structure, colour roles and Japanese text; their controls use ui-web's shared look, so survey and master screens match (user decision, 2026-10-07).
 4. React 18 and 19, SSR (`renderToString`) and a Next 16 App Router build pass.
 5. A host needs none of today's workarounds: no `dynamic(…, { ssr: false })`, no CSS-scoping script, no body-class theme trick, no `patch-package`, no Apollo client, no axios instance.
 
@@ -65,12 +65,12 @@ rebuild/
 
 ### ui-web additions (ship in 1.0.0)
 
-| Component                                                                                                | Notes                                                                                                |
-| -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `TableCaption` | shadcn markup and classes (v0's `components/ui/table.tsx`)                                           |
-| `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent`                                     | Radix accordion; caret range like the other Radix packages                                           |
-| `Command` family                                                                                         | `cmdk`                                                                                               |
-| `MultiSelect`                                                                                            | v0's `multi-select-combobox` behaviour: search, chips, select all; keyboard and screen-reader tested |
+| Component                                                                                                | Notes                                                                                                  |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `TableCaption` | shadcn markup and classes (v0's `components/ui/table.tsx`)                                             |
+| `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent`                                     | Radix accordion; caret range like the other Radix packages                                             |
+| `Command` family                                                                                         | `cmdk`                                                                                                 |
+| `MultiSelect`                                                                                            | v0's `multi-select-combobox` behaviour: search, chips, a check list; keyboard and screen-reader tested |
 
 `Combobox` (single choice) was dropped in M1: no v0 master screen uses one.
 
