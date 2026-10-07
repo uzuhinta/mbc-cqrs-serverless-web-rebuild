@@ -48,41 +48,41 @@ describe('validateFieldDefinition', () => {
 
   it('checks names: required, at most 255, no . [ ], unique', () => {
     expect(
-      validateFieldDefinition(field({ physicalName: ' ', name: '' }), []),
+      validateFieldDefinition(field({ physicalName: ' ', name: '' }), [])
     ).toEqual({
       physicalName: { key: 'required' },
       name: { key: 'required' },
     })
     expect(
       validateFieldDefinition(field({ physicalName: 'a'.repeat(256) }), [])
-        .physicalName,
+        .physicalName
     ).toEqual({ key: 'tooLong', params: { max: 255 } })
     expect(
-      validateFieldDefinition(field({ physicalName: 'a.b' }), []).physicalName,
+      validateFieldDefinition(field({ physicalName: 'a.b' }), []).physicalName
     ).toEqual({
       key: 'nameChars',
     })
     expect(
       validateFieldDefinition(field({ physicalName: 'price' }), [
         field({ physicalName: 'price' }),
-      ]).physicalName,
+      ]).physicalName
     ).toEqual({ key: 'duplicate' })
   })
 
   it('allows auto_number only on code, and asks code for its format', () => {
     expect(
-      validateFieldDefinition(field({ dataType: 'auto_number' }), []).dataType,
+      validateFieldDefinition(field({ dataType: 'auto_number' }), []).dataType
     ).toEqual({
       key: 'typeNotAllowed',
     })
     expect(
       validateFieldDefinition(
         field({ physicalName: 'code', dataType: 'auto_number' }),
-        [],
-      ),
+        []
+      )
     ).toEqual({ dataFormat: { key: 'formatRequired' } })
     expect(
-      validateFieldDefinition(field({ dataType: 'text' }), []).dataType,
+      validateFieldDefinition(field({ dataType: 'text' }), []).dataType
     ).toEqual({
       key: 'typeNotAllowed',
     })
@@ -98,12 +98,12 @@ describe('validateFieldDefinition', () => {
     expect(
       validateFieldDefinition(
         field({ dataType: 'number', min: '5', max: '5' }),
-        [],
-      ),
+        []
+      )
     ).toEqual({ min: { key: 'minNotLess' }, max: { key: 'maxNotGreater' } })
     expect(
       validateFieldDefinition(field({ dataType: 'text-area', maxRow: '0' }), [])
-        .maxRow,
+        .maxRow
     ).toEqual({ key: 'maxRowMin' })
   })
 
@@ -111,24 +111,24 @@ describe('validateFieldDefinition', () => {
     expect(
       validateFieldDefinition(
         field({ dataType: 'number', min: '1', max: '9', defaultValue: '10' }),
-        [],
-      ).defaultValue,
+        []
+      ).defaultValue
     ).toEqual({ key: 'defaultRange' })
     expect(
       validateFieldDefinition(
         field({ dataType: 'json', defaultValue: '{x' }),
-        [],
-      ).defaultValue,
+        []
+      ).defaultValue
     ).toEqual({ key: 'defaultJson' })
     expect(
       validateFieldDefinition(
         field({ dataType: 'boolean', defaultValue: 'yes' }),
-        [],
-      ).defaultValue,
+        []
+      ).defaultValue
     ).toEqual({ key: 'defaultBoolean' })
     expect(
       validateFieldDefinition(field({ length: '2', defaultValue: 'abc' }), [])
-        .defaultValue,
+        .defaultValue
     ).toEqual({ key: 'defaultLength' })
   })
 })
@@ -144,15 +144,15 @@ describe('normalizeFieldDefinition', () => {
           defaultValue: true,
           maxRow: '3',
           uiComponent: 'switch',
-        }),
-      ),
+        })
+      )
     ).toEqual(
       field({
         dataType: 'boolean',
         defaultValue: 'true',
         maxRow: 3,
         uiComponent: 'switch',
-      }),
+      })
     )
   })
 })

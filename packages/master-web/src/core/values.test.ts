@@ -13,7 +13,7 @@ import {
 } from './values'
 
 function parsed<T>(
-  result: { success: true; data: T } | { success: false; error: Error },
+  result: { success: true; data: T } | { success: false; error: Error }
 ): T {
   if (!result.success) throw result.error
   return result.data
@@ -65,7 +65,7 @@ describe('fromFormValues', () => {
     const fields = dataFields(setting())
     const data = record()
     expect(
-      fromFormValues(fields, toFormValues(fields, data), data.attributes),
+      fromFormValues(fields, toFormValues(fields, data), data.attributes)
     ).toEqual(data.attributes)
   })
 
@@ -73,7 +73,7 @@ describe('fromFormValues', () => {
     const fields = dataFields(setting())
     const data = odd()
     expect(
-      fromFormValues(fields, toFormValues(fields, data), data.attributes),
+      fromFormValues(fields, toFormValues(fields, data), data.attributes)
     ).toEqual({
       ...data.attributes,
       code: 'P-002',
@@ -103,15 +103,15 @@ describe('fromFormValues', () => {
       fromFormValues(
         fields,
         { ...toFormValues(fields, record()), sku: 'AP-2' },
-        record().attributes,
-      ),
+        record().attributes
+      )
     ).toMatchObject({ importedBy: 'batch-7', sku: 'AP-2' })
   })
 
   it('never writes the record-level code / name inputs into attributes', () => {
     const bare = { ...setting(), attributes: { description: '', fields: [] } }
     expect(fromFormValues(dataFields(bare), { code: 'X', name: 'Y' })).toEqual(
-      {},
+      {}
     )
   })
 })

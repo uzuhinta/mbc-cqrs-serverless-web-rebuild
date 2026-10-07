@@ -13,7 +13,7 @@ export type MasterDataErrors = Record<string, MasterError>
 export function validateMasterData(
   fields: readonly MasterField[],
   values: MasterFormValues,
-  { mode }: { mode: 'create' | 'update' },
+  { mode }: { mode: 'create' | 'update' }
 ): MasterDataErrors {
   const errors: MasterDataErrors = {}
   for (const field of fields) {

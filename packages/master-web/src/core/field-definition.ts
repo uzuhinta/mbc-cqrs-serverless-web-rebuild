@@ -39,12 +39,12 @@ export const defaultSettingFields: readonly MasterField[] = Object.freeze([
 ])
 
 export const FIXED_FIELD_NAMES: readonly string[] = Object.freeze(
-  defaultSettingFields.map((field) => field.physicalName),
+  defaultSettingFields.map((field) => field.physicalName)
 )
 
 /** v0: the code field can be text, number or auto-numbered; other fields cannot be auto-numbered. */
 export function allowedFieldTypes(
-  physicalName: string,
+  physicalName: string
 ): readonly MasterFieldType[] {
   return physicalName === 'code'
     ? ['string', 'number', 'auto_number']
@@ -105,7 +105,7 @@ function textInput(value: string): FieldDefinitionError | undefined {
  */
 export function validateFieldDefinition(
   field: MasterField,
-  siblings: readonly MasterField[],
+  siblings: readonly MasterField[]
 ): FieldDefinitionErrors {
   const errors: FieldDefinitionErrors = {}
   const physicalName =

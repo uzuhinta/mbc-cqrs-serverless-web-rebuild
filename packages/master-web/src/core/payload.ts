@@ -34,12 +34,12 @@ function text(value: unknown): string {
 export function toDataPayload(
   setting: MasterSetting,
   values: MasterFormValues,
-  options: { mode: 'create'; generatedCode?: string },
+  options: { mode: 'create'; generatedCode?: string }
 ): MasterDataCreateBody
 export function toDataPayload(
   setting: MasterSetting,
   values: MasterFormValues,
-  options: { mode: 'update'; previous: MasterData },
+  options: { mode: 'update'; previous: MasterData }
 ): MasterDataUpdateBody
 /**
  * v0's request bodies. Code and name come from the inputs (a generated code
@@ -51,7 +51,7 @@ export function toDataPayload(
   values: MasterFormValues,
   options:
     | { mode: 'create'; generatedCode?: string }
-    | { mode: 'update'; previous: MasterData },
+    | { mode: 'update'; previous: MasterData }
 ): MasterDataCreateBody | MasterDataUpdateBody {
   const fields = dataFields(setting)
   const hasSeq = fields.some((field) => field.physicalName === 'seq')

@@ -48,7 +48,7 @@ describe('master-web entries', () => {
     ]
     expect(Object.keys(core).sort()).toEqual([...CORE].sort())
     expect(Object.keys(root).sort()).toEqual(
-      [...CORE, 'MbcProvider', 'masterMessages', 'useMessages'].sort(),
+      [...CORE, 'MbcProvider', 'masterMessages', 'useMessages'].sort()
     )
   })
 
@@ -56,14 +56,14 @@ describe('master-web entries', () => {
     const { unmount } = render(
       <MbcProvider>
         <Labels />
-      </MbcProvider>,
+      </MbcProvider>
     )
     expect(screen.getByText(/^文字列\|数値\|自動採番\|/)).toBeInTheDocument()
     unmount()
     render(
       <MbcProvider locale="en">
         <Labels />
-      </MbcProvider>,
+      </MbcProvider>
     )
     expect(screen.getByText(/\|JSON\|/)).toBeInTheDocument()
     expect(screen.getByText(/^Text\|Number\|/)).toBeInTheDocument()

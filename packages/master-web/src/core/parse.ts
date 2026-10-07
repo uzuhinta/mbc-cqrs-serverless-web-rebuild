@@ -3,22 +3,21 @@ import { z } from 'zod'
 import type { MasterData, MasterSetting } from './types'
 
 export type ParseResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: z.ZodError }
+  { success: true; data: T } | { success: false; error: z.ZodError }
 
 /** v0 sometimes stores `null` where a value is optional. */
 const optional = <T extends z.ZodType>(schema: T) =>
   z
     .preprocess(
       (value) => (value === null ? undefined : value),
-      schema.optional(),
+      schema.optional()
     )
     .optional()
 
 /** v0 stores flags as booleans, older data as 'true' / 'false'. */
 const flag = z.preprocess(
   (value) => value === true || value === 'true',
-  z.boolean(),
+  z.boolean()
 )
 
 const stringOrNumber = optional(z.union([z.string(), z.number()]))
@@ -61,10 +60,10 @@ const MasterSettingSchema = z.looseObject({
     z.looseObject({
       description: z.preprocess(
         (value) => (typeof value === 'string' ? value : ''),
-        z.string(),
+        z.string()
       ),
       fields: z.preprocess((value) => value ?? [], z.array(MasterFieldSchema)),
-    }),
+    })
   ),
 })
 
@@ -73,7 +72,7 @@ const MasterDataSchema = z.looseObject({
   seq: optional(z.number()),
   attributes: z.preprocess(
     (value) => value ?? {},
-    z.record(z.string(), z.unknown()),
+    z.record(z.string(), z.unknown())
   ),
 })
 

@@ -113,7 +113,7 @@ function isBulkItem(entry: unknown, screen: BulkScreen): entry is BulkJsonItem {
  */
 export function parseBulkJson(
   text: string,
-  { screen, mapRawItem }: { screen: BulkScreen; mapRawItem?: BulkMapper },
+  { screen, mapRawItem }: { screen: BulkScreen; mapRawItem?: BulkMapper }
 ): BulkParseResult {
   let raw: unknown
   try {
@@ -165,7 +165,7 @@ export function parseBulkJson(
 /** The starting JSON in the import dialog (v0's samples, indented for a plain text box). */
 export function bulkSampleJson(
   screen: BulkScreen,
-  settingCode = 'SETTING_CODE',
+  settingCode = 'SETTING_CODE'
 ): string {
   const data = {
     settingCode,
@@ -180,7 +180,7 @@ export function bulkSampleJson(
     physicalName: string,
     name: string,
     dataType: string,
-    extra: Record<string, unknown>,
+    extra: Record<string, unknown>
   ) => ({
     physicalName,
     name,
@@ -217,6 +217,6 @@ export function bulkSampleJson(
       data,
     ],
     null,
-    2,
+    2
   )
 }

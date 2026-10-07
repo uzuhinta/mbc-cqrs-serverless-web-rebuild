@@ -7,12 +7,7 @@ export type FormValue = string | boolean | string[]
 
 /** Definition inputs the settings editor shows for a type, besides the common ones. */
 export type FieldOptionName =
-  | 'length'
-  | 'pattern'
-  | 'min'
-  | 'max'
-  | 'maxRow'
-  | 'format'
+  'length' | 'pattern' | 'min' | 'max' | 'maxRow' | 'format'
 
 export type FieldTypeDefinition = {
   options: readonly FieldOptionName[]
@@ -77,7 +72,7 @@ function matchesPattern(value: string, field: MasterField): MasterError | null {
 
 function textType(
   options: readonly FieldOptionName[],
-  check?: (value: string, field: MasterField) => MasterError | null,
+  check?: (value: string, field: MasterField) => MasterError | null
 ): FieldTypeDefinition {
   return {
     options,
@@ -192,7 +187,7 @@ export const fieldTypes: Readonly<
   string: textType(
     ['length', 'pattern'],
     (value, field) =>
-      lengthAndRows(value, field) ?? matchesPattern(value, field),
+      lengthAndRows(value, field) ?? matchesPattern(value, field)
   ),
   number,
   auto_number: { ...textType(['format']), hasDefault: false },
@@ -207,7 +202,7 @@ export const fieldTypes: Readonly<
 
 /** The field's type; a stored type this version does not know behaves as `string`. */
 export function fieldTypeOf(
-  field: Pick<MasterField, 'dataType'>,
+  field: Pick<MasterField, 'dataType'>
 ): FieldTypeDefinition {
   return isMasterFieldType(field.dataType)
     ? fieldTypes[field.dataType]

@@ -5,7 +5,7 @@ import type { MasterMessages } from './master-messages'
 
 export function formatMasterError(
   error: MasterError,
-  t: MasterMessages['validation'],
+  t: MasterMessages['validation']
 ): string {
   switch (error.key) {
     case 'maxLength':
@@ -25,14 +25,14 @@ export function formatMasterError(
 
 export function formatFieldDefinitionError(
   error: FieldDefinitionError,
-  t: MasterMessages['fieldDefinition'],
+  t: MasterMessages['fieldDefinition']
 ): string {
   return error.key === 'tooLong' ? t.tooLong(error.params) : t[error.key]
 }
 
 export function formatBulkError(
   error: BulkError,
-  t: MasterMessages['bulk'],
+  t: MasterMessages['bulk']
 ): string {
   const text =
     error.key === 'mapFailed'

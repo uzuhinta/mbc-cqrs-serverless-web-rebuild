@@ -46,7 +46,7 @@ export function dataFields(setting: MasterSetting): MasterField[] {
  */
 export function toFormValues(
   fields: readonly MasterField[],
-  data?: MasterData,
+  data?: MasterData
 ): MasterFormValues {
   const stored: Record<string, unknown> | undefined = data && {
     ...data.attributes,
@@ -76,7 +76,7 @@ function sameFormValue(a: FormValue, b: FormValue): boolean {
 export function fromFormValues(
   fields: readonly MasterField[],
   values: MasterFormValues,
-  previous: Readonly<Record<string, unknown>> = {},
+  previous: Readonly<Record<string, unknown>> = {}
 ): Record<string, unknown> {
   const attributes: Record<string, unknown> = { ...previous }
   for (const field of fields) {

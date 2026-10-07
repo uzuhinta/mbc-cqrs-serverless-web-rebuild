@@ -14,7 +14,7 @@ describe('buildCopyRequest', () => {
 
   it('sends every tenant for "all", the chosen ones otherwise', () => {
     expect(
-      buildCopyRequest({ ...base, copyType: 'BOTH', targets: 'all' }),
+      buildCopyRequest({ ...base, copyType: 'BOTH', targets: 'all' })
     ).toEqual({
       masterSettingId: base.masterSettingId,
       targetTenants: ['t1', 't2'],
@@ -22,7 +22,7 @@ describe('buildCopyRequest', () => {
     })
     expect(
       buildCopyRequest({ ...base, copyType: 'SETTING_ONLY', targets: ['t2'] })
-        .targetTenants,
+        .targetTenants
     ).toEqual(['t2'])
   })
 
@@ -33,11 +33,11 @@ describe('buildCopyRequest', () => {
         copyType: 'DATA_ONLY',
         targets: 'all',
         dataIds: ['d1'],
-      }).dataCopyOption,
+      }).dataCopyOption
     ).toEqual({ mode: 'PARTIAL', id: ['d1'] })
     expect(
       buildCopyRequest({ ...base, copyType: 'DATA_ONLY', targets: 'all' })
-        .dataCopyOption,
+        .dataCopyOption
     ).toEqual({ mode: 'ALL' })
   })
 })

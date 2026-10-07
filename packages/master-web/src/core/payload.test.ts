@@ -42,14 +42,14 @@ describe('toDataPayload', () => {
     expect(() =>
       toDataPayload(setting(), toFormValues(dataFields(setting())), {
         mode: 'create',
-      }),
+      })
     ).toThrow('generatedCode')
   })
 
   it('uses typed code / name when the setting has no such fields', () => {
     const bare = { ...setting(), attributes: { description: '', fields: [] } }
     expect(
-      toDataPayload(bare, { code: ' C1 ', name: 'N1' }, { mode: 'create' }),
+      toDataPayload(bare, { code: ' C1 ', name: 'N1' }, { mode: 'create' })
     ).toEqual({
       settingCode: 'PRODUCT',
       code: 'C1',
@@ -62,7 +62,7 @@ describe('toDataPayload', () => {
     const data = record()
     const values = toFormValues(dataFields(setting()), data)
     expect(
-      toDataPayload(setting(), values, { mode: 'update', previous: data }),
+      toDataPayload(setting(), values, { mode: 'update', previous: data })
     ).toEqual({
       name: 'りんご',
       seq: 3,
@@ -72,8 +72,8 @@ describe('toDataPayload', () => {
       toDataPayload(
         setting(),
         { ...values, seq: '' },
-        { mode: 'update', previous: data },
-      ).seq,
+        { mode: 'update', previous: data }
+      ).seq
     ).toBe(0)
   })
 })

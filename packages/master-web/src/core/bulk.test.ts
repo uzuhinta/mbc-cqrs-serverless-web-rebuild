@@ -94,7 +94,7 @@ describe('parseBulkJson with a mapper', () => {
       { kind: 'setting', id: 's', label: 'S' },
     ])
     expect(
-      parseBulkJson(text, { screen: 'settings', mapRawItem: mapper }),
+      parseBulkJson(text, { screen: 'settings', mapRawItem: mapper })
     ).toEqual({
       items: [
         {
@@ -114,18 +114,18 @@ describe('parseBulkJson with a mapper', () => {
   it('refuses mapped settings on a data list and checks mapped values', () => {
     const text = JSON.stringify([{ kind: 'setting', id: 's' }])
     expect(
-      parseBulkJson(text, { screen: 'data', mapRawItem: mapper }).errors,
+      parseBulkJson(text, { screen: 'data', mapRawItem: mapper }).errors
     ).toEqual([{ key: 'settingNotAllowed', index: 0 }])
     const broken: BulkMapper = () => ({
       kind: 'data',
       value: { settingCode: '', code: 'c', name: 'n', seq: 0, attributes: {} },
     })
     expect(
-      parseBulkJson('[{}]', { screen: 'data', mapRawItem: broken }).errors,
+      parseBulkJson('[{}]', { screen: 'data', mapRawItem: broken }).errors
     ).toEqual([{ key: 'invalidMappedData', index: 0 }])
     expect(
       parseBulkJson('[{"kind":"skip"}]', { screen: 'data', mapRawItem: mapper })
-        .errors,
+        .errors
     ).toEqual([{ key: 'empty' }])
   })
 })
@@ -136,7 +136,7 @@ describe('mapResultToBulkItem', () => {
       mapResultToBulkItem({
         kind: 'setting',
         value: { code: 'c', name: 'n', settingValue: { a: 1 } },
-      }),
+      })
     ).toEqual({
       code: 'c',
       name: 'n',
@@ -155,7 +155,7 @@ describe('bulkSampleJson', () => {
       expect(result.errors, screen).toEqual([])
     }
     expect(JSON.parse(bulkSampleJson('data', 'PRODUCT'))[0].settingCode).toBe(
-      'PRODUCT',
+      'PRODUCT'
     )
   })
 })

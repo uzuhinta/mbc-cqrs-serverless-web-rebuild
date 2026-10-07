@@ -43,24 +43,24 @@ describe('validateMasterData', () => {
   it('requires a typed code on create, even when the field is optional, and rejects spaces', () => {
     const fields = [codeField('string')]
     expect(
-      validateMasterData(fields, { code: '' }, { mode: 'create' }),
+      validateMasterData(fields, { code: '' }, { mode: 'create' })
     ).toEqual({
       code: { key: 'required' },
     })
     expect(
-      validateMasterData(fields, { code: '  ' }, { mode: 'create' }),
+      validateMasterData(fields, { code: '  ' }, { mode: 'create' })
     ).toEqual({
       code: { key: 'blank' },
     })
     expect(
-      validateMasterData(fields, { code: '' }, { mode: 'update' }),
+      validateMasterData(fields, { code: '' }, { mode: 'update' })
     ).toEqual({})
     expect(
       validateMasterData(
         [codeField('auto_number')],
         { code: '' },
-        { mode: 'create' },
-      ),
+        { mode: 'create' }
+      )
     ).toEqual({})
   })
 
@@ -82,7 +82,7 @@ describe('validateMasterData', () => {
       },
     ]
     expect(
-      validateMasterData(fields, { ok: false }, { mode: 'create' }),
+      validateMasterData(fields, { ok: false }, { mode: 'create' })
     ).toEqual({
       list: { key: 'required' },
     })

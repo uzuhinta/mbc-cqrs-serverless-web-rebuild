@@ -16,7 +16,7 @@ const field = (overrides: Partial<MasterField>): MasterField => ({
 describe('fieldTypes', () => {
   it('defines all ten v0 types with v0’s editor options', () => {
     expect(Object.keys(fieldTypes).sort()).toEqual(
-      [...MASTER_FIELD_TYPES].sort(),
+      [...MASTER_FIELD_TYPES].sort()
     )
     expect(fieldTypes.string.options).toEqual(['length', 'pattern'])
     expect(fieldTypes.number.options).toEqual(['min', 'max'])
@@ -46,7 +46,7 @@ describe('fieldTypes', () => {
     expect(fieldTypes.json.toFormValue({ a: 1 })).toBe('{\n  "a": 1\n}')
     expect(fieldTypes.json.toFormValue('{"a":1}')).toBe('{"a":1}')
     expect(fieldTypes.date.toFormValue('2026-10-07T10:30:00+09:00')).toBe(
-      '2026-10-07T10:30:00+09:00',
+      '2026-10-07T10:30:00+09:00'
     )
   })
 
