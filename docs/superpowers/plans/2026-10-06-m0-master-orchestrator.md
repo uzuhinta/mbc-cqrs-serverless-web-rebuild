@@ -82,7 +82,8 @@ git status --porcelain                                        # must be empty af
   - Gate: standard gate; `pnpm changeset status` lists four packages.
   - Depends on: —
 
-- [ ] **M2 — `/core`** (`m2-core`)
+- [x] **M2 — `/core`** (`m2-core`)
+  - Merged 2026-10-07: implemented by an external agent from the plan; independent review (0 Critical, 2 Important + 4 re-graded) fixed test-first; gate React 19 and 18 642/642, smoke passes. Also fixed: `pnpm verify` builds before it typechecks (clean checkouts / CI).
   - Plan: `docs/superpowers/plans/2026-10-07-m2-core.md` — written for an implementer without this conversation's context; its code was replayed task by task on `main` (5b8a2c9) and passes the full gate.
   - Spec: §3.1, §5 (auto-number type code note), Review Focus 1.
   - Builds: types (`MasterFieldType`, `MasterField`, `MasterSetting`, `MasterData`), `parseMasterSetting`, `parseMasterData` (tolerant, passthrough), `fieldTypes` table (options, defaults, `toFormValue`, `fromFormValue`, `validate`), `validateMasterData`, `toDataPayload`, `validateFieldDefinition`, `defaultSettingFields`, `parseBulkJson` + v0's `MapResult` / `MappedSetting` / `MappedData` / `mapResultToBulkItem`, `MasterCopyRequest`; error keys with ja/en messages in `master`; fixtures with all ten field types and unknown keys.
