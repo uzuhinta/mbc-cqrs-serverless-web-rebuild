@@ -76,29 +76,36 @@ function sameFormValue(a: FormValue, b: FormValue): boolean {
  * Attributes to save. Keys no field owns are kept; a field whose input is
  * unchanged keeps its stored value exactly (type included); an empty input
  * adds no key; record-level code / name inputs are not attributes.
+ * `previous` is the stored attributes of the record being updated; without
+ * it the values are a new record.
  */
 export function fromFormValues(
   fields: readonly MasterField[],
   values: MasterFormValues,
-  previous: Readonly<Record<string, unknown>> = {}
+  previous?: Readonly<Record<string, unknown>>
 ): Record<string, unknown> {
-  const attributes: Record<string, unknown> = { ...previous }
+  const creating = previous === undefined
+  const stored: Readonly<Record<string, unknown>> = previous ?? {}
+  const attributes: Record<string, unknown> = { ...stored }
   for (const field of fields) {
     const name = field.physicalName
     const form = values[name]
     if (form === undefined || isEntityField(field)) continue
     const type = fieldTypeOf(field)
-    const stored = Object.hasOwn(previous, name)
-    const before = stored ? previous[name] : undefined
-    // An empty input does not add a key the record never had — unless the
-    // field's default is non-empty (e.g. a switch defaulting to on that the
-    // user turned off), in which case the answer must be written.
-    if (!stored && sameFormValue(form, type.toFormValue(undefined))) {
-      const defaultForm = type.toFormValue(field.defaultValue)
-      if (sameFormValue(defaultForm, type.toFormValue(undefined))) continue
+    const has = Object.hasOwn(stored, name)
+    const before = has ? stored[name] : undefined
+    // An empty input does not add a key the record never had. On create, a
+    // field whose default is non-empty (a switch defaulting to on that the
+    // user turned off) still gets the answer written.
+    if (!has && sameFormValue(form, type.toFormValue(undefined))) {
+      const emptyDefault = sameFormValue(
+        type.toFormValue(field.defaultValue),
+        type.toFormValue(undefined)
+      )
+      if (!creating || emptyDefault) continue
     }
     const next =
-      stored && sameFormValue(form, type.toFormValue(before))
+      has && sameFormValue(form, type.toFormValue(before))
         ? before
         : type.fromFormValue(form, before)
     if (next === undefined) delete attributes[name]

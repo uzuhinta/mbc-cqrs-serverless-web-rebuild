@@ -140,6 +140,39 @@ describe('fromFormValues', () => {
     ).toEqual({ other: 1 })
   })
 
+  it('leaves an untouched update alone where fields have non-empty defaults', () => {
+    const fields: MasterField[] = [
+      {
+        physicalName: 'flag',
+        name: 'F',
+        dataType: 'boolean',
+        defaultValue: 'true',
+        isRequired: false,
+        isShowedOnList: false,
+      },
+      {
+        physicalName: 'label',
+        name: 'L',
+        dataType: 'string',
+        defaultValue: 'x',
+        isRequired: false,
+        isShowedOnList: false,
+      },
+    ]
+    const data: MasterData = {
+      id: 'i',
+      pk: 'p',
+      sk: 's',
+      code: 'c',
+      name: 'n',
+      version: 1,
+      attributes: { other: 1 },
+    }
+    expect(
+      fromFormValues(fields, toFormValues(fields, data), data.attributes)
+    ).toEqual({ other: 1 })
+  })
+
   it('writes an off switch when the field’s default is on', () => {
     const fields: MasterField[] = [
       {

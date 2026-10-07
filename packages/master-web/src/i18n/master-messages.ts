@@ -83,7 +83,7 @@ const ja: MasterMessages = {
   fieldDefinition: {
     required: '入力してください。',
     tooLong: ({ max }) => `${max}文字以内で入力してください。`,
-    nameChars: '物理名に「.」「[」「]」は使えません。',
+    nameChars: '物理名に「.」「[」「]」「\'」「"」は使えません。',
     duplicate: '同じ物理名の項目が既にあります。',
     reserved: 'この物理名は使えません。',
     typeNotAllowed: 'この項目では選択できないデータ型です。',
@@ -145,7 +145,7 @@ const en: MasterMessages = {
   fieldDefinition: {
     required: 'This field is required.',
     tooLong: ({ max }) => `Enter at most ${max} characters.`,
-    nameChars: 'A physical name cannot contain ".", "[" or "]".',
+    nameChars: `A physical name cannot contain ".", "[", "]", "'" or '"'.`,
     duplicate: 'Another field already has this physical name.',
     reserved: 'This physical name is reserved.',
     typeNotAllowed: 'This data type is not available for this field.',

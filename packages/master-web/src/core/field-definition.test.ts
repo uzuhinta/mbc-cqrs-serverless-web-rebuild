@@ -41,6 +41,31 @@ describe('allowedFieldTypes', () => {
   })
 })
 
+describe('allowedFieldTypes for the fixed fields', () => {
+  it('locks name to text and seq to number, as v0’s dialog did', () => {
+    expect(allowedFieldTypes('name')).toEqual(['string'])
+    expect(allowedFieldTypes('seq')).toEqual(['number'])
+    expect(
+      validateFieldDefinition(
+        field({ physicalName: 'seq', dataType: 'string' }),
+        []
+      ).dataType
+    ).toEqual({ key: 'typeNotAllowed' })
+  })
+
+  it('rejects physical names the form cannot address', () => {
+    expect(
+      validateFieldDefinition(field({ physicalName: 'prototype' }), [])
+        .physicalName
+    ).toEqual({ key: 'reserved' })
+    for (const name of ["it's", 'a"b'])
+      expect(
+        validateFieldDefinition(field({ physicalName: name }), []).physicalName,
+        name
+      ).toEqual({ key: 'nameChars' })
+  })
+})
+
 describe('validateFieldDefinition', () => {
   it('accepts a valid field', () => {
     expect(validateFieldDefinition(field({ length: '20' }), [])).toEqual({})

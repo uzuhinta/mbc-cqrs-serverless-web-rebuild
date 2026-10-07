@@ -5,6 +5,7 @@ import {
   mapResultToBulkItem,
   parseBulkJson,
   type BulkMapper,
+  type MapResult,
 } from './bulk'
 
 const setting = {
@@ -109,6 +110,26 @@ describe('parseBulkJson with a mapper', () => {
       ],
       errors: [{ key: 'mapFailed', index: 2, message: 'bad row' }],
     })
+  })
+
+  it('reports malformed mapper results instead of throwing', () => {
+    const results: unknown[] = [
+      { kind: 'data' },
+      { kind: 'setting', value: null },
+      'oops',
+      { kind: 'other', value: {} },
+    ]
+    const mapper: BulkMapper = (raw) =>
+      results[(raw as { i: number }).i] as MapResult
+    const text = JSON.stringify([{ i: 0 }, { i: 1 }, { i: 2 }, { i: 3 }])
+    expect(
+      parseBulkJson(text, { screen: 'settings', mapRawItem: mapper }).errors
+    ).toEqual([
+      { key: 'invalidMappedData', index: 0 },
+      { key: 'invalidMappedSetting', index: 1 },
+      { key: 'invalidMappedData', index: 2 },
+      { key: 'invalidMappedData', index: 3 },
+    ])
   })
 
   it('refuses mapped settings on a data list and checks mapped values', () => {

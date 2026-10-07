@@ -106,6 +106,10 @@ describe('fieldTypes', () => {
     })
   })
 
+  it('ignores a length below 1, as v0 did', () => {
+    expect(fieldTypes.string.validate('abc', field({ length: '0' }))).toBeNull()
+  })
+
   it('never counts a switch as empty, and an empty list as empty', () => {
     expect(fieldTypes.boolean.isEmpty(false)).toBe(false)
     expect(fieldTypes.array.isEmpty([])).toBe(true)

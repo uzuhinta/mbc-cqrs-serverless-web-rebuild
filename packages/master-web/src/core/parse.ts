@@ -22,11 +22,21 @@ const flag = z.preprocess(
 
 const stringOrNumber = optional(z.union([z.string(), z.number()]))
 
+/** A field v0 stored oddly still loads, so its setting can be opened and fixed. */
+const text = z.preprocess(
+  (value) =>
+    typeof value === 'string' ? value : value == null ? '' : String(value),
+  z.string()
+)
+
 const MasterFieldSchema = z.looseObject({
-  physicalName: z.string(),
-  name: z.string(),
+  physicalName: text,
+  name: text,
   description: optional(z.string()),
-  dataType: z.string(),
+  dataType: z.preprocess(
+    (value) => (typeof value === 'string' && value !== '' ? value : 'string'),
+    z.string()
+  ),
   isRequired: flag,
   isShowedOnList: flag,
   defaultValue: z.unknown().optional(),

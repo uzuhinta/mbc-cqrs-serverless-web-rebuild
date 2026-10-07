@@ -42,13 +42,18 @@ export const FIXED_FIELD_NAMES: readonly string[] = Object.freeze(
   defaultSettingFields.map((field) => field.physicalName)
 )
 
-/** v0: the code field can be text, number or auto-numbered; other fields cannot be auto-numbered. */
+/**
+ * v0: the code field can be text, number or auto-numbered; `name` stays text
+ * and `seq` a number (v0's dialog locked their type); other fields can be any
+ * type but auto-numbered.
+ */
 export function allowedFieldTypes(
   physicalName: string
 ): readonly MasterFieldType[] {
-  return physicalName === 'code'
-    ? ['string', 'number', 'auto_number']
-    : MASTER_FIELD_TYPES.filter((type) => type !== 'auto_number')
+  if (physicalName === 'code') return ['string', 'number', 'auto_number']
+  if (physicalName === 'name') return ['string']
+  if (physicalName === 'seq') return ['number']
+  return MASTER_FIELD_TYPES.filter((type) => type !== 'auto_number')
 }
 
 export type FieldDefinitionInput =
@@ -88,10 +93,14 @@ const INTEGER = /^-?[0-9]+$/
 const DIGITS = /^[0-9]+$/
 const MAX_TEXT = 255
 
-/** Names that collide with Object.prototype or poison plain-object lookups. */
+/**
+ * Names that collide with Object.prototype, poison plain-object lookups, or
+ * that react-hook-form ignores as a path segment (`prototype`).
+ */
 const RESERVED_PHYSICAL_NAMES = new Set([
   ...Object.getOwnPropertyNames(Object.prototype),
   '__proto__',
+  'prototype',
 ])
 
 const isSet = (value: unknown) =>
@@ -106,8 +115,8 @@ function textInput(value: string): FieldDefinitionError | undefined {
 
 /**
  * v0's field-dialog rules, one error per input, plus three that v0 lacked:
- * physical names must be unique, may not contain `.`, `[` or `]` (they name
- * form inputs), and the type must be allowed for the field.
+ * physical names must be unique, may not contain `.`, `[`, `]`, `'` or `"`
+ * (they name form inputs), and the type must be allowed for the field.
  * `siblings` are the setting's other fields (not the one being edited).
  */
 export function validateFieldDefinition(
@@ -117,7 +126,7 @@ export function validateFieldDefinition(
   const errors: FieldDefinitionErrors = {}
   const physicalName =
     textInput(field.physicalName) ??
-    (/[.[\]]/.test(field.physicalName)
+    (/[.[\]'"]/.test(field.physicalName)
       ? { key: 'nameChars' as const }
       : undefined) ??
     (RESERVED_PHYSICAL_NAMES.has(field.physicalName)

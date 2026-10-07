@@ -147,14 +147,25 @@ export function parseBulkJson(
       return
     }
     if (!mapped) return
-    if (mapped.kind === 'setting') {
+    // A host mapper may hand back anything; check the shape before reading it.
+    const raw: unknown = mapped
+    const kind = isPlainObject(raw) ? raw.kind : undefined
+    const value = isPlainObject(raw) ? raw.value : undefined
+    if (kind === 'setting') {
       if (screen === 'data') errors.push({ key: 'settingNotAllowed', index })
-      else if (!isMappedSetting(mapped.value))
+      else if (
+        !isPlainObject(value) ||
+        !isMappedSetting(value as MappedSetting['value'])
+      )
         errors.push({ key: 'invalidMappedSetting', index })
       else items.push(mapResultToBulkItem(mapped))
       return
     }
-    if (!isMappedData(mapped.value))
+    if (
+      kind !== 'data' ||
+      !isPlainObject(value) ||
+      !isMappedData(value as MappedData['value'])
+    )
       errors.push({ key: 'invalidMappedData', index })
     else items.push(mapResultToBulkItem(mapped))
   })

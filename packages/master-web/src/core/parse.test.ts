@@ -61,16 +61,22 @@ describe('parseMasterSetting', () => {
     expect(result.data.attributes).toEqual({ description: '', fields: [] })
   })
 
-  it('rejects a field without a physical name', () => {
+  it('still loads a setting with an odd field, so it can be opened and fixed', () => {
     const result = parseMasterSetting({
       id: 'i',
       pk: 'p',
       sk: 's',
       code: 'C',
       name: 'N',
-      attributes: { fields: [{ name: 'X', dataType: 'string' }] },
+      attributes: {
+        fields: [{ physicalName: 'x' }, { name: 'Y', dataType: 3 }],
+      },
     })
-    expect(result.success).toBe(false)
+    if (!result.success) throw result.error
+    expect(result.data.attributes.fields).toMatchObject([
+      { physicalName: 'x', name: '', dataType: 'string' },
+      { physicalName: '', name: 'Y', dataType: 'string' },
+    ])
   })
 })
 

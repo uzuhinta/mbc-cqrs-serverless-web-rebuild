@@ -51,8 +51,9 @@ function asString(form: FormValue): string {
 }
 
 function lengthAndRows(value: string, field: MasterField): MasterError | null {
+  // v0 ignored a length below 1.
   const max = numberOption(field.length)
-  if (max !== undefined && value.length > max)
+  if (max !== undefined && max >= 1 && value.length > max)
     return { key: 'maxLength', params: { max } }
   const rows = numberOption(field.maxRow)
   if (rows !== undefined && rows >= 1 && value.split('\n').length > rows)
