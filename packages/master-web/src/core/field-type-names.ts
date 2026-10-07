@@ -13,3 +13,7 @@ export const MASTER_FIELD_TYPES = [
 ] as const
 
 export type MasterFieldType = (typeof MASTER_FIELD_TYPES)[number]
+
+export function isMasterFieldType(value: string): value is MasterFieldType {
+  return (MASTER_FIELD_TYPES as readonly string[]).includes(value)
+}

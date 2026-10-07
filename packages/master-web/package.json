@@ -32,7 +32,8 @@
     "check:package": "publint --strict && attw --pack . --profile esm-only --exclude-entrypoints ./styles.css ./styles.layer.css ./package.json"
   },
   "dependencies": {
-    "@mbc-cqrs-serverless/ui-web": "workspace:^"
+    "@mbc-cqrs-serverless/ui-web": "workspace:^",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/react": "19.3.0",

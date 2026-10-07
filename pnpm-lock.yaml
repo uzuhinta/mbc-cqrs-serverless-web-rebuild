@@ -190,6 +190,9 @@ importers:
       '@mbc-cqrs-serverless/ui-web':
         specifier: workspace:^
         version: link:../ui-web
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
     devDependencies:
       '@types/react':
         specifier: 19.3.0
