@@ -54,6 +54,10 @@ Screens and new primitives (M1, M3–M7) also use the `evon:ui-ux` skill in **ke
 
 v0 reference source: `../mbc-cqrs-serverless-web/packages/master/src` (identical to npm 0.0.50).
 
+### Look precedence (ruling after the M1 review)
+
+ui-web's primitives keep survey v0's look (their defaults are not changed for master-web). Where master v0's classes differ — its Button (`h-10`, neutral outline: `border-input bg-background hover:bg-accent`), Badge (`rounded-full px-2.5 py-0.5 font-semibold`) and others — master-web's components and screens set master v0's classes explicitly and pin them in master-web's own `test/v0-classes.ts` parity entries. `MultiSelect` (ui-web, used only by master-web) already does this.
+
 ### Standard gate (every sub-plan)
 
 ```bash
