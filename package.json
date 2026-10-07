@@ -14,7 +14,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:package": "pnpm --filter \"./packages/*\" -r check:package",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm build && pnpm test && pnpm check:package",
+    "verify": "pnpm format:check && pnpm lint && pnpm build && pnpm typecheck && pnpm test && pnpm check:package",
     "use-react": "node scripts/use-react.ts",
     "playground": "pnpm --filter @mbc-cqrs-serverless/playground dev",
     "playground:react18": "pnpm use-react 18 && pnpm build && pnpm playground",
