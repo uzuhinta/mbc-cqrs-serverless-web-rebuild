@@ -90,7 +90,9 @@ git status --porcelain                                        # must be empty af
   - Gate: standard gate; `/core` build has no React import.
   - Depends on: M1.
 
-- [ ] **M3a — List building blocks** (`m3a-list-parts`)
+- [x] **M3a — List building blocks** (`m3a-list-parts`)
+  - Merged 2026-10-07 (fast-forward, at the user's request, before an independent code review): implemented by an external agent from the plan, plus its own fix for progress after a partial import failure; gate on React 19 667/667, smoke passes. A visual probe of the parts found four defects (pagination labels breaking per character, a cut page-size select, header contrast under 4.5:1, a dialog taller than the screen); M3b fixes them.
+  - Plan: `docs/superpowers/plans/2026-10-07-m3a-list-parts.md`.
   - Spec: §2 (ui-web additions), §3.2 (navigation, `BulkImportDialog`), §4 (data table), Review Focus 2, 3, 5.
   - Builds: ui-web `PaginationBar` (survey-web's template pagination moved to ui-web, plus master v0's `table` arrangement: result count, page size after the pages, page-number box; survey-web's `TemplatePagination` re-exports it); master-web `MasterRouting` / `MasterTarget` / `MasterLink`; internal `DataTable` (sortable headers with `aria-sort`, pagination above and below, row selection, empty and loading rows); `parseBulkJson` `tenantCode` option; `BulkImportDialog`; `master.table` and `master.bulkDialog` messages; smoke render.
   - Ruling: no TanStack — the lists need fixed columns, server-side sorting and paging, and checkbox selection, which a small component covers (spec §2 and §4 updated).
