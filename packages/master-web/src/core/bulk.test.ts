@@ -1,0 +1,161 @@
+import { describe, expect, it } from 'vitest'
+
+import {
+  bulkSampleJson,
+  mapResultToBulkItem,
+  parseBulkJson,
+  type BulkMapper,
+} from './bulk'
+
+const setting = {
+  code: 'S',
+  name: '設定',
+  attributes: { description: '', fields: [] },
+}
+const data = {
+  settingCode: 'S',
+  code: 'D1',
+  name: 'データ',
+  seq: 0,
+  attributes: {},
+}
+
+describe('parseBulkJson without a mapper', () => {
+  it('reports JSON that does not parse or is not a list', () => {
+    expect(parseBulkJson('{', { screen: 'settings' })).toEqual({
+      items: [],
+      errors: [{ key: 'invalidJson' }],
+    })
+    expect(parseBulkJson('{}', { screen: 'settings' }).errors).toEqual([
+      { key: 'notArray' },
+    ])
+    expect(parseBulkJson('[]', { screen: 'settings' }).errors).toEqual([
+      { key: 'empty' },
+    ])
+  })
+
+  it('accepts settings and data on the settings list, data only on a data list', () => {
+    const text = JSON.stringify([setting, data])
+    expect(parseBulkJson(text, { screen: 'settings' })).toEqual({
+      items: [setting, data],
+      errors: [],
+    })
+    expect(parseBulkJson(text, { screen: 'data' })).toEqual({
+      items: [data],
+      errors: [{ key: 'invalidDataItem', index: 0 }],
+    })
+  })
+
+  it('reports every bad entry with its index', () => {
+    const text = JSON.stringify([
+      { code: 1, name: 'x', attributes: {} },
+      { ...data, seq: '0' },
+      { ...data, settingCode: ' ' },
+      data,
+    ])
+    expect(parseBulkJson(text, { screen: 'settings' })).toEqual({
+      items: [data],
+      errors: [
+        { key: 'invalidItem', index: 0 },
+        { key: 'invalidItem', index: 1 },
+        { key: 'invalidItem', index: 2 },
+      ],
+    })
+  })
+})
+
+describe('parseBulkJson with a mapper', () => {
+  const mapper: BulkMapper = (raw) => {
+    const row = raw as { kind?: string; id?: string; label?: string }
+    if (row.kind === 'skip') return null
+    if (row.kind === 'boom') throw new Error('bad row')
+    if (row.kind === 'setting')
+      return {
+        kind: 'setting',
+        value: { code: row.id ?? '', name: row.label ?? '', settingValue: {} },
+      }
+    return {
+      kind: 'data',
+      value: {
+        settingCode: 'S',
+        code: row.id ?? '',
+        name: row.label ?? '',
+        seq: 1,
+        attributes: {},
+      },
+    }
+  }
+
+  it('maps entries, skips nulls and reports mapper failures', () => {
+    const text = JSON.stringify([
+      { kind: 'data', id: 'a', label: 'A' },
+      { kind: 'skip' },
+      { kind: 'boom' },
+      { kind: 'setting', id: 's', label: 'S' },
+    ])
+    expect(
+      parseBulkJson(text, { screen: 'settings', mapRawItem: mapper }),
+    ).toEqual({
+      items: [
+        {
+          name: 'A',
+          code: 'a',
+          settingCode: 'S',
+          tenantCode: undefined,
+          seq: 1,
+          attributes: {},
+        },
+        { name: 'S', code: 's', tenantCode: undefined, attributes: {} },
+      ],
+      errors: [{ key: 'mapFailed', index: 2, message: 'bad row' }],
+    })
+  })
+
+  it('refuses mapped settings on a data list and checks mapped values', () => {
+    const text = JSON.stringify([{ kind: 'setting', id: 's' }])
+    expect(
+      parseBulkJson(text, { screen: 'data', mapRawItem: mapper }).errors,
+    ).toEqual([{ key: 'settingNotAllowed', index: 0 }])
+    const broken: BulkMapper = () => ({
+      kind: 'data',
+      value: { settingCode: '', code: 'c', name: 'n', seq: 0, attributes: {} },
+    })
+    expect(
+      parseBulkJson('[{}]', { screen: 'data', mapRawItem: broken }).errors,
+    ).toEqual([{ key: 'invalidMappedData', index: 0 }])
+    expect(
+      parseBulkJson('[{"kind":"skip"}]', { screen: 'data', mapRawItem: mapper })
+        .errors,
+    ).toEqual([{ key: 'empty' }])
+  })
+})
+
+describe('mapResultToBulkItem', () => {
+  it('turns a mapped setting’s settingValue into attributes (v0)', () => {
+    expect(
+      mapResultToBulkItem({
+        kind: 'setting',
+        value: { code: 'c', name: 'n', settingValue: { a: 1 } },
+      }),
+    ).toEqual({
+      code: 'c',
+      name: 'n',
+      tenantCode: undefined,
+      attributes: { a: 1 },
+    })
+  })
+})
+
+describe('bulkSampleJson', () => {
+  it('gives a sample that its own screen accepts', () => {
+    for (const screen of ['settings', 'data'] as const) {
+      const result = parseBulkJson(bulkSampleJson(screen, 'PRODUCT'), {
+        screen,
+      })
+      expect(result.errors, screen).toEqual([])
+    }
+    expect(JSON.parse(bulkSampleJson('data', 'PRODUCT'))[0].settingCode).toBe(
+      'PRODUCT',
+    )
+  })
+})
