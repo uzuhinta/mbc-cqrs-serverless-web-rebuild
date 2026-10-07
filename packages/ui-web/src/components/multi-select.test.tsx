@@ -1,7 +1,10 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useState } from 'react'
+import { createRef, useState } from 'react'
 import { describe, expect, it } from 'vitest'
+
+import { expectV0Classes } from '../../test/parity'
+import { V0 } from '../../test/v0-classes'
 
 import { MbcProvider } from '../i18n/provider'
 import { Field, FieldLabel } from './field'
@@ -59,7 +62,7 @@ describe('MultiSelect', () => {
     expect(stored()).toEqual(['t1'])
     expect(within(trigger).getByText('Tokyo')).toBeInTheDocument()
     expect(
-      screen.getByRole('option', { name: 'Tokyo selected' })
+      screen.getByRole('option', { name: 'Tokyo checked' })
     ).toBeInTheDocument()
 
     await userEvent.keyboard('{Enter}')
@@ -68,6 +71,41 @@ describe('MultiSelect', () => {
     await userEvent.keyboard('{Escape}')
     expect(trigger).toHaveAttribute('aria-expanded', 'false')
     expect(trigger).toHaveFocus()
+  })
+
+  it('keeps master v0’s trigger and chip classes', () => {
+    render(<Harness initial={['t1']} />)
+    const trigger = screen.getByRole('combobox', { name: 'Tenants' })
+    expectV0Classes(trigger, V0['multi-select.trigger'])
+    expectV0Classes(within(trigger).getByText('Tokyo'), V0['multi-select.chip'])
+  })
+
+  it('forwards its ref and takes button props such as aria-label', () => {
+    const ref = createRef<HTMLButtonElement>()
+    render(
+      <MbcProvider locale="en">
+        <MultiSelect
+          ref={ref}
+          aria-label="Targets"
+          name="targets"
+          options={OPTIONS}
+          value={[]}
+          onValueChange={() => {}}
+        />
+      </MbcProvider>
+    )
+    const trigger = screen.getByRole('combobox', { name: 'Targets' })
+    expect(ref.current).toBe(trigger)
+    expect(trigger).toHaveAttribute('name', 'targets')
+  })
+
+  it('names the open list and its search box', async () => {
+    render(<Harness />)
+    await userEvent.click(screen.getByRole('combobox', { name: 'Tenants' }))
+    expect(screen.getByRole('dialog', { name: 'Options' })).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Search...')).toHaveAccessibleName(
+      'Search...'
+    )
   })
 
   it('toggles only the chosen value when labels repeat', async () => {

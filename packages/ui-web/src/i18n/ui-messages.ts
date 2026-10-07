@@ -14,8 +14,10 @@ export type UiMessages = {
     placeholder: string
     search: string
     empty: string
-    /** Read by screen readers after a selected option. */
-    selected: string
+    /** Read by screen readers after a chosen option ("selected" is the highlighted one). */
+    checked: string
+    /** Name of the open option list. */
+    options: string
   }
 }
 
@@ -33,7 +35,8 @@ const ja: UiMessages = {
     placeholder: '選択してください',
     search: '検索...',
     empty: 'データがありません',
-    selected: '選択済み',
+    checked: 'チェック済み',
+    options: '選択肢',
   },
 }
 
@@ -51,7 +54,8 @@ const en: UiMessages = {
     placeholder: 'Select options...',
     search: 'Search...',
     empty: 'No data',
-    selected: 'selected',
+    checked: 'checked',
+    options: 'Options',
   },
 }
 

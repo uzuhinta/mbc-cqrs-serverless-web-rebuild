@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import axe from 'axe-core'
 import { describe, expect, it } from 'vitest'
 
@@ -192,6 +193,28 @@ describe('accessibility', () => {
         </main>
       </MbcProvider>
     )
+    expect(await violations()).toEqual([])
+  })
+
+  it('has no axe violations in an open MultiSelect', async () => {
+    render(
+      <MbcProvider locale="en">
+        <main>
+          <Field>
+            <FieldLabel>Tenants</FieldLabel>
+            <MultiSelect
+              options={[
+                { value: 'a', label: 'Alpha' },
+                { value: 'b', label: 'Beta' },
+              ]}
+              value={['a']}
+              onValueChange={() => {}}
+            />
+          </Field>
+        </main>
+      </MbcProvider>
+    )
+    await userEvent.click(screen.getByRole('combobox', { name: 'Tenants' }))
     expect(await violations()).toEqual([])
   })
 

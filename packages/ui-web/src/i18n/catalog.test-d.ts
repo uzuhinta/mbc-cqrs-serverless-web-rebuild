@@ -14,7 +14,8 @@ interface InterfaceTyped {
     placeholder: string
     search: string
     empty: string
-    selected: string
+    checked: string
+    options: string
   }
 }
 
@@ -32,7 +33,8 @@ const messages: InterfaceTyped = {
     placeholder: 'x',
     search: 'x',
     empty: 'x',
-    selected: 'x',
+    checked: 'x',
+    options: 'x',
   },
 }
 
