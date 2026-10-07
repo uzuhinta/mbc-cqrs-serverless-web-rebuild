@@ -13,6 +13,18 @@ export type MasterMessages = {
     pagerTop: string
     pagerBottom: string
   }
+  /** The JSON bulk-import dialog. */
+  bulkDialog: {
+    open: string
+    title: string
+    json: string
+    cancel: string
+    load: string
+    save: string
+    submit: string
+    progress: (params: { done: number; total: number }) => string
+    failed: string
+  }
   /** Data-record errors (`MasterError`). */
   validation: {
     required: string
@@ -87,6 +99,17 @@ const ja: MasterMessages = {
     pagerTop: '上部のページ送り',
     pagerBottom: '下部のページ送り',
   },
+  bulkDialog: {
+    open: 'JSONエディタ',
+    title: 'JSONエディタ',
+    json: 'JSON',
+    cancel: 'キャンセル',
+    load: 'JSON読込',
+    save: 'JSON保存',
+    submit: 'データ反映',
+    progress: ({ done, total }) => `反映中 (${done}/${total})`,
+    failed: 'マスターデータの反映に失敗しました。',
+  },
   validation: {
     required: '入力してください。',
     blank: '空白のみは許可されていません。',
@@ -157,6 +180,17 @@ const en: MasterMessages = {
     selectRow: 'Select this row',
     pagerTop: 'Pagination (top)',
     pagerBottom: 'Pagination (bottom)',
+  },
+  bulkDialog: {
+    open: 'JSON editor',
+    title: 'JSON editor',
+    json: 'JSON',
+    cancel: 'Cancel',
+    load: 'Load JSON',
+    save: 'Save JSON',
+    submit: 'Import',
+    progress: ({ done, total }) => `Importing (${done}/${total})`,
+    failed: 'The import failed.',
   },
   validation: {
     required: 'This field is required.',
