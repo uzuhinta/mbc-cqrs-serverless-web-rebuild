@@ -168,11 +168,12 @@ type MasterData = {
   - `defaultValue`: v0's per-type empty value (`number` → `0`, `boolean` → `false`, `array` → `[]`, others → `''`);
   - `toFormValue(stored)` / `fromFormValue(form)`: JSON object ↔ text, number ↔ text, array ↔ list, boolean, ISO date;
   - `validate(value, field)` → `{ key, params } | null` (required, max length, pattern, whole number, min, max, valid JSON).
-- `validateMasterData(setting, values)` → `Record<string, { key, params }>` over all fields.
-- `toDataPayload(setting, values, mode: 'create' | 'update')` — v0's request bodies: with a `code` field, `code` and `name` come from `attributes`; empty `seq` → `undefined` on create, `0` on update; JSON fields parsed.
+- Untouched inputs keep the stored value exactly; an empty input adds no key; number inputs are saved as strings (v0) unless the stored value was a number; boolean values keep their stored representation (`true` or `'true'`).
+- `validateMasterData(fields, values, { mode })` → `Record<string, MasterError>`, one error per field; `fields` is `dataFields(setting)` (adds v0's record-level code / name inputs when the setting has no such fields).
+- `toDataPayload(setting, values, { mode: 'create', generatedCode? } | { mode: 'update', previous })` — v0's request bodies: with a `code` field, `code` and `name` come from `attributes`; empty `seq` → `undefined` on create, `0` on update; JSON fields parsed.
 - `validateFieldDefinition(field, siblings)` — `physicalName` required, unique, not reserved; default value fits the type (v0's checks); `auto_number` only on `code`.
 - `defaultSettingFields` — v0's fixed `code`, `name`, `seq` fields.
-- `parseBulkJson(text, { kind: 'setting' | 'data', mapRawItem? })` → `{ items: BulkJsonItem[]; errors: { index: number; key: string }[] }`. Keeps v0's `MapResult`, `MappedSetting`, `MappedData`, `mapResultToBulkItem` and the `mapRawItem` hook.
+- `parseBulkJson(text, { screen: 'settings' | 'data', mapRawItem? })` → `{ items, errors }` — the settings list accepts settings and data (v0), a setting's data list accepts data only; errors carry the entry's index. Keeps v0's `MapResult`, `MappedSetting`, `MappedData`, `mapResultToBulkItem` and the `mapRawItem` hook.
 - `MasterCopyRequest` — `{ masterSettingId, targetTenants, copyType: 'SETTING_ONLY' | 'DATA_ONLY' | 'BOTH', dataCopyOption?: { mode: 'ALL' | 'PARTIAL'; id?: string[] } }`, the backend DTO.
 
 `/core` imports only zod: usable on a server, e.g. to validate a bulk import.
