@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@mbc-cqrs-serverless/ui-web": "workspace:^",
+    "lucide-react": "^1.52.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {

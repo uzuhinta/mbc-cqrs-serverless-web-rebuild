@@ -4,6 +4,15 @@ import type { MasterFieldType } from '../core/field-type-names'
 
 export type MasterMessages = {
   fieldTypes: Record<MasterFieldType, string>
+  /** The data tables of the list screens. */
+  table: {
+    empty: string
+    loading: string
+    selectAll: string
+    selectRow: string
+    pagerTop: string
+    pagerBottom: string
+  }
   /** Data-record errors (`MasterError`). */
   validation: {
     required: string
@@ -69,6 +78,14 @@ const ja: MasterMessages = {
     'text-html': 'HTML形式',
     'text-markdown': 'Markdown形式',
   },
+  table: {
+    empty: 'データがありません',
+    loading: '読み込み中',
+    selectAll: 'このページをすべて選択',
+    selectRow: 'この行を選択',
+    pagerTop: '上部のページ送り',
+    pagerBottom: '下部のページ送り',
+  },
   validation: {
     required: '入力してください。',
     blank: '空白のみは許可されていません。',
@@ -130,6 +147,14 @@ const en: MasterMessages = {
     'text-area': 'Text area',
     'text-html': 'HTML',
     'text-markdown': 'Markdown',
+  },
+  table: {
+    empty: 'No data',
+    loading: 'Loading',
+    selectAll: 'Select all on this page',
+    selectRow: 'Select this row',
+    pagerTop: 'Pagination (top)',
+    pagerBottom: 'Pagination (bottom)',
   },
   validation: {
     required: 'This field is required.',

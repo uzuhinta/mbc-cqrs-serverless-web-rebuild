@@ -190,6 +190,9 @@ importers:
       '@mbc-cqrs-serverless/ui-web':
         specifier: workspace:^
         version: link:../ui-web
+      lucide-react:
+        specifier: ^1.52.0
+        version: 1.52.0(@types/react@19.3.0)(react@19.3.0)
       zod:
         specifier: ^4.6.5
         version: 4.6.5
