@@ -46,6 +46,7 @@ export type BulkError =
   | { key: 'invalidMappedSetting'; index: number }
   | { key: 'invalidMappedData'; index: number }
   | { key: 'settingNotAllowed'; index: number }
+  | { key: 'otherTenant'; index: number }
 
 export type BulkParseResult = { items: BulkJsonItem[]; errors: BulkError[] }
 
@@ -113,7 +114,16 @@ function isBulkItem(entry: unknown, screen: BulkScreen): entry is BulkJsonItem {
  */
 export function parseBulkJson(
   text: string,
-  { screen, mapRawItem }: { screen: BulkScreen; mapRawItem?: BulkMapper }
+  {
+    screen,
+    mapRawItem,
+    tenantCode,
+  }: {
+    screen: BulkScreen
+    mapRawItem?: BulkMapper
+    /** The current tenant: entries for another tenant are refused (the backend rejects the whole batch). */
+    tenantCode?: string
+  }
 ): BulkParseResult {
   let raw: unknown
   try {
@@ -125,9 +135,18 @@ export function parseBulkJson(
 
   const items: BulkJsonItem[] = []
   const errors: BulkError[] = []
+  const accept = (item: BulkJsonItem, index: number) => {
+    if (
+      tenantCode !== undefined &&
+      item.tenantCode !== undefined &&
+      item.tenantCode !== tenantCode
+    )
+      errors.push({ key: 'otherTenant', index })
+    else items.push(item)
+  }
   raw.forEach((entry: unknown, index) => {
     if (!mapRawItem) {
-      if (isBulkItem(entry, screen)) items.push(entry)
+      if (isBulkItem(entry, screen)) accept(entry, index)
       else
         errors.push({
           key: screen === 'data' ? 'invalidDataItem' : 'invalidItem',
@@ -158,7 +177,7 @@ export function parseBulkJson(
         !isMappedSetting(value as MappedSetting['value'])
       )
         errors.push({ key: 'invalidMappedSetting', index })
-      else items.push(mapResultToBulkItem(mapped))
+      else accept(mapResultToBulkItem(mapped), index)
       return
     }
     if (
@@ -167,7 +186,7 @@ export function parseBulkJson(
       !isMappedData(value as MappedData['value'])
     )
       errors.push({ key: 'invalidMappedData', index })
-    else items.push(mapResultToBulkItem(mapped))
+    else accept(mapResultToBulkItem(mapped), index)
   })
   if (items.length === 0 && errors.length === 0) errors.push({ key: 'empty' })
   return { items, errors }

@@ -56,6 +56,7 @@ export type MasterMessages = {
     invalidMappedSetting: string
     invalidMappedData: string
     settingNotAllowed: string
+    otherTenant: string
   }
 }
 
@@ -132,6 +133,7 @@ const ja: MasterMessages = {
       'データの settingCode, code, name は文字列、seq は数値、attributes はオブジェクトである必要があります。',
     settingNotAllowed:
       'マスター設定はこの画面から登録できません。マスターデータ画面では kind: "data" のみ登録できます。',
+    otherTenant: 'tenantCode が現在のテナントと異なります。',
   },
 }
 
@@ -201,6 +203,7 @@ const en: MasterMessages = {
       'Mapped data needs a text settingCode, code and name, a number seq and an object attributes.',
     settingNotAllowed:
       'Settings cannot be imported here; only kind: "data" items are allowed.',
+    otherTenant: 'The tenantCode differs from the current tenant.',
   },
 }
 

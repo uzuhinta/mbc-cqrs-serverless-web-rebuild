@@ -151,6 +151,41 @@ describe('parseBulkJson with a mapper', () => {
   })
 })
 
+describe('parseBulkJson with the current tenant', () => {
+  it('refuses entries for another tenant, mapped or not (the backend would reject the batch)', () => {
+    const text = JSON.stringify([
+      { ...data, tenantCode: 't1' },
+      { ...data, code: 'D2', tenantCode: 't2' },
+      { ...data, code: 'D3' },
+    ])
+    expect(parseBulkJson(text, { screen: 'data', tenantCode: 't1' })).toEqual({
+      items: [
+        { ...data, tenantCode: 't1' },
+        { ...data, code: 'D3' },
+      ],
+      errors: [{ key: 'otherTenant', index: 1 }],
+    })
+    const mapper: BulkMapper = () => ({
+      kind: 'data',
+      value: {
+        settingCode: 'S',
+        code: 'c',
+        name: 'n',
+        seq: 0,
+        attributes: {},
+        tenantCode: 't2',
+      },
+    })
+    expect(
+      parseBulkJson('[{}]', {
+        screen: 'data',
+        tenantCode: 't1',
+        mapRawItem: mapper,
+      }).errors
+    ).toEqual([{ key: 'otherTenant', index: 0 }])
+  })
+})
+
 describe('mapResultToBulkItem', () => {
   it('turns a mapped setting’s settingValue into attributes (v0)', () => {
     expect(
