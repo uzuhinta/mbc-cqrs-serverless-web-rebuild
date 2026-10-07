@@ -13,7 +13,7 @@ describe('PaginationBar', () => {
         pageSize={10}
         total={10}
         onPageChange={() => {}}
-      />,
+      />
     )
     expect(container).toBeEmptyDOMElement()
   })
@@ -26,11 +26,11 @@ describe('PaginationBar', () => {
         pageSize={10}
         total={95}
         onPageChange={onPageChange}
-      />,
+      />
     )
     expect(screen.getByRole('link', { name: '2' })).toHaveAttribute(
       'aria-current',
-      'page',
+      'page'
     )
     await userEvent.click(screen.getByRole('link', { name: '3' }))
     screen.getByRole('link', { name: '1' }).focus()
@@ -47,7 +47,7 @@ describe('PaginationBar', () => {
         pageSize={10}
         total={30}
         onPageChange={onPageChange}
-      />,
+      />
     )
     const previous = screen.getByRole('link', { name: '前のページへ' })
     expect(previous).toHaveAttribute('aria-disabled', 'true')
@@ -65,13 +65,13 @@ describe('PaginationBar', () => {
         onPageChange={() => {}}
         onPageSizeChange={onPageSizeChange}
         pageSizeOptions={[10, 20]}
-      />,
+      />
     )
     await userEvent.click(
-      screen.getByRole('combobox', { name: '1ページの件数' }),
+      screen.getByRole('combobox', { name: '1ページの件数' })
     )
     await userEvent.click(
-      await screen.findByRole('option', { name: '20 / ページ' }),
+      await screen.findByRole('option', { name: '20 / ページ' })
     )
     expect(onPageSizeChange).toHaveBeenCalledWith(20)
   })
@@ -84,10 +84,10 @@ describe('PaginationBar', () => {
         pageSize={10}
         total={30}
         onPageChange={() => {}}
-      />,
+      />
     )
     expect(
-      screen.getByRole('navigation', { name: '下部のページ送り' }),
+      screen.getByRole('navigation', { name: '下部のページ送り' })
     ).toBeInTheDocument()
   })
 
@@ -101,13 +101,13 @@ describe('PaginationBar', () => {
           total={0}
           onPageChange={() => {}}
           onPageSizeChange={() => {}}
-        />,
+        />
       )
       const bar = screen.getByRole('navigation', { name: 'ページ送り' })
       expect(within(bar).getByText('検索件数:0')).toBeInTheDocument()
       expect(within(bar).queryByRole('link')).toBeNull()
       expect(
-        within(bar).getByRole('combobox', { name: '1ページの件数' }),
+        within(bar).getByRole('combobox', { name: '1ページの件数' })
       ).toBeInTheDocument()
       expect(within(bar).queryByRole('spinbutton')).toBeNull()
 
@@ -119,10 +119,10 @@ describe('PaginationBar', () => {
           total={25}
           onPageChange={() => {}}
           onPageSizeChange={() => {}}
-        />,
+        />
       )
       const order = Array.from(bar.children).map(
-        (child) => child.getAttribute('data-part') ?? child.tagName,
+        (child) => child.getAttribute('data-part') ?? child.tagName
       )
       expect(order).toEqual(['total', 'UL', 'size', 'jump'])
     })
@@ -138,7 +138,7 @@ describe('PaginationBar', () => {
             total={95}
             onPageChange={onPageChange}
           />
-        </MbcProvider>,
+        </MbcProvider>
       )
       expect(screen.getByText('95 results')).toBeInTheDocument()
       const jump = screen.getByRole('spinbutton', { name: 'Go to page (1–10)' })

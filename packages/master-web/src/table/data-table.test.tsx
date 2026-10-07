@@ -51,7 +51,7 @@ function table(overrides: Partial<DataTableProps<Row>> = {}) {
 describe('DataTable', () => {
   it('shows rows, column widths and which column is sorted', () => {
     render(
-      table({ sort: { column: 'code', desc: false }, onSortChange: () => {} }),
+      table({ sort: { column: 'code', desc: false }, onSortChange: () => {} })
     )
     const grid = screen.getByRole('table', { name: 'データ一覧' })
     expect(within(grid).getByRole('cell', { name: 'B-2' })).toBeInTheDocument()
@@ -101,7 +101,7 @@ describe('DataTable', () => {
     rerender(table({ rows: [], total: 0, loading: true }))
     expect(screen.queryByText('データがありません')).toBeNull()
     expect(
-      screen.getByRole('status', { name: '読み込み中' }),
+      screen.getByRole('status', { name: '読み込み中' })
     ).toBeInTheDocument()
     expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true')
   })
@@ -135,7 +135,7 @@ describe('DataTable', () => {
         <main>
           {table({ onSortChange: () => {}, onSelectionChange: () => {} })}
         </main>
-      </MbcProvider>,
+      </MbcProvider>
     )
     const result = await axe.run(document.body, {
       rules: {

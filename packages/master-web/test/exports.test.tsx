@@ -48,7 +48,14 @@ describe('master-web entries', () => {
     ]
     expect(Object.keys(core).sort()).toEqual([...CORE].sort())
     expect(Object.keys(root).sort()).toEqual(
-      [...CORE, 'MbcProvider', 'masterMessages', 'useMessages'].sort()
+      [
+        ...CORE,
+        'BulkImportDialog',
+        'MasterLink',
+        'MbcProvider',
+        'masterMessages',
+        'useMessages',
+      ].sort()
     )
   })
 

@@ -57,20 +57,21 @@ rebuild/
 
 ### Package boundaries
 
-- `master-web` depends on `ui-web` and `client-web` (same version, `workspace:^`), `react-hook-form`, `zod` 4, `@tanstack/react-table`, `@dnd-kit/*`, `lucide-react`. Peer: `react`, `react-dom` `^18.2 || ^19`.
+- `master-web` depends on `ui-web` and `client-web` (same version, `workspace:^`), `react-hook-form`, `zod` 4, `@dnd-kit/*`, `lucide-react`. Peer: `react`, `react-dom` `^18.2 || ^19`.
 - Optional peers (only `/editors` imports them): `react-quill-new`, `@uiw/react-md-editor`, `jsoneditor`.
 - Not used: axios, `@apollo/client`, aws-amplify, `aws-appsync-*`, mobx, swr, nuqs, `next-usequerystate`, next, `react-draggable`, `react-resizable`, `patch-package`, `usehooks-ts`.
-- The TanStack `DataTable` lives in master-web (its only user); ui-web gains only the plain `Table` primitives.
+- master-web's `DataTable` is a small internal component (fixed columns, server-side sorting and paging, checkbox selection; no TanStack, ruling in M3a); ui-web gains the plain `Table` primitives and the `PaginationBar` both lists share.
 - The survey spec's library rules apply: no env vars, no `window` during render, no global CSS outside the `mbc:` prefix, `'use client'` on client modules only, ESM only.
 
 ### ui-web additions (ship in 1.0.0)
 
-| Component                                                                                                | Notes                                                                                                  |
-| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `TableCaption` | shadcn markup and classes (v0's `components/ui/table.tsx`)                                             |
-| `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent`                                     | Radix accordion; caret range like the other Radix packages                                             |
-| `Command` family                                                                                         | `cmdk`                                                                                                 |
-| `MultiSelect`                                                                                            | v0's `multi-select-combobox` behaviour: search, chips, a check list; keyboard and screen-reader tested |
+| Component                                                                                                | Notes                                                                                                                                                    |
+| -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `TableCaption` | shadcn markup and classes (v0's `components/ui/table.tsx`)                                                                                               |
+| `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent`                                     | Radix accordion; caret range like the other Radix packages                                                                                               |
+| `Command` family                                                                                         | `cmdk`                                                                                                                                                   |
+| `MultiSelect`                                                                                            | v0's `multi-select-combobox` behaviour: search, chips, a check list; keyboard and screen-reader tested                                                   |
+| `PaginationBar`                                                                                          | survey-web's template pagination moved to ui-web; `variant="table"` adds master v0's result count, page size after the pages and a page-number box (M3a) |
 
 `Combobox` (single choice) was dropped in M1: no v0 master screen uses one.
 
@@ -259,7 +260,7 @@ Namespaces (module augmentation of `MbcMessageRegistry`, as survey-web): `master
 
 ## 4. Internals
 
-- **Data table:** `DataTable` on TanStack Table v8 in manual mode (server paging and sorting); sortable column headers are buttons with `aria-sort`; page size and page links from ui-web `Pagination`; row selection (copy request) with labelled checkboxes. Column sizes follow v0's `meta.size`.
+- **Data table:** `DataTable`, a small component (server paging and sorting); sortable column headers are buttons with `aria-sort`; page size, page links, result count and page-number box from ui-web `PaginationBar` (`table` variant); row selection (copy request) with labelled checkboxes. Column sizes follow v0's `meta.size`.
 - **Forms:** react-hook-form with resolvers built from `/core` validators; async code-uniqueness runs on submit (v0 ran it in `validate`); errors are linked to inputs (`aria-invalid`, `aria-describedby`) and focus moves to the first error on submit.
 - **Fields table:** dnd-kit sortable with keyboard sensor and translated announcements (survey creator's pattern); `code`, `name`, `seq` rows not removable.
 - **State:** list state (page, page size, ordering, filters) internal or host-controlled; no URL access in the package.

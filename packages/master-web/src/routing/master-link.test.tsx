@@ -41,13 +41,13 @@ describe('MasterLink', () => {
     render(
       <MasterLink routing={routing({ Link })} to={target} className="x">
         P-001
-      </MasterLink>,
+      </MasterLink>
     )
     const link = screen.getByRole('link', { name: 'P-001' })
     expect(link).toHaveAttribute('data-host-link', '')
     expect(link).toHaveAttribute(
       'href',
-      '/data/MASTER%23t%23MASTER_SETTING%23P/MASTER%23t%23P%23a%2Fb',
+      '/data/MASTER%23t%23MASTER_SETTING%23P/MASTER%23t%23P%23a%2Fb'
     )
     expect(link).toHaveClass('x')
   })
@@ -57,7 +57,7 @@ describe('MasterLink', () => {
     render(
       <MasterLink routing={host} to={target}>
         P-001
-      </MasterLink>,
+      </MasterLink>
     )
     const link = screen.getByRole('link', { name: 'P-001' })
     await userEvent.click(link)

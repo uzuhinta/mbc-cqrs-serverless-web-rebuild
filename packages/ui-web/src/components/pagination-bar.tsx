@@ -164,13 +164,13 @@ export function PaginationBar({
               className={cn(
                 'mbc:hover:text-primary mbc:flex mbc:h-8 mbc:w-8 mbc:items-center mbc:justify-center mbc:rounded-none mbc:text-sm mbc:transition-colors mbc:duration-200',
                 item === page &&
-                  'mbc:border-primary mbc:bg-primary/5 mbc:text-primary mbc:border',
+                  'mbc:border-primary mbc:bg-primary/5 mbc:text-primary mbc:border'
               )}
             >
               {item}
             </PaginationLink>
           </PaginationItem>
-        ),
+        )
       )}
       <PaginationItem>
         <PaginationNext
@@ -195,7 +195,7 @@ export function PaginationBar({
       {...named}
       className={cn(
         'mbc:flex-wrap mbc:items-center mbc:justify-end mbc:text-sm',
-        className,
+        className
       )}
     >
       <span

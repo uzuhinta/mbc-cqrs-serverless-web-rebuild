@@ -52,6 +52,14 @@ describe('master-web output', () => {
     }
   })
 
+  it('marks every module that renders as a client module', () => {
+    for (const file of listFiles(dist, '.js')) {
+      const source = readText(dist, file)
+      if (/from\s*["']react\/jsx-runtime["']/.test(source))
+        expect(hasUseClientDirective(source), file).toBe(true)
+    }
+  })
+
   it('contains no host-framework or host-library references', () => {
     for (const file of listFiles(dist, '.js')) {
       for (const pattern of FORBIDDEN_JS_PATTERNS) {

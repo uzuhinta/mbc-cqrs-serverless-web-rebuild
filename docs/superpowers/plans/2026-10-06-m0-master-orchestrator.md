@@ -6,7 +6,7 @@
 
 **Architecture:** A fourth ESM-only package in the `rebuild/` monorepo, built like survey-web (tsdown unbundled, Tailwind v4 `mbc:` prefix, `styles.css` + `styles.layer.css`). Layers: React-free `/core`, prop-driven screens at the root, opt-in rich editors in `/editors`, backend integration in `/mbc` on client-web. ui-web gains `Table`, `Accordion`, `Command`, `MultiSelect`, `useHydrated`; client-web gains `command({ expectedFinishes, onProgress })` and a public `useQuery`.
 
-**Tech Stack:** pnpm 10.29, Node 24.13 (fnm), TypeScript ~6.0, tsdown, Tailwind CSS 4, Vitest + jsdom + Testing Library + axe-core, ESLint 10, Radix, cmdk, react-hook-form 7, zod 4, `@tanstack/react-table` 8, dnd-kit, Changesets. Optional peers in `/editors`: `react-quill-new`, `@uiw/react-md-editor`, `jsoneditor`.
+**Tech Stack:** pnpm 10.29, Node 24.13 (fnm), TypeScript ~6.0, tsdown, Tailwind CSS 4, Vitest + jsdom + Testing Library + axe-core, ESLint 10, Radix, cmdk, react-hook-form 7, zod 4, dnd-kit, Changesets. Optional peers in `/editors`: `react-quill-new`, `@uiw/react-md-editor`, `jsoneditor`.
 
 **Spec:** `docs/superpowers/specs/2026-10-06-master-web-rebuild-design.md` (builds on `docs/superpowers/specs/2026-10-04-survey-web-rebuild-design.md`)
 
@@ -90,17 +90,24 @@ git status --porcelain                                        # must be empty af
   - Gate: standard gate; `/core` build has no React import.
   - Depends on: M1.
 
-- [ ] **M3 — Lists** (`m3-lists`)
-  - Spec: §3.2 (navigation, `MasterSettingList`, `MasterDataList`, `BulkImportDialog`), §4 (data table, state), Review Focus 2, 3, 5.
-  - Builds: `MasterRouting` / `MasterTarget` types and a link helper; `DataTable` (TanStack manual mode, sortable headers with `aria-sort`, paging via ui-web `Pagination`, row selection); `MasterSettingList`; `MasterDataList` (columns from `isShowedOnList`, per-type cell formatting); `BulkImportDialog` (paste / file / sample download, per-item errors, progress); playground pages on fixture data.
-  - Gate: standard gate; v0 class parity for both lists.
+- [ ] **M3a — List building blocks** (`m3a-list-parts`)
+  - Spec: §2 (ui-web additions), §3.2 (navigation, `BulkImportDialog`), §4 (data table), Review Focus 2, 3, 5.
+  - Builds: ui-web `PaginationBar` (survey-web's template pagination moved to ui-web, plus master v0's `table` arrangement: result count, page size after the pages, page-number box; survey-web's `TemplatePagination` re-exports it); master-web `MasterRouting` / `MasterTarget` / `MasterLink`; internal `DataTable` (sortable headers with `aria-sort`, pagination above and below, row selection, empty and loading rows); `parseBulkJson` `tenantCode` option; `BulkImportDialog`; `master.table` and `master.bulkDialog` messages; smoke render.
+  - Ruling: no TanStack — the lists need fixed columns, server-side sorting and paging, and checkbox selection, which a small component covers (spec §2 and §4 updated).
+  - Gate: standard gate.
   - Depends on: M2.
+
+- [ ] **M3b — List screens** (`m3b-lists`)
+  - Spec: §3.2 (`MasterSettingList`, `MasterDataList`), §4 (state), Review Focus 2, 5.
+  - Builds: ui-web `--mbc-emphasis` token (master v0's section headers); list row types; per-type cell formatting; `MasterSettingList` (search, JSON editor, create, table, back) without the "own tenant" column (v0's live list had none — it lived in the unused `MasterTable.tsx`); `MasterDataList` (accordion: setting info, search, results); `masterSetting` / `masterData` messages; playground pages on fixture data; smoke render.
+  - Gate: standard gate; master v0 layout parity for both lists (layout markup, not ui-web controls).
+  - Depends on: M3a.
 
 - [ ] **M4 — Settings editor** (`m4-settings-editor`)
   - Spec: §3.2 (`MasterSettingEditor`, host-specific props `canCopy`, `settingOptions`), §4 (forms, fields table), Review Focus 4.
   - Builds: `MasterSettingEditor` (code with async uniqueness, name, description, `settingOptions`), fields table (dnd-kit sortable + keyboard + announcements; `code`/`name`/`seq` fixed), field dialog (per-type options from `fieldTypes`, `validateFieldDefinition`), JSON dialog (edit / import / download), view/edit mode, delete confirm, copy buttons when `canCopy`, read-only mode; playground page.
   - Gate: standard gate; v0 class parity.
-  - Depends on: M3 (`MasterRouting`, JSON dialog shares the bulk dialog's text area).
+  - Depends on: M3b (`MasterRouting`, `DataTable`, the JSON dialog pattern).
 
 - [ ] **M5 — Data editor** (`m5-data-editor`)
   - Spec: §3.2 (`MasterDataEditor`, field renderers), §3.1 (`toDataPayload`), §5 (auto-number note), Review Focus 1, 4.
@@ -136,14 +143,14 @@ git status --porcelain                                        # must be empty af
 | §2 client-web addition            | M1                                               |
 | §3 entry table, subpaths not kept | M1 (exports), M8 (migration)                     |
 | §3.1 core                         | M2                                               |
-| §3.2 navigation                   | M3                                               |
-| §3.2 screens                      | M3, M4, M5, M7                                   |
+| §3.2 navigation                   | M3a                                              |
+| §3.2 screens                      | M3a, M3b, M4, M5, M7                             |
 | §3.2 host-specific props          | M4 (`canCopy`, `settingOptions`), M7 (`tenants`) |
 | §3.2 field renderers              | M5                                               |
 | §3.3 editors                      | M6                                               |
 | §3.4 `/mbc`                       | M7                                               |
 | §3.5 messages                     | M1 (namespaces), M2–M7 (strings)                 |
-| §4 internals                      | M3–M7                                            |
-| §5 behaviour changes              | M3, M5, M7, M8 (MIGRATION)                       |
+| §4 internals                      | M3a–M7                                           |
+| §5 behaviour changes              | M3a, M5, M7, M8 (MIGRATION)                      |
 | §6 testing                        | every sub-plan                                   |
 | §7 delivery, release              | M1 (fixed group), M8                             |
