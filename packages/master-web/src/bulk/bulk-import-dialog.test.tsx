@@ -136,6 +136,32 @@ describe('BulkImportDialog', () => {
     expect(onImported).not.toHaveBeenCalled()
   })
 
+  it('keeps progress and reloads the list when a later batch fails', async () => {
+    const gate = deferred()
+    let report: (done: number, total: number) => void = () => {}
+    const onImport = vi.fn<BulkImportDialogProps['onImport']>(
+      async (_items, onProgress) => {
+        report = onProgress
+        await gate.promise
+      }
+    )
+    const { onImported } = setup({ onImport })
+    await open()
+    await typeJson([DATA, { ...DATA, code: 'D2' }])
+    await userEvent.click(screen.getByRole('button', { name: 'データ反映' }))
+    report(1, 2)
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent('反映中 (1/2)')
+    )
+    gate.reject(new Error('batch 2 failed'))
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('マスターデータの反映に失敗しました。')
+    expect(alert).toHaveTextContent('batch 2 failed')
+    expect(alert).toHaveTextContent('1 / 2 件反映済み')
+    expect(screen.getByRole('button', { name: 'データ反映' })).toBeEnabled()
+    expect(onImported).toHaveBeenCalledTimes(1)
+  })
+
   it('loads a JSON file and saves the text as a file', async () => {
     setup()
     await open()

@@ -81,6 +81,11 @@ export function BulkImportDialog({
     done: number
     total: number
   } | null>(null)
+  /** Progress retained after a mid-import failure so the host can reload. */
+  const [partial, setPartial] = useState<{
+    done: number
+    total: number
+  } | null>(null)
   const submitting = progress !== null
 
   const changeOpen = (next: boolean) => {
@@ -90,6 +95,7 @@ export function BulkImportDialog({
     if (next) {
       setErrors([])
       setFailure(null)
+      setPartial(null)
     }
   }
 
@@ -125,18 +131,26 @@ export function BulkImportDialog({
     const parsed = parseBulkJson(text, { screen, mapRawItem, tenantCode })
     setErrors(parsed.errors)
     setFailure(null)
+    setPartial(null)
     if (parsed.errors.length > 0) return
-    setProgress({ done: 0, total: parsed.items.length })
+    let last = { done: 0, total: parsed.items.length }
+    setProgress(last)
     try {
-      await onImport(parsed.items, (done, total) =>
-        setProgress({ done, total })
-      )
+      await onImport(parsed.items, (done, total) => {
+        last = { done, total }
+        setProgress(last)
+      })
       setProgress(null)
       setOpen(false)
       onImported?.()
     } catch (error) {
       setProgress(null)
       setFailure(error instanceof Error ? error.message : '')
+      // Batches already accepted by the host must still reach the list.
+      if (last.done > 0) {
+        setPartial(last)
+        onImported?.()
+      }
     }
   }
 
@@ -175,7 +189,15 @@ export function BulkImportDialog({
         {failure !== null && (
           <Alert variant="destructive" role="alert">
             <AlertTitle>{t.bulkDialog.failed}</AlertTitle>
-            {failure && <AlertDescription>{failure}</AlertDescription>}
+            <AlertDescription>
+              {failure}
+              {partial && (
+                <>
+                  {failure ? ' ' : null}
+                  {t.bulkDialog.partial(partial)}
+                </>
+              )}
+            </AlertDescription>
           </Alert>
         )}
         {progress && (

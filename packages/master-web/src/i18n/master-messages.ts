@@ -23,6 +23,8 @@ export type MasterMessages = {
     save: string
     submit: string
     progress: (params: { done: number; total: number }) => string
+    /** Shown in the failure alert when some items already saved. */
+    partial: (params: { done: number; total: number }) => string
     failed: string
   }
   /** Data-record errors (`MasterError`). */
@@ -108,6 +110,7 @@ const ja: MasterMessages = {
     save: 'JSON保存',
     submit: 'データ反映',
     progress: ({ done, total }) => `反映中 (${done}/${total})`,
+    partial: ({ done, total }) => `${done} / ${total} 件反映済み`,
     failed: 'マスターデータの反映に失敗しました。',
   },
   validation: {
@@ -190,6 +193,7 @@ const en: MasterMessages = {
     save: 'Save JSON',
     submit: 'Import',
     progress: ({ done, total }) => `Importing (${done}/${total})`,
+    partial: ({ done, total }) => `${done} / ${total} imported`,
     failed: 'The import failed.',
   },
   validation: {
