@@ -14,8 +14,6 @@ export type TemplateMessages = {
     questions: (params: { count: number }) => string
     sections: (params: { count: number }) => string
     open: (params: { name: string }) => string
-    pageSize: string
-    perPage: (params: { size: number }) => string
   }
   editor: {
     loadingEdit: string
@@ -60,8 +58,6 @@ const ja: TemplateMessages = {
     questions: ({ count }) => `${count} 質問`,
     sections: ({ count }) => `${count} セクション`,
     open: ({ name }) => `アンケートテンプレートを開く: ${name}`,
-    pageSize: '1ページの件数',
-    perPage: ({ size }) => `${size} / ページ`,
   },
   editor: {
     loadingEdit: 'アンケートを読み込んでいます...',
@@ -106,8 +102,6 @@ const en: TemplateMessages = {
       `${count} ${count === 1 ? 'question' : 'questions'}`,
     sections: ({ count }) => `${count} ${count === 1 ? 'section' : 'sections'}`,
     open: ({ name }) => `Open survey template: ${name}`,
-    pageSize: 'Items per page',
-    perPage: ({ size }) => `${size} / page`,
   },
   editor: {
     loadingEdit: 'Loading survey...',

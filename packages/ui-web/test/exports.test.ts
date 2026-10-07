@@ -69,6 +69,7 @@ const EXPECTED = [
   'MbcProvider',
   'MultiSelect',
   'Pagination',
+  'PaginationBar',
   'PaginationContent',
   'PaginationEllipsis',
   'PaginationItem',

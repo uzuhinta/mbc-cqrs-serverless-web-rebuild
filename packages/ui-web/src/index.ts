@@ -130,6 +130,10 @@ export {
   type PaginationLinkProps,
 } from './components/pagination'
 export {
+  PaginationBar,
+  type PaginationBarProps,
+} from './components/pagination-bar'
+export {
   Popover,
   PopoverAnchor,
   PopoverContent,

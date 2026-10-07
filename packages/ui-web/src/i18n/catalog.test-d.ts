@@ -9,6 +9,12 @@ interface InterfaceTyped {
     next: string
     morePages: string
     page: (params: { page: number }) => string
+    pageSize: string
+    perPage: (params: { size: number }) => string
+    total: (params: { count: number }) => string
+    jump: (params: { last: number }) => string
+    jumpBefore: string
+    jumpAfter: string
   }
   multiSelect: {
     placeholder: string
@@ -28,6 +34,12 @@ const messages: InterfaceTyped = {
     next: 'x',
     morePages: 'x',
     page: () => 'x',
+    pageSize: 'x',
+    perPage: () => 'x',
+    total: () => 'x',
+    jump: () => 'x',
+    jumpBefore: 'x',
+    jumpAfter: 'x',
   },
   multiSelect: {
     placeholder: 'x',
