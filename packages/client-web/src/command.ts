@@ -15,20 +15,39 @@ export type CommandRequest = {
   query?: QueryParams
 }
 
-export type CommandOptions = {
+export type CommandOptions<T = unknown> = {
+  /**
+   * How long to wait without news, in ms (default 60 000). The timer restarts
+   * each time an item finishes, so a long bulk command that keeps progressing
+   * does not time out.
+   */
   timeoutMs?: number
   signal?: AbortSignal
   onPhase?: (phase: 'sending' | 'waiting') => void
   /**
-   * How many `finish:FINISHED` messages complete the command; bulk commands
-   * send one per item. Default 1; values below 1 count as 1.
+   * Reads the request id from the response. Default: `data.requestId`.
+   * Bulk endpoints answer with an array whose changed items share one id.
    */
-  expectedFinishes?: number
-  /** Called on each `finish:FINISHED` with the number finished so far. */
-  onProgress?: (done: number, expected: number) => void
+  requestIdOf?: (data: T) => string | undefined
+  /**
+   * How many `finish:FINISHED` messages complete the command: a number, or a
+   * function of the response (a bulk request finishes once per changed item).
+   * 0 resolves on the response. Default 1; a non-finite value counts as 1.
+   * Each item (`pk` + `sk`) counts once, even if its message is delivered twice.
+   */
+  expectedFinishes?: number | ((data: T) => number)
+  /**
+   * Called once per finished item with the count so far and the item's
+   * message (its `pk` / `sk` name the item). An error it throws rejects the command.
+   */
+  onProgress?: (done: number, expected: number, message: MbcMessage) => void
 }
 
-export type CommandResult<T> = { data: T; requestId: string }
+/**
+ * `requestId` is undefined only when there was nothing to wait for
+ * (`expectedFinishes` came to 0 and the response carried no request id).
+ */
+export type CommandResult<T> = { data: T; requestId: string | undefined }
 
 const DEFAULT_TIMEOUT_MS = 60_000
 const FINISHED = 'finish:FINISHED'
@@ -38,96 +57,148 @@ function statusOf(message: MbcMessage): string | undefined {
   return typeof content?.status === 'string' ? content.status : undefined
 }
 
+function defaultRequestId(data: unknown): string | undefined {
+  const id = (data as { requestId?: unknown } | null | undefined)?.requestId
+  return typeof id === 'string' && id !== '' ? id : undefined
+}
+
+function expectedFor<T>(
+  option: CommandOptions<T>['expectedFinishes'],
+  data: T
+): number {
+  const value = typeof option === 'function' ? option(data) : (option ?? 1)
+  return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 1
+}
+
 export function createCommand(
   http: Http,
   realtime: RealtimeClient | undefined
 ) {
-  return async function command<T extends { requestId?: string }>(
+  return async function command<T = unknown>(
     request: CommandRequest,
-    options: CommandOptions = {}
+    options: CommandOptions<T> = {}
   ): Promise<CommandResult<T>> {
     const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS
-    const expected = Math.max(1, Math.floor(options.expectedFinishes ?? 1))
-    let finished = 0
     const controller = new AbortController()
     const cleanups: (() => void)[] = []
 
-    const outcome = new Promise<CommandResult<T>>((resolve, reject) => {
-      const timer = setTimeout(() => {
-        reject(new MbcTimeoutError(timeoutMs))
-      }, timeoutMs)
-      cleanups.push(() => clearTimeout(timer))
-
-      const onAbort = () =>
-        reject(new MbcAbortError({ cause: options.signal?.reason }))
-      if (options.signal?.aborted) onAbort()
-      options.signal?.addEventListener('abort', onAbort, { once: true })
-      cleanups.push(() => options.signal?.removeEventListener('abort', onAbort))
-
-      void (async () => {
-        const buffered: MbcMessage[] = []
-        // Filled in once the HTTP response arrives; messages before that are buffered.
-        const sent: { requestId?: string; data?: T } = {}
-
-        const check = (message: MbcMessage) => {
-          const { requestId, data } = sent
-          if (requestId === undefined || message.id !== requestId) return
-          const status = statusOf(message)
-          if (status === FINISHED) {
-            finished += 1
-            options.onProgress?.(finished, expected)
-            if (finished >= expected) resolve({ data: data as T, requestId })
-          } else if (status?.endsWith(':FAILED'))
-            reject(new MbcCommandError(requestId, status))
+    const outcome = new Promise<CommandResult<T>>(
+      (resolvePromise, rejectPromise) => {
+        // Nothing counts or reports once the command has settled.
+        let settled = false
+        const resolve = (result: CommandResult<T>) => {
+          settled = true
+          resolvePromise(result)
+        }
+        const reject = (error: unknown) => {
+          settled = true
+          rejectPromise(error)
         }
 
-        if (realtime) {
-          const subscription = realtime.subscribe(
-            {
-              query: ON_MESSAGE,
-              variables: {
-                tenantCode: http.resolveTenantCode(),
-                action: 'command-status',
-              },
-            },
-            {
-              next: (payload) => {
-                const message = parseMessage(payload)
-                if (!message) return
-                if (sent.requestId === undefined) buffered.push(message)
-                else check(message)
-              },
-              error: (error) => reject(error),
-            }
-          )
-          cleanups.push(() => subscription.unsubscribe())
-          await subscription.ready
-        }
-
-        options.onPhase?.('sending')
-        const data = await http.request<T>(request.method, request.path, {
-          body: request.body,
-          query: request.query,
-          signal: controller.signal,
-        })
-        if (!data?.requestId) {
-          throw new MbcApiError(
-            200,
-            data,
-            'The command response has no requestId'
+        let timer: ReturnType<typeof setTimeout> | undefined
+        const arm = () => {
+          clearTimeout(timer)
+          timer = setTimeout(
+            () => reject(new MbcTimeoutError(timeoutMs)),
+            timeoutMs
           )
         }
-        const requestId = data.requestId
-        sent.data = data
-        sent.requestId = requestId
-        if (!realtime) {
-          resolve({ data, requestId })
-          return
-        }
-        options.onPhase?.('waiting')
-        for (const message of buffered.splice(0)) check(message)
-      })().catch(reject)
-    })
+        arm()
+        cleanups.push(() => clearTimeout(timer))
+
+        const onAbort = () =>
+          reject(new MbcAbortError({ cause: options.signal?.reason }))
+        if (options.signal?.aborted) onAbort()
+        options.signal?.addEventListener('abort', onAbort, { once: true })
+        cleanups.push(() =>
+          options.signal?.removeEventListener('abort', onAbort)
+        )
+
+        void (async () => {
+          const buffered: MbcMessage[] = []
+          // Filled in once the HTTP response arrives; messages before that are buffered.
+          const sent: { requestId?: string; data?: T; expected?: number } = {}
+          const finished = new Set<string>()
+
+          const check = (message: MbcMessage) => {
+            const { requestId, data, expected } = sent
+            if (settled || expected === undefined) return
+            if (requestId === undefined || message.id !== requestId) return
+            const status = statusOf(message)
+            if (status === FINISHED) {
+              const item =
+                message.pk !== undefined && message.sk !== undefined
+                  ? `${message.pk}#${message.sk}`
+                  : `#${finished.size}`
+              if (finished.has(item)) return
+              finished.add(item)
+              try {
+                options.onProgress?.(finished.size, expected, message)
+              } catch (error) {
+                reject(error)
+                return
+              }
+              if (finished.size >= expected)
+                resolve({ data: data as T, requestId })
+              else arm()
+            } else if (status?.endsWith(':FAILED'))
+              reject(new MbcCommandError(requestId, status))
+          }
+
+          if (realtime) {
+            const subscription = realtime.subscribe(
+              {
+                query: ON_MESSAGE,
+                variables: {
+                  tenantCode: http.resolveTenantCode(),
+                  action: 'command-status',
+                },
+              },
+              {
+                next: (payload) => {
+                  const message = parseMessage(payload)
+                  if (!message) return
+                  if (sent.expected === undefined) buffered.push(message)
+                  else check(message)
+                },
+                error: (error) => reject(error),
+              }
+            )
+            cleanups.push(() => subscription.unsubscribe())
+            await subscription.ready
+          }
+
+          options.onPhase?.('sending')
+          const data = await http.request<T>(request.method, request.path, {
+            body: request.body,
+            query: request.query,
+            signal: controller.signal,
+          })
+          const requestId = (options.requestIdOf ?? defaultRequestId)(data)
+          const expected = expectedFor(options.expectedFinishes, data)
+          if (expected === 0) {
+            resolve({ data, requestId })
+            return
+          }
+          if (requestId === undefined) {
+            throw new MbcApiError(
+              200,
+              data,
+              'The command response has no requestId'
+            )
+          }
+          if (!realtime) {
+            resolve({ data, requestId })
+            return
+          }
+          sent.data = data
+          sent.requestId = requestId
+          sent.expected = expected
+          options.onPhase?.('waiting')
+          for (const message of buffered.splice(0)) check(message)
+        })().catch(reject)
+      }
+    )
 
     try {
       return await outcome

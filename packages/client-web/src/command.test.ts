@@ -48,7 +48,12 @@ function setup(tenantCode: string | (() => string) = 'tenant-a') {
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
-function status(socket: FakeWebSocket, requestId: string, value: string) {
+function status(
+  socket: FakeWebSocket,
+  requestId: string,
+  value: string,
+  sk?: string
+) {
   const start = socket.starts()[0]
   socket.receive({
     type: 'data',
@@ -60,11 +65,14 @@ function status(socket: FakeWebSocket, requestId: string, value: string) {
           tenantCode: 'tenant-a',
           action: 'command-status',
           content: JSON.stringify({ status: value }),
+          ...(sk && { pk: 'MASTER#tenant-a', sk }),
         },
       },
     },
   })
 }
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 async function connected() {
   await flush()
@@ -333,16 +341,139 @@ describe('command', () => {
     await expect(pending).rejects.toBeInstanceOf(MbcCommandError)
   })
 
-  it('counts expectedFinishes below 1 as 1', async () => {
+  it('resolves on the HTTP response when expectedFinishes is 0', async () => {
     const { command, responses } = setup()
     const pending = command(
       { method: 'POST', path: '/api/x' },
       { expectedFinishes: 0 }
     )
+    await connected()
+    responses[0]?.resolve({ requestId: 'req-1' })
+    await expect(pending).resolves.toEqual({
+      data: { requestId: 'req-1' },
+      requestId: 'req-1',
+    })
+  })
+
+  it('treats a non-finite expectedFinishes as 1', async () => {
+    const { command, responses } = setup()
+    const pending = command(
+      { method: 'POST', path: '/api/x' },
+      { expectedFinishes: Number.NaN }
+    )
     const socket = await connected()
     responses[0]?.resolve({ requestId: 'req-1' })
     await flush()
     status(socket, 'req-1', 'finish:FINISHED')
+    await expect(pending).resolves.toMatchObject({ requestId: 'req-1' })
+  })
+
+  it('waits for one finish per changed item of a bulk (array) response', async () => {
+    const { command, responses } = setup()
+    type Item = { sk: string; requestId?: string }
+    const progress: string[] = []
+    const pending = command<Item[]>(
+      { method: 'POST', path: '/api/master-bulk', body: { items: [] } },
+      {
+        requestIdOf: (items) => items.find((item) => item.requestId)?.requestId,
+        expectedFinishes: (items) =>
+          items.filter((item) => item.requestId).length,
+        onProgress: (done, expected, message) =>
+          progress.push(`${done}/${expected} ${message.sk}`),
+      }
+    )
+    const socket = await connected()
+    responses[0]?.resolve([
+      { sk: 'S#a', requestId: 'req-1' },
+      { sk: 'S#b' },
+      { sk: 'S#c', requestId: 'req-1' },
+    ])
+    await flush()
+    status(socket, 'req-1', 'finish:FINISHED', 'S#a')
+    status(socket, 'req-1', 'finish:FINISHED', 'S#a') // redelivered: counted once
+    status(socket, 'req-1', 'finish:FINISHED', 'S#c')
+    await expect(pending).resolves.toMatchObject({ requestId: 'req-1' })
+    expect(progress).toEqual(['1/2 S#a', '2/2 S#c'])
+  })
+
+  it('resolves at once when nothing in a bulk request changed', async () => {
+    const { command, responses } = setup()
+    const pending = command<{ sk: string; requestId?: string }[]>(
+      { method: 'POST', path: '/api/master-bulk' },
+      {
+        requestIdOf: (items) => items.find((item) => item.requestId)?.requestId,
+        expectedFinishes: (items) =>
+          items.filter((item) => item.requestId).length,
+      }
+    )
+    await connected()
+    responses[0]?.resolve([{ sk: 'S#a' }])
+    await expect(pending).resolves.toEqual({
+      data: [{ sk: 'S#a' }],
+      requestId: undefined,
+    })
+  })
+
+  it('never reports more progress than expected, nor any after a failure', async () => {
+    const { command, responses } = setup()
+    const progress: number[] = []
+    const pending = command(
+      { method: 'POST', path: '/api/master-bulk' },
+      { expectedFinishes: 2, onProgress: (done) => progress.push(done) }
+    )
+    const socket = await connected()
+    for (const sk of ['S#a', 'S#b', 'S#c'])
+      status(socket, 'req-1', 'finish:FINISHED', sk) // all buffered
+    responses[0]?.resolve({ requestId: 'req-1' })
+    await expect(pending).resolves.toMatchObject({ requestId: 'req-1' })
+    expect(progress).toEqual([1, 2])
+
+    const second = setup()
+    const failed: number[] = []
+    const failing = second.command(
+      { method: 'POST', path: '/api/master-bulk' },
+      { expectedFinishes: 3, onProgress: (done) => failed.push(done) }
+    )
+    const socket2 = await connected()
+    second.responses[0]?.resolve({ requestId: 'req-2' })
+    await flush()
+    status(socket2, 'req-2', 'finish:FINISHED', 'S#a')
+    status(socket2, 'req-2', 'import:FAILED', 'S#b')
+    status(socket2, 'req-2', 'finish:FINISHED', 'S#c')
+    await expect(failing).rejects.toBeInstanceOf(MbcCommandError)
+    expect(failed).toEqual([1])
+  })
+
+  it('rejects with the error an onProgress callback throws', async () => {
+    const { command, responses } = setup()
+    const pending = command(
+      { method: 'POST', path: '/api/master-bulk' },
+      {
+        expectedFinishes: 2,
+        onProgress: () => {
+          throw new Error('host bug')
+        },
+      }
+    )
+    const socket = await connected()
+    responses[0]?.resolve({ requestId: 'req-1' })
+    await flush()
+    status(socket, 'req-1', 'finish:FINISHED', 'S#a')
+    await expect(pending).rejects.toThrow('host bug')
+  })
+
+  it('restarts the timeout whenever an item finishes', async () => {
+    const { command, responses } = setup()
+    const pending = command(
+      { method: 'POST', path: '/api/master-bulk' },
+      { expectedFinishes: 3, timeoutMs: 150 }
+    )
+    const socket = await connected()
+    responses[0]?.resolve({ requestId: 'req-1' })
+    for (const sk of ['S#a', 'S#b', 'S#c']) {
+      await wait(100) // 300 ms in all, never 150 ms without progress
+      status(socket, 'req-1', 'finish:FINISHED', sk)
+    }
     await expect(pending).resolves.toMatchObject({ requestId: 'req-1' })
   })
 

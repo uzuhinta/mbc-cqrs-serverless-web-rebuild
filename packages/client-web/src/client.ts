@@ -35,9 +35,9 @@ export type MbcClient = {
   put<T>(path: string, body?: unknown, options?: VerbOptions): Promise<T>
   patch<T>(path: string, body?: unknown, options?: VerbOptions): Promise<T>
   delete<T>(path: string, options?: VerbOptions): Promise<T>
-  command<T extends { requestId?: string }>(
+  command<T = unknown>(
     request: CommandRequest,
-    options?: CommandOptions
+    options?: CommandOptions<T>
   ): Promise<CommandResult<T>>
   messages:
     | {
