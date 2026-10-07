@@ -1,10 +1,12 @@
 import '@mbc-cqrs-serverless/survey-web/styles.css'
+import '@mbc-cqrs-serverless/master-web/styles.css'
 
 import { MbcProvider } from '@mbc-cqrs-serverless/ui-web'
 import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import { Gallery } from './gallery'
+import { MasterPage } from './master-pages'
 import { SurveyCreatorPage } from './survey-creator-page'
 import { SurveyFormPage } from './survey-form-page'
 import { TemplatesPage } from './templates-page'
@@ -36,7 +38,9 @@ export function App() {
   return (
     <MbcProvider locale={settings.locale}>
       <Toolbar settings={settings} onChange={setSettings} />
-      {hash.startsWith('#templates') ? (
+      {hash.startsWith('#master') ? (
+        <MasterPage route={hash.slice(1)} />
+      ) : hash.startsWith('#templates') ? (
         <TemplatesPage route={hash.slice(1)} />
       ) : hash === '#creator' ? (
         <SurveyCreatorPage />

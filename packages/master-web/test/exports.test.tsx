@@ -56,7 +56,11 @@ describe('master-web entries', () => {
       [
         ...CORE,
         'BulkImportDialog',
+        'MasterDataList',
         'MasterLink',
+        'MasterSettingList',
+        'masterDataMessages',
+        'masterSettingMessages',
         'MbcProvider',
         'masterMessages',
         'useMessages',

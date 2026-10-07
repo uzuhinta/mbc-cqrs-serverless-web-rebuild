@@ -58,6 +58,13 @@ v0 reference source: `../mbc-cqrs-serverless-web/packages/master/src` (identical
 
 Master screens use ui-web's controls as they are (Button, Input, Select, Switch, Badge, Dialog, Accordion, Table, MultiSelect, pagination), so survey and master screens look the same in one app. What master-web keeps from master v0: page layouts, section structure (e.g. the data list's accordion sections and their dark section headers), the table's structure, colour roles and the Japanese text. Parity tests pin master-web's own layout markup, not ui-web's controls. (Replaces the M1-review ruling that master screens copy master v0's control classes.)
 
+Look notes from the M3b probe, left as they are (ui-web's shared look, or polish for later):
+
+- Hover states of ui-web's outline, secondary and pagination buttons are faint on white (a background a few shades off, or a border colour change only).
+- When a wide table scrolls sideways on a phone, its first column is not pinned.
+- Code links in table rows are 20px tall; they pass WCAG 2.5.8 through row spacing, not size.
+- Links use `text-primary`, which is near-black in ui-web's palette: they read as text until hovered (v0's look).
+
 ### Standard gate (every sub-plan)
 
 ```bash
@@ -101,7 +108,7 @@ git status --porcelain                                        # must be empty af
 
 - [ ] **M3b — List screens** (`m3b-lists`)
   - Spec: §3.2 (`MasterSettingList`, `MasterDataList`), §4 (state), Review Focus 2, 5.
-  - Builds: ui-web `--mbc-emphasis` token (master v0's section headers); list row types; per-type cell formatting; `MasterSettingList` (search, JSON editor, create, table, back) without the "own tenant" column (v0's live list had none — it lived in the unused `MasterTable.tsx`); `MasterDataList` (accordion: setting info, search, results); `masterSetting` / `masterData` messages; playground pages on fixture data; smoke render.
+  - Builds: ui-web `--mbc-emphasis` token (master v0's section headers); list row types; per-type cell formatting; `MasterSettingList` (search, JSON editor, create, table, back) without the "own tenant" column (v0's live list had none — it lived in the unused `MasterTable.tsx`); `MasterDataList` (accordion: setting info, search, results); `masterSetting` / `masterData` messages; playground pages on fixture data; smoke render; fixes from the visual probe of M3a's parts (`PaginationBar` labels on one line and a page-size select sized to its text; `DataTable` header contrast and a minimum width per column; the JSON dialog kept on screen).
   - Gate: standard gate; master v0 layout parity for both lists (layout markup, not ui-web controls).
   - Depends on: M3a.
 
