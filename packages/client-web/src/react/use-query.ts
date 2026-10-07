@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export type QueryState<T> = {
   data: T | undefined
@@ -43,11 +43,13 @@ export function useQuery<T>(
     return () => controller.abort()
   }, [requestKey, active])
 
+  // Stable, so hosts can list it in an effect's dependencies.
+  const refetch = useCallback(() => setNonce((n) => n + 1), [])
   const current = active && settled?.key === requestKey ? settled : null
   return {
     data: current?.data,
     loading: active && current === null,
     error: current?.error,
-    refetch: () => setNonce((n) => n + 1),
+    refetch,
   }
 }

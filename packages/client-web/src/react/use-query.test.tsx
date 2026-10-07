@@ -64,6 +64,16 @@ describe('useQuery', () => {
     expect(signals.at(-1)?.aborted).toBe(false)
   })
 
+  it('keeps refetch stable, so it can sit in an effect’s dependencies', async () => {
+    const { result, rerender } = renderHook(() =>
+      useQuery('a', async () => 'A')
+    )
+    const first = result.current.refetch
+    await waitFor(() => expect(result.current.data).toBe('A'))
+    rerender()
+    expect(result.current.refetch).toBe(first)
+  })
+
   it('is idle without a loader', () => {
     const { result } = renderHook(() => useQuery<string>('x', null))
     expect(result.current).toMatchObject({
