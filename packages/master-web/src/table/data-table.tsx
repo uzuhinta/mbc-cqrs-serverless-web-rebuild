@@ -59,6 +59,12 @@ export type DataTableProps<T> = {
 /** master v0's page sizes. */
 const PAGE_SIZES = [10, 20, 50, 100] as const
 
+// ui-web's header text is muted; on the muted header it is under 4.5:1.
+const HEAD = 'mbc:bg-muted mbc:text-foreground'
+
+// A column narrower than this wraps its text one character per line.
+const MIN_COLUMN_REM = 6.5
+
 function SortIcon({ state }: { state: false | 'asc' | 'desc' }) {
   const className = 'mbc:ml-2 mbc:h-4 mbc:w-4'
   if (state === 'asc')
@@ -123,13 +129,17 @@ export function DataTable<T>({
       <div className="mbc:rounded-md">
         <Table
           className="mbc:table-fixed"
+          // Below this the container scrolls sideways.
+          style={{
+            minWidth: `${columns.length * MIN_COLUMN_REM + (selectable ? 2.5 : 0)}rem`,
+          }}
           aria-label={label}
           aria-busy={loading || undefined}
         >
           <TableHeader>
             <TableRow className="mbc:border-border mbc:border-b mbc:font-bold">
               {selectable && (
-                <TableHead className="mbc:bg-muted mbc:w-10 mbc:px-2">
+                <TableHead className={cn(HEAD, 'mbc:w-10 mbc:px-2')}>
                   <Checkbox
                     checked={
                       allSelected
@@ -164,7 +174,7 @@ export function DataTable<T>({
                     key={column.id}
                     aria-sort={ariaSort}
                     style={column.width ? { width: column.width } : undefined}
-                    className="mbc:bg-muted mbc:px-0 mbc:font-bold"
+                    className={cn(HEAD, 'mbc:px-0 mbc:font-bold')}
                   >
                     {column.sortable && onSortChange ? (
                       <Button

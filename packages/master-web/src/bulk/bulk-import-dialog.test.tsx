@@ -162,6 +162,18 @@ describe('BulkImportDialog', () => {
     expect(onImported).toHaveBeenCalledTimes(1)
   })
 
+  it('stays on screen with a long JSON: the editor and the dialog scroll', async () => {
+    // Textarea grows with its content; unbounded, a long JSON pushes the
+    // buttons below the screen, where a fixed dialog cannot be scrolled to.
+    setup()
+    await open()
+    expect(editor()).toHaveClass('mbc:max-h-[50vh]')
+    expect(screen.getByRole('dialog')).toHaveClass(
+      'mbc:max-h-[calc(100dvh-2rem)]',
+      'mbc:overflow-y-auto'
+    )
+  })
+
   it('loads a JSON file and saves the text as a file', async () => {
     setup()
     await open()

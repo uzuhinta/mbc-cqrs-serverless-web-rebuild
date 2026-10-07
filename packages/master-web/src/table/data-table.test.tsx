@@ -63,6 +63,19 @@ describe('DataTable', () => {
     expect(within(memo!).queryByRole('button')).toBeNull()
   })
 
+  it('writes headers in the text colour: muted text on the muted header is under 4.5:1', () => {
+    render(table({ onSortChange: () => {} }))
+    for (const header of screen.getAllByRole('columnheader'))
+      expect(header).toHaveClass('mbc:bg-muted', 'mbc:text-foreground')
+  })
+
+  it('scrolls sideways on a narrow screen instead of squeezing columns to a character', () => {
+    const { rerender } = render(table())
+    expect(screen.getByRole('table')).toHaveStyle({ minWidth: '19.5rem' })
+    rerender(table({ selection: new Set(), onSelectionChange: () => {} }))
+    expect(screen.getByRole('table')).toHaveStyle({ minWidth: '22rem' })
+  })
+
   it('sorts a column ascending first, then flips it (v0)', async () => {
     const onSortChange = vi.fn<(sort: DataTableSort) => void>()
     const { rerender } = render(table({ onSortChange }))

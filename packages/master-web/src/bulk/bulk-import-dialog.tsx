@@ -161,7 +161,11 @@ export function BulkImportDialog({
           {t.bulkDialog.open}
         </Button>
       </DialogTrigger>
-      <DialogContent aria-describedby={undefined} className="mbc:sm:max-w-3xl">
+      <DialogContent
+        aria-describedby={undefined}
+        // The textarea grows with its text: keep the buttons reachable.
+        className="mbc:max-h-[calc(100dvh-2rem)] mbc:overflow-y-auto mbc:sm:max-w-3xl"
+      >
         <DialogHeader>
           <DialogTitle>{t.bulkDialog.title}</DialogTitle>
         </DialogHeader>
@@ -173,7 +177,7 @@ export function BulkImportDialog({
           aria-describedby={errors.length > 0 ? errorsId : undefined}
           spellCheck={false}
           disabled={submitting}
-          className="mbc:min-h-[50vh] mbc:font-mono mbc:text-xs"
+          className="mbc:max-h-[50vh] mbc:min-h-[50vh] mbc:font-mono mbc:text-xs"
         />
         {errors.length > 0 && (
           <Alert variant="destructive" id={errorsId}>
