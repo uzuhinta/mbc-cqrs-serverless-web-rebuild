@@ -20,6 +20,8 @@
   --color-border: var(--mbc-border);
   --color-input: var(--mbc-input);
   --color-ring: var(--mbc-ring);
+  --color-emphasis: var(--mbc-emphasis);
+  --color-emphasis-foreground: var(--mbc-emphasis-foreground);
   --color-brand: var(--mbc-brand);
   --color-brand-accent: var(--mbc-brand-accent);
   --radius-sm: calc(var(--mbc-radius) - 4px);

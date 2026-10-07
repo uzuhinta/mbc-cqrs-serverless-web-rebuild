@@ -76,6 +76,21 @@ describe('PaginationBar', () => {
     expect(onPageSizeChange).toHaveBeenCalledWith(20)
   })
 
+  it('sizes the page-size select to its text: a fixed 120px cut "20 / ページ"', () => {
+    render(
+      <PaginationBar
+        page={1}
+        pageSize={500}
+        total={3000}
+        onPageChange={() => {}}
+        onPageSizeChange={() => {}}
+      />
+    )
+    const trigger = screen.getByRole('combobox', { name: '1ページの件数' })
+    expect(trigger).toHaveClass('mbc:w-fit', 'mbc:min-w-[120px]')
+    expect(trigger).not.toHaveClass('mbc:w-[120px]')
+  })
+
   it('takes its own name', () => {
     render(
       <PaginationBar
@@ -146,6 +161,29 @@ describe('PaginationBar', () => {
       await userEvent.type(jump, '3{Enter}')
       expect(onPageChange.mock.calls).toEqual([[3]])
       expect(jump).toHaveValue(null)
+    })
+
+    it('keeps its labels on one line: the page box does not take the row', () => {
+      // Input's wrapper is w-full; unbounded, it squeezes the labels to one
+      // character per line, even on a wide screen.
+      render(
+        <PaginationBar
+          variant="table"
+          page={1}
+          pageSize={10}
+          total={95}
+          onPageChange={() => {}}
+        />
+      )
+      for (const text of ['検索件数:95', '移動', 'ページ'])
+        expect(screen.getByText(text)).toHaveClass(
+          'mbc:shrink-0',
+          'mbc:whitespace-nowrap'
+        )
+      const box = screen
+        .getByRole('spinbutton')
+        .closest('[data-part="page-box"]')
+      expect(box).toHaveClass('mbc:w-16', 'mbc:shrink-0')
     })
   })
 })

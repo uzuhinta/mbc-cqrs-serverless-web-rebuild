@@ -18,6 +18,8 @@
   --mbc-border: hsl(214.3 31.8% 91.4%);
   --mbc-input: hsl(214.3 31.8% 91.4%);
   --mbc-ring: hsl(222.2 84% 4.9%);
+  --mbc-emphasis: hsl(222.2 47.4% 21.2%);
+  --mbc-emphasis-foreground: hsl(210 40% 98%);
   --mbc-brand: #417e96;
   --mbc-brand-accent: #369ca3;
   --mbc-radius: 0.5rem;
@@ -43,4 +45,6 @@
   --mbc-border: hsl(217.2 32.6% 17.5%);
   --mbc-input: hsl(217.2 32.6% 17.5%);
   --mbc-ring: hsl(212.7 26.8% 83.9%);
+  --mbc-emphasis: hsl(217.2 32.6% 27.5%);
+  --mbc-emphasis-foreground: hsl(210 40% 98%);
 }

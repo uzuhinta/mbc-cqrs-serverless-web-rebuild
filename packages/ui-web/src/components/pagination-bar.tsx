@@ -24,6 +24,9 @@ import {
   SelectValue,
 } from './select'
 
+// Labels keep their width; CJK text would otherwise break after every character.
+const LABEL = 'mbc:shrink-0 mbc:whitespace-nowrap mbc:text-muted-foreground'
+
 const ARROW =
   'mbc:flex mbc:h-8 mbc:w-8 mbc:items-center mbc:justify-center mbc:aria-disabled:pointer-events-none mbc:aria-disabled:cursor-not-allowed mbc:aria-disabled:text-[#A3ACBA] mbc:aria-disabled:opacity-50'
 
@@ -66,23 +69,26 @@ function JumpToPage({
   return (
     <span data-part="jump" className="mbc:flex mbc:items-center mbc:gap-2">
       {t.pagination.jumpBefore && (
-        <span aria-hidden className="mbc:text-muted-foreground">
+        <span aria-hidden className={LABEL}>
           {t.pagination.jumpBefore}
         </span>
       )}
-      <Input
-        type="number"
-        inputMode="numeric"
-        min={1}
-        max={lastPage}
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        onKeyDown={onKeyDown}
-        aria-label={t.pagination.jump({ last: lastPage })}
-        className="mbc:h-8 mbc:w-16 mbc:text-center"
-      />
+      {/* Input's wrapper is w-full: bound it, or it takes the row. */}
+      <span data-part="page-box" className="mbc:w-16 mbc:shrink-0">
+        <Input
+          type="number"
+          inputMode="numeric"
+          min={1}
+          max={lastPage}
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          onKeyDown={onKeyDown}
+          aria-label={t.pagination.jump({ last: lastPage })}
+          className="mbc:h-8 mbc:text-center"
+        />
+      </span>
       {t.pagination.jumpAfter && (
-        <span aria-hidden className="mbc:text-muted-foreground">
+        <span aria-hidden className={LABEL}>
           {t.pagination.jumpAfter}
         </span>
       )}
@@ -124,7 +130,7 @@ export function PaginationBar({
         onValueChange={(value) => onPageSizeChange(Number(value))}
       >
         <SelectTrigger
-          className="mbc:h-8 mbc:w-[120px]"
+          className="mbc:h-8 mbc:w-fit mbc:min-w-[120px]"
           aria-label={t.pagination.pageSize}
         >
           <SelectValue />
@@ -198,10 +204,7 @@ export function PaginationBar({
         className
       )}
     >
-      <span
-        data-part="total"
-        className="mbc:text-muted-foreground mbc:font-medium"
-      >
+      <span data-part="total" className={cn(LABEL, 'mbc:font-medium')}>
         {t.pagination.total({ count: total })}
       </span>
       {pages}

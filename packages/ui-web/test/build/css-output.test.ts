@@ -106,6 +106,13 @@ describe('styles.css (default)', () => {
     expect(unlayeredCss).toContain('animate-accordion-up')
   })
 
+  it('defines the emphasis colour master v0 uses for section headers', () => {
+    // hsl(222.2 47.4% 21.2%) / hsl(217.2 32.6% 27.5%) in tokens.css; the build writes hex.
+    expect(unlayeredCss).toContain('--mbc-emphasis:#1c2c50')
+    expect(unlayeredCss).toContain('--mbc-emphasis:#2f415d')
+    expect(unlayeredCss).toContain('--mbc-emphasis-foreground:#f8fafc')
+  })
+
   it('compiles classes from every primitive', () => {
     for (const selector of [
       '.mbc\\:field-sizing-content',
