@@ -15,7 +15,7 @@ import {
   useMessages,
 } from '@mbc-cqrs-serverless/ui-web'
 import { Download, Save, Upload } from 'lucide-react'
-import { useId, useRef, useState, type ChangeEvent } from 'react'
+import { useId, useRef, useState } from 'react'
 
 import {
   bulkSampleJson,
@@ -27,6 +27,7 @@ import {
 } from '../core/bulk'
 import { formatBulkError } from '../i18n/format-error'
 import { masterMessages } from '../i18n/master-messages'
+import { downloadJson, readJsonFile } from '../json/json-file'
 
 export type BulkImportDialogProps = {
   /** `settings`: the settings list (settings and data); `data`: one setting's data list. */
@@ -97,34 +98,6 @@ export function BulkImportDialog({
       setFailure(null)
       setPartial(null)
     }
-  }
-
-  const loadFile = (event: ChangeEvent<HTMLInputElement>) => {
-    const input = event.currentTarget
-    const file = input.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === 'string') setText(reader.result)
-      input.value = ''
-    }
-    reader.onerror = () => {
-      input.value = ''
-    }
-    reader.readAsText(file, 'UTF-8')
-  }
-
-  const download = () => {
-    const url = URL.createObjectURL(
-      new Blob([text], { type: 'application/json' })
-    )
-    const link = document.createElement('a')
-    link.href = url
-    link.download = FILE_NAMES[screen]
-    document.body.append(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
   }
 
   const submit = async () => {
@@ -234,13 +207,13 @@ export function BulkImportDialog({
             tabIndex={-1}
             aria-hidden
             className="mbc:hidden"
-            onChange={loadFile}
+            onChange={(event) => readJsonFile(event, setText)}
           />
           <Button
             type="button"
             variant="secondary"
             disabled={submitting}
-            onClick={download}
+            onClick={() => downloadJson(text, FILE_NAMES[screen])}
           >
             <Download aria-hidden />
             {t.bulkDialog.save}

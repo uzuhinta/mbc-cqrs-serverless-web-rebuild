@@ -27,6 +27,16 @@ export type MasterMessages = {
     partial: (params: { done: number; total: number }) => string
     failed: string
   }
+  /** The editors' JSON dialog (one setting or record). */
+  jsonDialog: {
+    open: string
+    title: string
+    json: string
+    cancel: string
+    load: string
+    save: string
+    apply: string
+  }
   /** Data-record errors (`MasterError`). */
   validation: {
     required: string
@@ -113,6 +123,15 @@ const ja: MasterMessages = {
     partial: ({ done, total }) => `${done} / ${total} 件反映済み`,
     failed: 'マスターデータの反映に失敗しました。',
   },
+  jsonDialog: {
+    open: 'JSONエディタ',
+    title: 'JSONエディタ',
+    json: 'JSON',
+    cancel: 'キャンセル',
+    load: 'JSON読込',
+    save: 'JSON保存',
+    apply: 'データ反映',
+  },
   validation: {
     required: '入力してください。',
     blank: '空白のみは許可されていません。',
@@ -195,6 +214,15 @@ const en: MasterMessages = {
     progress: ({ done, total }) => `Importing (${done}/${total})`,
     partial: ({ done, total }) => `${done} / ${total} imported`,
     failed: 'The import failed.',
+  },
+  jsonDialog: {
+    open: 'JSON editor',
+    title: 'JSON editor',
+    json: 'JSON',
+    cancel: 'Cancel',
+    load: 'Load JSON',
+    save: 'Save JSON',
+    apply: 'Apply',
   },
   validation: {
     required: 'This field is required.',
