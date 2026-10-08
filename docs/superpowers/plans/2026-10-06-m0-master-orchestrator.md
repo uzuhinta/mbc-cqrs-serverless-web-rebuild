@@ -65,6 +65,12 @@ Look notes from the M3b probe, left as they are (ui-web's shared look, or polish
 - Code links in table rows are 20px tall; they pass WCAG 2.5.8 through row spacing, not size.
 - Links use `text-primary`, which is near-black in ui-web's palette: they read as text until hovered (v0's look).
 
+Added by the M4 probe:
+
+- ui-web's switches are 32×18px; they pass WCAG 2.5.8 through spacing, not size.
+- Dropdown menus have a border of about 1.23:1 on white, heavier than a decorative line needs.
+- On a phone the fields table scrolls sideways with no column pinned (v0 pinned three columns, which covered the screen at 375px; they stay pinned from `md` up).
+
 ### Standard gate (every sub-plan)
 
 ```bash
@@ -116,7 +122,7 @@ git status --porcelain                                        # must be empty af
 
 - [ ] **M4 — Settings editor** (`m4-settings-editor`)
   - Spec: §3.2 (`MasterSettingEditor`, host-specific props `canCopy`, `settingOptions`), §4 (forms, fields table), Review Focus 4.
-  - Builds: `MasterSettingEditor` (code with async uniqueness, name, description, `settingOptions`), fields table (dnd-kit sortable + keyboard + announcements; `code`/`name`/`seq` fixed), field dialog (per-type options from `fieldTypes`, `validateFieldDefinition`), JSON dialog (edit / import / download), view/edit mode, delete confirm, copy buttons when `canCopy`, read-only mode; playground page.
+  - Builds: `MasterSettingEditor` (code with async uniqueness, name, description, `settingOptions`), fields table (dnd-kit sortable + keyboard + announcements; `code`/`name`/`seq` fixed), field dialog (per-type options from `fieldTypes`, `validateFieldDefinition`), JSON dialog (edit / import / download), view/edit mode, delete confirm, copy buttons when `canCopy`, read-only mode; playground page. Also: `/core` `settingToForm`, `toSettingPayload` (create sends `settingValue`, update keeps unknown attribute keys), `validateSettingForm`, `parseSettingJson` / `settingJson` (v0's checks plus the field dialog's rules); auto-number `formats`; a shared `JsonDialog` (M5 reuses it); ui-web's destructive red darkened to pass 4.5:1.
   - Gate: standard gate; v0 class parity.
   - Depends on: M3b (`MasterRouting`, `DataTable`, the JSON dialog pattern).
 

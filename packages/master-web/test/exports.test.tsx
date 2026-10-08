@@ -63,6 +63,7 @@ describe('master-web entries', () => {
         'BulkImportDialog',
         'MasterDataList',
         'MasterLink',
+        'MasterSettingEditor',
         'MasterSettingList',
         'masterDataMessages',
         'masterSettingMessages',

@@ -17,6 +17,10 @@ export {
   type MasterSettingListProps,
 } from './settings/master-setting-list'
 export {
+  MasterSettingEditor,
+  type MasterSettingEditorProps,
+} from './settings/master-setting-editor'
+export {
   MasterDataList,
   type MasterDataListProps,
 } from './data/master-data-list'

@@ -5,6 +5,7 @@ import {
   MASTER_FIELD_TYPES,
   MasterDataList,
   MasterLink,
+  MasterSettingEditor,
   MasterSettingList,
   MbcProvider,
   masterMessages,
@@ -100,6 +101,13 @@ export function MasterScreens() {
         state={initialDataListState()}
         onStateChange={() => {}}
         routing={routing}
+      />
+      <MasterSettingEditor
+        mode="edit"
+        setting={setting}
+        routing={routing}
+        onSave={async () => {}}
+        onDelete={async () => {}}
       />
       <MultiSelect
         options={[{ value: 'a', label: 'A' }]}

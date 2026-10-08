@@ -2,6 +2,7 @@ import {
   initialDataListState,
   initialSettingListState,
   MasterDataList,
+  MasterSettingEditor,
   MasterSettingList,
   parseMasterSetting,
   type BulkJsonItem,
@@ -10,29 +11,44 @@ import {
   type MasterDataListState,
   type MasterRouting,
   type MasterSetting,
+  type MasterSettingCreateBody,
   type MasterSettingListItem,
   type MasterSettingListState,
+  type MasterSettingUpdateBody,
+  type SequenceFormat,
+  type SettingOption,
 } from '@mbc-cqrs-serverless/master-web'
 import { useState } from 'react'
 
 const TENANT = 'tenant-a'
 
-function settingOf(code: string, name: string): MasterSetting {
+const FORMATS: SequenceFormat[] = [
+  { code: 'SEQ#PRODUCT', name: '商品番号', format: '%%no%%' },
+  { code: 'SEQ#ORDER', name: '注文番号', format: 'O-%%no%%' },
+]
+
+const OPTIONS: SettingOption[] = [
+  { key: 'copyOnTenantCreate', label: '新規テナント作成時に設定をコピー' },
+]
+
+function settingOf(code: string, name: string, tenant = TENANT): MasterSetting {
   const parsed = parseMasterSetting({
-    id: `MASTER#${TENANT}#MASTER_SETTING#${code}`,
-    pk: `MASTER#${TENANT}`,
+    id: `MASTER#${tenant}#MASTER_SETTING#${code}`,
+    pk: `MASTER#${tenant}`,
     sk: `MASTER_SETTING#${code}`,
     code,
     name,
     version: 1,
-    tenantCode: TENANT,
+    tenantCode: tenant,
     attributes: {
       description: `${name}のマスタ`,
       fields: [
         {
           physicalName: 'code',
           name: 'コード',
-          dataType: 'string',
+          dataType: code === 'PRODUCT' ? 'auto_number' : 'string',
+          formatCode: code === 'PRODUCT' ? 'SEQ#PRODUCT' : undefined,
+          dataFormat: code === 'PRODUCT' ? '%%no%%' : undefined,
           isRequired: true,
           isShowedOnList: true,
         },
@@ -40,6 +56,7 @@ function settingOf(code: string, name: string): MasterSetting {
           physicalName: 'name',
           name: '名称',
           dataType: 'string',
+          length: '255',
           isRequired: true,
           isShowedOnList: true,
         },
@@ -54,13 +71,16 @@ function settingOf(code: string, name: string): MasterSetting {
           physicalName: 'price',
           name: '価格',
           dataType: 'number',
-          isRequired: false,
+          min: '0',
+          max: '100000',
+          isRequired: true,
           isShowedOnList: true,
         },
         {
           physicalName: 'released',
           name: '発売日',
           dataType: 'date',
+          defaultValue: '2026-10-07T00:00:00+09:00',
           isRequired: false,
           isShowedOnList: true,
         },
@@ -68,6 +88,7 @@ function settingOf(code: string, name: string): MasterSetting {
           physicalName: 'spec',
           name: '仕様',
           dataType: 'json',
+          defaultValue: { size: 'M' },
           isRequired: false,
           isShowedOnList: true,
         },
@@ -78,23 +99,30 @@ function settingOf(code: string, name: string): MasterSetting {
   return parsed.data
 }
 
-const SETTINGS: MasterSetting[] = [
-  settingOf('PRODUCT', '商品'),
-  settingOf('PREF', '都道府県'),
-  ...Array.from({ length: 22 }, (_, i) =>
-    settingOf(`EXTRA_${String(i + 1).padStart(2, '0')}`, `追加マスタ ${i + 1}`)
-  ),
-]
+/** The playground's settings, kept while it runs; PREF belongs to another tenant. */
+const store = new Map<string, MasterSetting>(
+  [
+    settingOf('PRODUCT', '商品'),
+    settingOf('PREF', '都道府県', 'common'),
+    ...Array.from({ length: 22 }, (_, i) =>
+      settingOf(
+        `EXTRA_${String(i + 1).padStart(2, '0')}`,
+        `追加マスタ ${i + 1}`
+      )
+    ),
+  ].map((setting) => [setting.id, setting])
+)
 
-const settingRows: MasterSettingListItem[] = SETTINGS.map((setting) => ({
-  id: setting.id,
-  pk: setting.pk,
-  sk: setting.sk,
-  code: `MASTER_SETTING#${setting.code}`,
-  name: setting.name,
-  tenantCode: TENANT,
-  attributes: { description: setting.attributes.description },
-}))
+const settingRows = (): MasterSettingListItem[] =>
+  [...store.values()].map((setting) => ({
+    id: setting.id,
+    pk: setting.pk,
+    sk: setting.sk,
+    code: `MASTER_SETTING#${setting.code}`,
+    name: setting.name,
+    tenantCode: setting.tenantCode,
+    attributes: { description: setting.attributes.description },
+  }))
 
 const dataRows: MasterDataListItem[] = Array.from({ length: 26 }, (_, i) => {
   const code = `P-${String(i + 1).padStart(3, '0')}`
@@ -134,13 +162,15 @@ function sorted<T>(
 const pageOf = <T,>(rows: T[], state: { page: number; pageSize: number }) =>
   rows.slice((state.page - 1) * state.pageSize, state.page * state.pageSize)
 
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 /** Pretends to import: one item finishes every 300 ms. */
 async function fakeImport(
   items: BulkJsonItem[],
   onProgress: (done: number, total: number) => void
 ) {
   for (let done = 1; done <= items.length; done++) {
-    await new Promise((resolve) => setTimeout(resolve, 300))
+    await wait(300)
     onProgress(done, items.length)
   }
 }
@@ -149,7 +179,9 @@ const routing: MasterRouting = {
   href: (to) =>
     to.screen === 'data'
       ? `#master/data/${encodeURIComponent(to.settingId)}`
-      : `#master/${to.screen}`,
+      : to.screen === 'setting'
+        ? `#master/setting/${encodeURIComponent(to.id)}`
+        : `#master/${to.screen}`,
   navigate: (to) => {
     location.hash = routing.href(to)
   },
@@ -159,7 +191,7 @@ function SettingsPage() {
   const [state, setState] = useState<MasterSettingListState>(
     initialSettingListState
   )
-  const matches = settingRows.filter(
+  const matches = settingRows().filter(
     (row) =>
       row.code.includes(state.code) &&
       row.name.includes(state.name) &&
@@ -184,10 +216,56 @@ function SettingsPage() {
   )
 }
 
+function SettingPage({ id }: { id?: string }) {
+  const [setting, setSetting] = useState(() =>
+    id === undefined ? undefined : store.get(id)
+  )
+  const save = async (
+    body: MasterSettingCreateBody | MasterSettingUpdateBody
+  ) => {
+    await wait(600)
+    if (!setting) {
+      const created = settingOf(body.code, body.name)
+      created.attributes = body.attributes
+      store.set(created.id, created)
+      routing.navigate({ screen: 'data', settingId: created.id })
+      return
+    }
+    const next = {
+      ...setting,
+      name: body.name,
+      attributes: body.attributes,
+      version: setting.version + 1,
+    }
+    store.set(next.id, next)
+    setSetting(next)
+  }
+  return (
+    <MasterSettingEditor
+      mode={id === undefined ? 'create' : 'edit'}
+      setting={setting}
+      routing={routing}
+      tenantCode={TENANT}
+      canCopy
+      settingOptions={OPTIONS}
+      formats={FORMATS}
+      checkCodeUnique={async (code) => {
+        await wait(200)
+        return ![...store.values()].some((entry) => entry.code === code)
+      }}
+      onSave={save}
+      onDelete={async () => {
+        await wait(600)
+        if (setting) store.delete(setting.id)
+        routing.navigate({ screen: 'settings' })
+      }}
+    />
+  )
+}
+
 function DataPage({ settingId }: { settingId: string }) {
   const [state, setState] = useState<MasterDataListState>(initialDataListState)
-  const setting =
-    SETTINGS.find((entry) => entry.id === settingId) ?? SETTINGS[0]!
+  const setting = store.get(settingId) ?? [...store.values()][0]!
   const source = setting.code === 'PRODUCT' ? dataRows : []
   const matches = source.filter(
     (row) =>
@@ -216,13 +294,21 @@ function DataPage({ settingId }: { settingId: string }) {
   )
 }
 
-/** `#master` (settings list) and `#master/data/<setting id>` on in-memory data. */
+/**
+ * `#master` (settings list), `#master/newSetting`, `#master/setting/<id>` and
+ * `#master/data/<setting id>`, on in-memory data.
+ */
 export function MasterPage({ route }: { route: string }) {
   const [, screen, id] = route.split('/')
+  const decoded = id === undefined ? undefined : decodeURIComponent(id)
   return (
     <div style={{ padding: 16 }}>
-      {screen === 'data' && id ? (
-        <DataPage key={id} settingId={decodeURIComponent(id)} />
+      {screen === 'data' && decoded ? (
+        <DataPage key={decoded} settingId={decoded} />
+      ) : screen === 'setting' && decoded ? (
+        <SettingPage key={decoded} id={decoded} />
+      ) : screen === 'newSetting' ? (
+        <SettingPage key="new" />
       ) : (
         <SettingsPage />
       )}
