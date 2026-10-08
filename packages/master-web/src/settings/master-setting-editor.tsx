@@ -2,19 +2,7 @@
 
 import { arrayMove } from '@dnd-kit/sortable'
 import {
-  Alert,
-  AlertDescription,
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-  AlertTitle,
   Button,
-  buttonVariants,
   Field,
   FieldError,
   FieldLabel,
@@ -39,6 +27,8 @@ import {
 } from '../core/setting-form'
 import { parseSettingJson, settingJson } from '../core/setting-json'
 import type { MasterField, MasterSetting } from '../core/types'
+import { ConfirmButton } from '../form/confirm-button'
+import { FailureAlert, failureOf, type Failure } from '../form/failure'
 import { RequiredMark } from '../form/required-mark'
 import {
   formatFieldDefinitionError,
@@ -88,10 +78,6 @@ const NO_OPTIONS: readonly SettingOption[] = []
 const NO_FORMATS: readonly SequenceFormat[] = []
 
 type Snapshot = { values: SettingFormValues; rows: FieldRow[] }
-type Failure = { title: string; hint?: string }
-
-const isTimeout = (error: unknown) =>
-  error instanceof Error && error.name === 'MbcTimeoutError'
 
 /** v0's settings editor: view, edit, save, delete, fields and the JSON dialog. */
 export function MasterSettingEditor(props: MasterSettingEditorProps) {
@@ -189,9 +175,7 @@ function EditorBody({
     })
 
   const fail = (reason: unknown, title: string) =>
-    setFailure(
-      isTimeout(reason) ? { title: t.timeout } : { title, hint: t.failedHint }
-    )
+    setFailure(failureOf(reason, title, t))
 
   const save = async (event: FormEvent) => {
     event.preventDefault()
@@ -361,32 +345,15 @@ function EditorBody({
                 </div>
               )}
               {mode === 'edit' && onDelete && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      loading={deleting}
-                      disabled={saving}
-                    >
-                      {t.delete}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>{t.deleteTitle}</AlertDialogTitle>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-                      <AlertDialogAction
-                        className={buttonVariants({ variant: 'destructive' })}
-                        onClick={() => void remove()}
-                      >
-                        {t.deleteConfirm}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <ConfirmButton
+                  label={t.delete}
+                  title={t.deleteTitle}
+                  confirm={t.deleteConfirm}
+                  cancel={t.cancel}
+                  onConfirm={() => void remove()}
+                  loading={deleting}
+                  disabled={saving}
+                />
               )}
             </div>
           ) : (
@@ -401,14 +368,7 @@ function EditorBody({
               </p>
             </div>
           )}
-          {failure && (
-            <Alert variant="destructive" role="alert" className="mbc:mt-4">
-              <AlertTitle>{failure.title}</AlertTitle>
-              {failure.hint && (
-                <AlertDescription>{failure.hint}</AlertDescription>
-              )}
-            </Alert>
-          )}
+          {failure && <FailureAlert failure={failure} className="mbc:mt-4" />}
         </div>
 
         <div className="mbc:mt-4 mbc:px-4">
