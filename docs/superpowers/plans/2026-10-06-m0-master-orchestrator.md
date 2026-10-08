@@ -131,7 +131,7 @@ git status --porcelain                                        # must be empty af
 
 - [ ] **M5 — Data editor** (`m5-data-editor`)
   - Spec: §3.2 (`MasterDataEditor`, field renderers), §3.1 (`toDataPayload`), §5 (auto-number note), Review Focus 1, 4.
-  - Builds: renderer registry + `FieldRendererProps`; built-ins for all ten types; `components` override; form from `/core` validators with focus-first-error; view/edit mode; code locked after create; `generateCode` on save (once per save, StrictMode-safe); delete / restore confirms; JSON dialog; read-only mode; playground page.
+  - Builds: renderer registry + `FieldRendererProps`; built-ins for all ten types; `components` override; form from `/core` validators with focus-first-error; view/edit mode; code locked after create; `generateCode` on save (once per save, StrictMode-safe); delete / restore confirms; JSON dialog; read-only mode; playground page. Also: `/core` `dataJson` / `parseDataJson` (the record JSON); a shared `ConfirmButton` and failure alert, which M4's editor now uses too. The sequence request bodies move to M7 (`createMasterApi`).
   - Gate: standard gate; v0 class parity.
   - Depends on: M4 (JSON dialog, view/edit pattern).
 
@@ -143,7 +143,7 @@ git status --porcelain                                        # must be empty af
 
 - [ ] **M7 — Copy + `/mbc`** (`m7-copy-mbc`)
   - Spec: §3.2 (copy screens, `tenants`), §3.4 (API, writes, hooks, pages, tenant rules), Review Focus 2, 3, 4.
-  - Builds: `MasterCopyRequest`, `MasterCopyTaskList`, `MasterCopyTaskDetail` screens; `createMasterApi(client, { paths })` with every endpoint in §3.4 (bulk batches of 100, `expectedFinishes` per batch, ids encoded); hooks; seven connected pages; re-exports of `createMbcClient`, `MbcClientProvider` and the client errors; playground fake master backend (commands, tasks, sequence) and connected playground pages.
+  - Builds: `MasterCopyRequest`, `MasterCopyTaskList`, `MasterCopyTaskDetail` screens; `createMasterApi(client, { paths })` with every endpoint in §3.4 (bulk batches of 100, `expectedFinishes` per batch, ids encoded; v0's two sequence requests behind the data editor's `generateCode`, checked against the sequence backend, §5); hooks; seven connected pages; re-exports of `createMbcClient`, `MbcClientProvider` and the client errors; playground fake master backend (commands, tasks, sequence) and connected playground pages.
   - Gate: standard gate.
   - Depends on: M6.
 

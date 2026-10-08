@@ -3,6 +3,7 @@
 import {
   BulkImportDialog,
   MASTER_FIELD_TYPES,
+  MasterDataEditor,
   MasterDataList,
   MasterLink,
   MasterSettingEditor,
@@ -101,6 +102,12 @@ export function MasterScreens() {
         state={initialDataListState()}
         onStateChange={() => {}}
         routing={routing}
+      />
+      <MasterDataEditor
+        mode="create"
+        setting={setting}
+        routing={routing}
+        onSave={async () => {}}
       />
       <MasterSettingEditor
         mode="edit"

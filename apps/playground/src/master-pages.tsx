@@ -1,14 +1,18 @@
 import {
   initialDataListState,
   initialSettingListState,
+  MasterDataEditor,
   MasterDataList,
   MasterSettingEditor,
   MasterSettingList,
   parseMasterSetting,
   type BulkJsonItem,
   type ListSort,
+  type MasterData,
+  type MasterDataCreateBody,
   type MasterDataListItem,
   type MasterDataListState,
+  type MasterDataUpdateBody,
   type MasterRouting,
   type MasterSetting,
   type MasterSettingCreateBody,
@@ -49,6 +53,7 @@ function settingOf(code: string, name: string, tenant = TENANT): MasterSetting {
           dataType: code === 'PRODUCT' ? 'auto_number' : 'string',
           formatCode: code === 'PRODUCT' ? 'SEQ#PRODUCT' : undefined,
           dataFormat: code === 'PRODUCT' ? '%%no%%' : undefined,
+          formatName: code === 'PRODUCT' ? '商品番号' : undefined,
           isRequired: true,
           isShowedOnList: true,
         },
@@ -124,26 +129,47 @@ const settingRows = (): MasterSettingListItem[] =>
     attributes: { description: setting.attributes.description },
   }))
 
-const dataRows: MasterDataListItem[] = Array.from({ length: 26 }, (_, i) => {
-  const code = `P-${String(i + 1).padStart(3, '0')}`
-  return {
-    id: `MASTER#${TENANT}#PRODUCT#${code}`,
-    pk: `MASTER#${TENANT}`,
-    sk: `PRODUCT#${code}`,
-    masterCode: code,
-    name:
-      i === 3
-        ? '名前がとても長い商品で、表のセルで折り返されることを確かめるための行'
-        : `商品 ${i + 1}`,
-    seq: i,
-    isDeleted: i === 25,
-    attributes: {
-      price: String((i + 1) * 120),
-      released: `2026-${String((i % 12) + 1).padStart(2, '0')}-07T00:00:00+09:00`,
-      spec: i % 3 === 0 ? { size: 'L' } : {},
-    },
-  }
-})
+/** PRODUCT's records, kept while the playground runs; P-025 belongs to another tenant. */
+const records = new Map<string, MasterData>(
+  Array.from({ length: 26 }, (_, i): [string, MasterData] => {
+    const code = `P-${String(i + 1).padStart(3, '0')}`
+    const tenant = i === 24 ? 'common' : TENANT
+    const record: MasterData = {
+      id: `MASTER#${tenant}#PRODUCT#${code}`,
+      pk: `MASTER#${tenant}`,
+      sk: `PRODUCT#${code}`,
+      code,
+      name:
+        i === 3
+          ? '名前がとても長い商品で、表のセルで折り返されることを確かめるための行'
+          : `商品 ${i + 1}`,
+      version: 1,
+      tenantCode: tenant,
+      seq: i,
+      isDeleted: i === 25,
+      attributes: {
+        code,
+        price: String((i + 1) * 120),
+        released: `2026-${String((i % 12) + 1).padStart(2, '0')}-07T00:00:00+09:00`,
+        spec: i % 3 === 0 ? { size: 'L' } : {},
+      },
+    }
+    return [record.id, record]
+  })
+)
+let nextNumber = records.size + 1
+
+const dataRows = (): MasterDataListItem[] =>
+  [...records.values()].map((record) => ({
+    id: record.id,
+    pk: record.pk,
+    sk: record.sk,
+    masterCode: record.code,
+    name: record.name,
+    seq: record.seq,
+    isDeleted: record.isDeleted,
+    attributes: record.attributes,
+  }))
 
 function sorted<T>(
   rows: T[],
@@ -181,7 +207,11 @@ const routing: MasterRouting = {
       ? `#master/data/${encodeURIComponent(to.settingId)}`
       : to.screen === 'setting'
         ? `#master/setting/${encodeURIComponent(to.id)}`
-        : `#master/${to.screen}`,
+        : to.screen === 'newData'
+          ? `#master/newData/${encodeURIComponent(to.settingId)}`
+          : to.screen === 'dataItem'
+            ? `#master/dataItem/${encodeURIComponent(to.settingId)}/${encodeURIComponent(to.id)}`
+            : `#master/${to.screen}`,
   navigate: (to) => {
     location.hash = routing.href(to)
   },
@@ -266,7 +296,7 @@ function SettingPage({ id }: { id?: string }) {
 function DataPage({ settingId }: { settingId: string }) {
   const [state, setState] = useState<MasterDataListState>(initialDataListState)
   const setting = store.get(settingId) ?? [...store.values()][0]!
-  const source = setting.code === 'PRODUCT' ? dataRows : []
+  const source = setting.code === 'PRODUCT' ? dataRows() : []
   const matches = source.filter(
     (row) =>
       (row.masterCode ?? '').includes(state.code) &&
@@ -294,17 +324,78 @@ function DataPage({ settingId }: { settingId: string }) {
   )
 }
 
+function DataEditorPage({ settingId, id }: { settingId: string; id?: string }) {
+  const setting = store.get(settingId)
+  const [data, setData] = useState(() =>
+    id === undefined ? undefined : records.get(id)
+  )
+  const save = async (body: MasterDataCreateBody | MasterDataUpdateBody) => {
+    await wait(600)
+    if (!setting) return
+    if (!data && 'code' in body) {
+      const created: MasterData = {
+        id: `MASTER#${TENANT}#${body.settingCode}#${body.code}`,
+        pk: `MASTER#${TENANT}`,
+        sk: `${body.settingCode}#${body.code}`,
+        code: body.code,
+        name: body.name,
+        version: 1,
+        tenantCode: TENANT,
+        seq: body.seq,
+        attributes: body.attributes,
+      }
+      records.set(created.id, created)
+      routing.navigate({ screen: 'data', settingId })
+      return
+    }
+    if (!data) return
+    const next = { ...data, ...body, version: data.version + 1 }
+    records.set(next.id, next)
+    setData(next)
+  }
+  const mark = (isDeleted: boolean) => async () => {
+    await wait(600)
+    if (data) records.set(data.id, { ...data, isDeleted })
+  }
+  return (
+    <MasterDataEditor
+      mode={id === undefined ? 'create' : 'edit'}
+      setting={setting}
+      data={data}
+      routing={routing}
+      tenantCode={TENANT}
+      checkCodeUnique={async (code) => {
+        await wait(200)
+        return ![...records.values()].some((record) => record.code === code)
+      }}
+      generateCode={async () => {
+        await wait(300)
+        return `P-${String(nextNumber++).padStart(3, '0')}`
+      }}
+      onSave={save}
+      onDelete={mark(true)}
+      onRestore={mark(false)}
+    />
+  )
+}
+
 /**
- * `#master` (settings list), `#master/newSetting`, `#master/setting/<id>` and
- * `#master/data/<setting id>`, on in-memory data.
+ * `#master` (settings list), `#master/newSetting`, `#master/setting/<id>`,
+ * `#master/data/<setting id>`, `#master/newData/<setting id>` and
+ * `#master/dataItem/<setting id>/<id>`, on in-memory data.
  */
 export function MasterPage({ route }: { route: string }) {
-  const [, screen, id] = route.split('/')
+  const [, screen, id, item] = route.split('/')
   const decoded = id === undefined ? undefined : decodeURIComponent(id)
+  const itemId = item === undefined ? undefined : decodeURIComponent(item)
   return (
     <div style={{ padding: 16 }}>
       {screen === 'data' && decoded ? (
         <DataPage key={decoded} settingId={decoded} />
+      ) : screen === 'newData' && decoded ? (
+        <DataEditorPage key={`new:${decoded}`} settingId={decoded} />
+      ) : screen === 'dataItem' && decoded && itemId ? (
+        <DataEditorPage key={itemId} settingId={decoded} id={itemId} />
       ) : screen === 'setting' && decoded ? (
         <SettingPage key={decoded} id={decoded} />
       ) : screen === 'newSetting' ? (

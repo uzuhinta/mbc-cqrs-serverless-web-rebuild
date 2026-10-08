@@ -57,7 +57,7 @@ rebuild/
 
 ### Package boundaries
 
-- `master-web` depends on `ui-web` and `client-web` (same version, `workspace:^`), `react-hook-form`, `zod` 4, `@dnd-kit/*`, `lucide-react`. Peer: `react`, `react-dom` `^18.2 || ^19`.
+- `master-web` depends on `ui-web` and `client-web` (same version, `workspace:^`), `zod` 4, `@dnd-kit/*`, `lucide-react`. Peer: `react`, `react-dom` `^18.2 || ^19`.
 - Optional peers (only `/editors` imports them): `react-quill-new`, `@uiw/react-md-editor`, `jsoneditor`.
 - Not used: axios, `@apollo/client`, aws-amplify, `aws-appsync-*`, mobx, swr, nuqs, `next-usequerystate`, next, `react-draggable`, `react-resizable`, `patch-package`, `usehooks-ts`.
 - master-web's `DataTable` is a small internal component (fixed columns, server-side sorting and paging, checkbox selection; no TanStack, ruling in M3a); ui-web gains the plain `Table` primitives and the `PaginationBar` both lists share.
@@ -225,7 +225,7 @@ Backend-dependent behaviour enters as async props: `checkCodeUnique(code)`, `gen
 
 **Host-specific behaviour as props** (all optional, default off): `canCopy` (v0 hard-codes a system tenant code), `tenants: { code: string; name: string }[]` (v0 reads a host-specific endpoint), `settingOptions: { key: string; label: string }[]` (extra boolean flags stored in `attributes`, for hosts whose backend reads such flags). Every string is a message, so a host can replace "テナント" with its own term by override.
 
-**Field renderers.** `MasterDataEditor` renders each field with `renderers[field.dataType]`; `components={{ [dataType]: Renderer }}` replaces any of them (`FieldRendererProps`: `field`, `value`, `onChange`, `onBlur`, `disabled`, `invalid`, `describedBy`, `id`). Built-ins: input (`string`, `auto_number` read-only), number input, switch (`boolean`), date picker (ui-web `Calendar`), list input (`array`), textarea with JSON check (`json`), textarea with `maxRow` (`text-area`), textarea + preview (`text-html`, `text-markdown`).
+**Field renderers.** `MasterDataEditor` renders each field with `defaultRenderers[field.dataType]`; `components={{ [dataType]: Renderer }}` replaces any of them (`FieldRendererProps`: `field`, `value`, `onChange`, `onBlur`, `disabled`, `invalid`, `describedBy`, `id`, and `labelId` for a control that is a group). Built-ins: input (`string`; a text area when `maxRow` > 1), read-only input naming its sequence (`auto_number`), number input, switch (`boolean`), date picker (ui-web `Calendar`), list input (`array`), monospace textarea (`json`), textarea (`text-area`, `text-html`, `text-markdown`; previews and rich editing come with `/editors`, M6, as an HTML preview needs a sanitizer). Unknown types render as `string`.
 
 ### 3.3 Editors (`/editors`)
 
@@ -261,7 +261,7 @@ Namespaces (module augmentation of `MbcMessageRegistry`, as survey-web): `master
 ## 4. Internals
 
 - **Data table:** `DataTable`, a small component (server paging and sorting); sortable column headers are buttons with `aria-sort`; page size, page links, result count and page-number box from ui-web `PaginationBar` (`table` variant); row selection (copy request) with labelled checkboxes. Column sizes follow v0's `meta.size`. Header text uses the foreground colour (muted text on the muted header is under 4.5:1); below 6.5rem per column the table scrolls sideways instead of squeezing its columns (M3b).
-- **Forms:** validation from `/core` on submit; async code-uniqueness runs on submit (v0 ran it in `validate`); errors are linked to inputs (`aria-invalid`, `aria-describedby`) and focus moves to the first error on submit. The settings editor's two fixed forms (the setting, the field dialog) keep their values in component state; react-hook-form arrives with the data editor (M5), whose inputs come from the setting.
+- **Forms:** validation from `/core` on submit; async code-uniqueness runs on submit (v0 ran it in `validate`); errors are linked to inputs (`aria-invalid`, `aria-describedby`) and focus moves to the first error on submit. Both editors keep their values in component state: the renderers are controlled (`value` / `onChange`), so react-hook-form would add a dependency without simplifying anything (rulings in M4 and M5).
 - **Fields table:** dnd-kit sortable with keyboard sensor and translated announcements (survey creator's pattern); `code`, `name`, `seq` rows not removable.
 - **State:** list state (page, page size, ordering, filters) internal or host-controlled; no URL access in the package.
 - **Error handling:** every request failure reaches `onError` with the client error class; screens show an inline error with Retry for loads and a form-level alert for saves; an `MbcTimeoutError` on create says the outcome is unknown.
@@ -278,7 +278,7 @@ Namespaces (module augmentation of `MbcMessageRegistry`, as survey-web): `master
 - Bulk import sends batches of 100 and reports progress per item.
 - The JSON import dialog is a normal dialog (no drag or resize).
 - Rich editors are opt-in through `/editors`; without them the built-in textarea renderers apply.
-- `auto_number` without `formatCode` sends the setting's `MASTER_SETTING#<code>` type code as v0 does (its outer variable); M5 confirms against the sequence backend and documents the result.
+- `auto_number` without `formatCode` sends the setting's `MASTER_SETTING#<code>` type code as v0 does (its outer variable). The data editor asks the host's `generateCode(field, setting)` once per save (M5); M7's `createMasterApi` builds v0's two sequence requests, confirms them against the sequence backend and documents the result.
 
 ## 6. Testing
 
