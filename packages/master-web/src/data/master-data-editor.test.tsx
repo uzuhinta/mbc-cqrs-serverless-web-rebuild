@@ -281,6 +281,35 @@ describe('MasterDataEditor', () => {
     expect(input('コード')).toHaveValue('P-001')
   })
 
+  it('keeps Save off after a create whose outcome is unknown', async () => {
+    const timeout = Object.assign(new Error('late'), {
+      name: 'MbcTimeoutError',
+    })
+    const generateCode = vi.fn(async () => 'P-100')
+    const onSave = vi.fn<MasterDataEditorProps['onSave']>(async () => {
+      throw timeout
+    })
+    setup({ mode: 'create', data: undefined, generateCode, onSave })
+    await userEvent.type(input('名称'), 'なし')
+    await userEvent.type(input('価格'), '500')
+    await userEvent.click(button('登録'))
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      '時間内に結果を確認できませんでした。'
+    )
+    expect(button('登録')).toBeDisabled()
+    expect(generateCode).toHaveBeenCalledTimes(1)
+  })
+
+  it('applies the JSON a new auto-numbered record opens with', async () => {
+    setup({ mode: 'create', data: undefined })
+    await userEvent.type(input('名称'), 'なし')
+    await userEvent.click(button('JSONエディタ'))
+    await userEvent.click(button('データ反映'))
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.queryByRole('textbox', { name: 'JSON' })).toBeNull()
+    expect(input('名称')).toHaveValue('なし')
+  })
+
   it('says when saving failed, and when the outcome is unknown', async () => {
     const timeout = Object.assign(new Error('late'), {
       name: 'MbcTimeoutError',

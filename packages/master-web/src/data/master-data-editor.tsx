@@ -204,6 +204,14 @@ function EditorBody({
       }
     } catch (reason) {
       setFailure(failureOf(reason, failedTitle, t))
+      // A create that timed out may already exist. Saving again would
+      // number another record; the message tells the host to reload.
+      if (
+        mode === 'create' &&
+        reason instanceof Error &&
+        reason.name === 'MbcTimeoutError'
+      )
+        setCreated(true)
     } finally {
       busy.current = false
       setSaving(false)

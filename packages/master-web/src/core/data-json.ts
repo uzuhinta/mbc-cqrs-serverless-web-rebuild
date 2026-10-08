@@ -53,6 +53,7 @@ export function dataJson(
 /**
  * The input values of a record JSON. v0's check: an object with a
  * `settingCode`, a `code` and a `name`; `attributes`, when present, is an object.
+ * An auto-numbered code may be empty: it does not exist until save.
  */
 export function parseDataJson(
   text: string,
@@ -64,10 +65,15 @@ export function parseDataJson(
   } catch {
     return { ok: false, error: { key: 'invalidJson' } }
   }
+  // An auto-numbered code is empty until save, so the dialog's own text
+  // has no code yet. A typed code is still required (v0).
+  const numbered = dataFields(setting).some(
+    (field) => field.physicalName === 'code' && field.dataType === 'auto_number'
+  )
   if (
     !isObject(value) ||
     !value.settingCode ||
-    !value.code ||
+    (!numbered && !value.code) ||
     !value.name ||
     (value.attributes !== undefined && !isObject(value.attributes))
   )
@@ -84,7 +90,8 @@ export function parseDataJson(
     pk: '',
     sk: '',
     version: 0,
-    code: String(value.code),
+    code:
+      value.code === undefined || value.code === null ? '' : String(value.code),
     name: String(value.name),
     seq,
     attributes: isObject(value.attributes) ? value.attributes : {},
