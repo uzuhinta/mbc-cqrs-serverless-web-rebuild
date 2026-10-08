@@ -106,7 +106,9 @@ git status --porcelain                                        # must be empty af
   - Gate: standard gate.
   - Depends on: M2.
 
-- [ ] **M3b — List screens** (`m3b-lists`)
+- [x] **M3b — List screens** (`m3b-lists`)
+  - Merged 2026-10-08 (fast-forward): implemented by an external agent from the plan; the branch matches the plan apart from one redundant class; the implementer's own review found nothing; gate React 19 and 18 702/702, smoke passes.
+  - Plan: `docs/superpowers/plans/2026-10-07-m3b-lists.md` — replayed task by task on M3a's tip before hand-over.
   - Spec: §3.2 (`MasterSettingList`, `MasterDataList`), §4 (state), Review Focus 2, 5.
   - Builds: ui-web `--mbc-emphasis` token (master v0's section headers); list row types; per-type cell formatting; `MasterSettingList` (search, JSON editor, create, table, back) without the "own tenant" column (v0's live list had none — it lived in the unused `MasterTable.tsx`); `MasterDataList` (accordion: setting info, search, results); `masterSetting` / `masterData` messages; playground pages on fixture data; smoke render; fixes from the visual probe of M3a's parts (`PaginationBar` labels on one line and a page-size select sized to its text; `DataTable` header contrast and a minimum width per column; the JSON dialog kept on screen).
   - Gate: standard gate; master v0 layout parity for both lists (layout markup, not ui-web controls).
