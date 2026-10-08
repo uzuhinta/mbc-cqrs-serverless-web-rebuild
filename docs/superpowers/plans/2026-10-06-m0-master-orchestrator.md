@@ -120,7 +120,10 @@ git status --porcelain                                        # must be empty af
   - Gate: standard gate; master v0 layout parity for both lists (layout markup, not ui-web controls).
   - Depends on: M3a.
 
-- [ ] **M4 — Settings editor** (`m4-settings-editor`)
+- [x] **M4 — Settings editor** (`m4-settings-editor`)
+  - Merged 2026-10-08 (fast-forward): implemented by an external agent from the plan. The branch matches the plan apart from the files `pnpm add` writes. The implementer's review found that a second Save during the code check could create twice, and that JSON defaults of `0` / `false` / `null` were dropped on save; both were fixed test-first. Gate on React 19 and 18: 753/753, smoke passes.
+  - Plan: `docs/superpowers/plans/2026-10-08-m4-settings-editor.md` — replayed task by task on `main` before hand-over.
+  - Deferred minors: a failed code check uses the timeout wording; the JSON dialog omits attribute keys the editor does not edit (an update still keeps them); the read-only test looks for the copy links as buttons, not links; inputs stay editable while saving; a JSON default v0 stored as a string shows escaped in the field dialog.
   - Spec: §3.2 (`MasterSettingEditor`, host-specific props `canCopy`, `settingOptions`), §4 (forms, fields table), Review Focus 4.
   - Builds: `MasterSettingEditor` (code with async uniqueness, name, description, `settingOptions`), fields table (dnd-kit sortable + keyboard + announcements; `code`/`name`/`seq` fixed), field dialog (per-type options from `fieldTypes`, `validateFieldDefinition`), JSON dialog (edit / import / download), view/edit mode, delete confirm, copy buttons when `canCopy`, read-only mode; playground page. Also: `/core` `settingToForm`, `toSettingPayload` (create sends `settingValue`, update keeps unknown attribute keys), `validateSettingForm`, `parseSettingJson` / `settingJson` (v0's checks plus the field dialog's rules); auto-number `formats`; a shared `JsonDialog` (M5 reuses it); ui-web's destructive red darkened to pass 4.5:1.
   - Gate: standard gate; v0 class parity.
