@@ -113,6 +113,11 @@ describe('styles.css (default)', () => {
     expect(unlayeredCss).toContain('--mbc-emphasis-foreground:#f8fafc')
   })
 
+  it('uses a destructive red that keeps 4.5:1 with white, as text and as a background', () => {
+    // hsl(0 72.2% 50.6%) in tokens.css: 4.83:1 against white (#ef4444 was 3.76:1).
+    expect(unlayeredCss).toContain('--mbc-destructive:#dc2626')
+  })
+
   it('compiles classes from every primitive', () => {
     for (const selector of [
       '.mbc\\:field-sizing-content',
