@@ -170,6 +170,7 @@ function EditorBody({
     open: false,
   })
   const formRef = useRef<HTMLFormElement>(null)
+  const busy = useRef(false)
   const readOnly = !editing || !owned
 
   useEffect(() => {
@@ -194,30 +195,31 @@ function EditorBody({
 
   const save = async (event: FormEvent) => {
     event.preventDefault()
-    if (saving || readOnly) return
+    if (busy.current || readOnly) return
+    busy.current = true
+    setSaving(true)
     setFailure(null)
-    const found = validateSettingForm(values)
-    const next: { code?: string; name?: string } = {
-      code: found.code && formatMasterError(found.code, m.validation),
-      name: found.name && formatMasterError(found.name, m.validation),
-    }
     const failedTitle = mode === 'create' ? t.createFailed : t.updateFailed
-    if (mode === 'create' && !next.code && !next.name && checkCodeUnique) {
-      try {
-        if (!(await checkCodeUnique(values.code.trim())))
-          next.code = t.codeTaken
-      } catch (reason) {
-        fail(reason, failedTitle)
+    try {
+      const found = validateSettingForm(values)
+      const next: { code?: string; name?: string } = {
+        code: found.code && formatMasterError(found.code, m.validation),
+        name: found.name && formatMasterError(found.name, m.validation),
+      }
+      if (mode === 'create' && !next.code && !next.name && checkCodeUnique) {
+        try {
+          if (!(await checkCodeUnique(values.code.trim())))
+            next.code = t.codeTaken
+        } catch (reason) {
+          fail(reason, failedTitle)
+          return
+        }
+      }
+      setErrors(next)
+      if (next.code || next.name) {
+        setAttempts((count) => count + 1)
         return
       }
-    }
-    setErrors(next)
-    if (next.code || next.name) {
-      setAttempts((count) => count + 1)
-      return
-    }
-    setSaving(true)
-    try {
       if (mode === 'create')
         await onSave(toSettingPayload(values, fields, { mode: 'create' }))
       else if (setting) {
@@ -233,6 +235,7 @@ function EditorBody({
     } catch (reason) {
       fail(reason, failedTitle)
     } finally {
+      busy.current = false
       setSaving(false)
     }
   }

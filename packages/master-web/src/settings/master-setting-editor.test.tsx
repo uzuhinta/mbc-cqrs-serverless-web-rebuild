@@ -86,6 +86,28 @@ describe('MasterSettingEditor', () => {
     ])
   })
 
+  it('creates a setting once while the code check is still running', async () => {
+    const pending: Array<(free: boolean) => void> = []
+    const checkCodeUnique = vi.fn(
+      () =>
+        new Promise<boolean>((resolve) => {
+          pending.push(resolve)
+        })
+    )
+    const { onSave } = setup({
+      mode: 'create',
+      setting: undefined,
+      checkCodeUnique,
+    })
+    await userEvent.type(input('コード'), 'NEW')
+    await userEvent.type(input('名称'), '新規')
+    await userEvent.click(button('保存'))
+    await userEvent.click(button('保存'))
+    expect(checkCodeUnique).toHaveBeenCalledTimes(1)
+    for (const resolve of pending) resolve(true)
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1))
+  })
+
   it('refuses an empty or taken code before saving', async () => {
     const { onSave } = setup({
       mode: 'create',

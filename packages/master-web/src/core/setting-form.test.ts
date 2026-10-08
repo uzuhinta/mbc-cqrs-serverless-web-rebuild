@@ -83,6 +83,15 @@ describe('field conversions', () => {
     expect(fieldFromForm(field({ dataType: 'json' })).defaultValue).toBe('')
   })
 
+  it('keeps a JSON default of 0, false or null through a save', () => {
+    for (const defaultValue of [0, false, null]) {
+      const stored = field({ dataType: 'json', defaultValue })
+      expect(fieldFromForm(fieldToForm(stored)).defaultValue).toEqual(
+        defaultValue
+      )
+    }
+  })
+
   it('edits a boolean default as "true" / "false" and stores a boolean (v0)', () => {
     expect(
       fieldToForm(field({ dataType: 'boolean', defaultValue: true }))

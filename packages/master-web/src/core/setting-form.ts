@@ -48,7 +48,11 @@ export type MasterSettingUpdateBody = {
  */
 export function fieldToForm(field: MasterField): MasterField {
   const { defaultValue } = field
-  if (field.dataType === 'json' && defaultValue)
+  if (
+    field.dataType === 'json' &&
+    defaultValue !== undefined &&
+    defaultValue !== ''
+  )
     return { ...field, defaultValue: JSON.stringify(defaultValue) }
   if (field.dataType === 'boolean' && typeof defaultValue === 'boolean')
     return { ...field, defaultValue: String(defaultValue) }
@@ -62,8 +66,9 @@ export function fieldFromForm(field: MasterField): MasterField {
   if (field.dataType === 'boolean')
     next.defaultValue = defaultValue === true || defaultValue === 'true'
   if (field.dataType === 'json') {
-    if (typeof defaultValue !== 'string' || defaultValue === '')
-      next.defaultValue = defaultValue || ''
+    if (defaultValue === undefined || defaultValue === '')
+      next.defaultValue = ''
+    else if (typeof defaultValue !== 'string') next.defaultValue = defaultValue
     else {
       try {
         next.defaultValue = JSON.parse(defaultValue)
