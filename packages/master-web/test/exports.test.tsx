@@ -45,11 +45,16 @@ describe('master-web entries', () => {
       'parseBulkJson',
       'parseMasterData',
       'parseMasterSetting',
+      'parseSettingJson',
       'settingCodeOf',
+      'settingJson',
+      'settingToForm',
       'toDataPayload',
       'toFormValues',
+      'toSettingPayload',
       'validateFieldDefinition',
       'validateMasterData',
+      'validateSettingForm',
     ]
     expect(Object.keys(core).sort()).toEqual([...CORE].sort())
     expect(Object.keys(root).sort()).toEqual(
