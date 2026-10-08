@@ -42,6 +42,12 @@ export {
   type FormValue,
 } from './field-types'
 export {
+  dataJson,
+  parseDataJson,
+  type DataJsonError,
+  type DataJsonResult,
+} from './data-json'
+export {
   dataCodeOf,
   dateParts,
   DEFAULT_PAGE_SIZE,
