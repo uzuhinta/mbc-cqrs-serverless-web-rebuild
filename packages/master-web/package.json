@@ -17,8 +17,13 @@
       "types": "./dist/core/index.d.ts",
       "default": "./dist/core/index.js"
     },
+    "./editors": {
+      "types": "./dist/editors/index.d.ts",
+      "default": "./dist/editors/index.js"
+    },
     "./styles.css": "./dist/styles.css",
     "./styles.layer.css": "./dist/styles.layer.css",
+    "./editors.css": "./dist/editors.css",
     "./package.json": "./package.json"
   },
   "files": [
@@ -26,10 +31,10 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "build": "tsdown && node ../../scripts/build-css.ts",
+    "build": "tsdown && node ../../scripts/build-css.ts && node ../../scripts/build-editors-css.ts",
     "prepack": "pnpm run build",
     "typecheck": "tsc -p tsconfig.json",
-    "check:package": "publint --strict && attw --pack . --profile esm-only --exclude-entrypoints ./styles.css ./styles.layer.css ./package.json"
+    "check:package": "publint --strict && attw --pack . --profile esm-only --exclude-entrypoints ./styles.css ./styles.layer.css ./editors.css ./package.json"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
