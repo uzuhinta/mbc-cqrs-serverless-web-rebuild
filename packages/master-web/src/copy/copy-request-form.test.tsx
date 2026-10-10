@@ -137,12 +137,22 @@ describe('MasterCopyRequestForm', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
-  it('does not send a request without any tenant', async () => {
-    const { onRequestCopy } = setup({ tenants: [] })
+  it('says when there is no tenant to copy to, and clears that once a copy goes out', async () => {
+    const onRequestCopy = vi.fn(async () => {})
+    const { rerender } = render(
+      <Host tenants={[]} onRequestCopy={onRequestCopy} />
+    )
     await submit()
     expect(onRequestCopy).not.toHaveBeenCalled()
     expect(screen.getByRole('alert')).toHaveTextContent(
-      'コピー先のテナントを選択してください。'
+      'コピー先のテナントがありません。'
+    )
+    rerender(<Host tenants={TENANTS} onRequestCopy={onRequestCopy} />)
+    await submit()
+    expect(onRequestCopy).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '汎用マスタコピーを登録しました。'
     )
   })
 
@@ -156,14 +166,14 @@ describe('MasterCopyRequestForm', () => {
     expect(within(table).getByText('P-001')).toBeInTheDocument()
     expect(within(table).queryByRole('link')).not.toBeInTheDocument()
     await userEvent.click(
-      within(table).getByRole('checkbox', { name: 'この行を選択' })
+      within(table).getByRole('checkbox', { name: 'P-001 を選択' })
     )
     expect(screen.getByText('選択した 1 つのアイテム')).toBeInTheDocument()
     const [pager] = screen.getAllByRole('navigation')
     await userEvent.click(within(pager!).getByRole('link', { name: '2' }))
     expect(within(table).getByText('P/002')).toBeInTheDocument()
     await userEvent.click(
-      within(table).getByRole('checkbox', { name: 'この行を選択' })
+      within(table).getByRole('checkbox', { name: 'P/002 を選択' })
     )
     expect(screen.getByText('選択した 2 つのアイテム')).toBeInTheDocument()
     await submit()
@@ -178,11 +188,21 @@ describe('MasterCopyRequestForm', () => {
     })
   })
 
-  it('copies all the data when no row is chosen (v0)', async () => {
+  it('copies all the data when no row is chosen (v0), and says so', async () => {
     const { onRequestCopy } = setup()
     await userEvent.click(
       screen.getByRole('radio', { name: '指定したマスタデータのみ' })
     )
+    const all = '行が選択されていません。全てのマスタデータをコピーします。'
+    expect(screen.getByText(all)).toBeInTheDocument()
+    await userEvent.click(
+      screen.getByRole('checkbox', { name: 'P-001 を選択' })
+    )
+    expect(screen.queryByText(all)).not.toBeInTheDocument()
+    await userEvent.click(
+      screen.getByRole('checkbox', { name: 'P-001 を選択' })
+    )
+    expect(screen.getByText(all)).toBeInTheDocument()
     await submit()
     expect(onRequestCopy.mock.calls[0]?.[0].dataCopyOption).toEqual({
       mode: 'ALL',
@@ -230,6 +250,20 @@ describe('MasterCopyRequestForm', () => {
       '汎用マスタコピーの登録に失敗しました。'
     )
     expect(screen.getByRole('button', { name: 'コピー登録' })).toBeEnabled()
+  })
+
+  it('says the outcome is unknown when the answer timed out', async () => {
+    setup({
+      onRequestCopy: async () => {
+        throw Object.assign(new Error('late'), { name: 'MbcTimeoutError' })
+      },
+    })
+    await submit()
+    const alert = screen.getByRole('alert')
+    expect(alert).toHaveTextContent(
+      '時間内に結果が届きませんでした。コピー結果一覧で登録されたかを確認してください。'
+    )
+    expect(alert).not.toHaveTextContent('登録に失敗しました')
   })
 
   it('sends one request at a time', async () => {

@@ -53,6 +53,8 @@ export type DataTableProps<T> = {
   /** Selected row keys; with `onSelectionChange`, a checkbox column appears. */
   selection?: ReadonlySet<string>
   onSelectionChange?(selection: Set<string>): void
+  /** Accessible name of a row's checkbox; by default a generic "select this row". */
+  rowLabel?(row: T): string
   loading?: boolean
 }
 
@@ -91,6 +93,7 @@ export function DataTable<T>({
   onSortChange,
   selection,
   onSelectionChange,
+  rowLabel,
   loading = false,
 }: DataTableProps<T>) {
   const t = useMessages(masterMessages)
@@ -220,7 +223,9 @@ export function DataTable<T>({
                           onCheckedChange={(value) =>
                             select([key], value === true)
                           }
-                          aria-label={t.table.selectRow}
+                          aria-label={
+                            rowLabel ? rowLabel(row) : t.table.selectRow
+                          }
                         />
                       </TableCell>
                     )}

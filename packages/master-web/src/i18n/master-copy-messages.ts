@@ -21,11 +21,18 @@ export type MasterCopyMessages = {
     /** Accessible name of the data table. */
     table: string
     selected: (params: { count: number }) => string
+    /** "Chosen data only" with no row chosen copies all of it (v0). */
+    allData: string
+    /** A row's checkbox. */
+    selectRow: (params: { code: string }) => string
     back: string
     submit: string
     noTargets: string
+    noTenants: string
     failed: string
     failedHint: string
+    /** The request timed out: it may have been registered. */
+    timeout: string
     requested: string
     viewResults: string
     loadFailed: string
@@ -93,11 +100,16 @@ const ja: MasterCopyMessages = {
     search: '検索',
     table: 'マスタデータ一覧',
     selected: ({ count }) => `選択した ${count} つのアイテム`,
+    allData: '行が選択されていません。全てのマスタデータをコピーします。',
+    selectRow: ({ code }) => `${code} を選択`,
     back: '戻る',
     submit: 'コピー登録',
     noTargets: 'コピー先のテナントを選択してください。',
+    noTenants: 'コピー先のテナントがありません。',
     failed: '汎用マスタコピーの登録に失敗しました。',
     failedHint: '入力内容を確認した上で再度やり直してください。',
+    timeout:
+      '時間内に結果が届きませんでした。コピー結果一覧で登録されたかを確認してください。',
     requested: '汎用マスタコピーを登録しました。',
     viewResults: 'コピー結果を確認',
     loadFailed: '読み込みに失敗しました。',
@@ -166,11 +178,16 @@ const en: MasterCopyMessages = {
     search: 'Search',
     table: 'Data',
     selected: ({ count }) => `${count} selected`,
+    allData: 'No rows chosen: all the data will be copied.',
+    selectRow: ({ code }) => `Select ${code}`,
     back: 'Back',
     submit: 'Request copy',
     noTargets: 'Choose at least one tenant to copy to.',
+    noTenants: 'There are no tenants to copy to.',
     failed: 'Could not request the copy.',
     failedHint: 'Check your input and try again.',
+    timeout:
+      'The result did not arrive in time. Check the copy results before requesting again.',
     requested: 'The copy was requested.',
     viewResults: 'Copy results',
     loadFailed: 'Could not load the data.',

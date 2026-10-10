@@ -31,7 +31,7 @@ import {
 } from '../core/list'
 import type { MasterSetting } from '../core/types'
 import { dataColumns } from '../data/data-columns'
-import { FailureAlert, type Failure } from '../form/failure'
+import { failureOf, FailureAlert, type Failure } from '../form/failure'
 import { masterCopyMessages } from '../i18n/master-copy-messages'
 import { ListError } from '../list/list-error'
 import { useFilters } from '../list/use-filters'
@@ -87,7 +87,8 @@ export function MasterCopyRequestForm({
   const [copyType, setCopyType] = useState<CopyType>('BOTH')
   // Kept across pages and searches, like v0's row selection.
   const [selection, setSelection] = useState<ReadonlySet<string>>(new Set())
-  const [noTargets, setNoTargets] = useState(false)
+  // Why no request went out: no tenant chosen, or none to choose from.
+  const [missing, setMissing] = useState<'choice' | 'tenants' | null>(null)
   const [saving, setSaving] = useState(false)
   const [failure, setFailure] = useState<Failure | null>(null)
   const [requested, setRequested] = useState(false)
@@ -113,18 +114,19 @@ export function MasterCopyRequestForm({
     })
     // v0 copied to every tenant when none was chosen.
     if (request.targetTenants.length === 0) {
-      setNoTargets(true)
+      setMissing(tenants.length === 0 ? 'tenants' : 'choice')
       tenantList.current?.focus()
       return
     }
+    setMissing(null)
     setSaving(true)
     setFailure(null)
     setRequested(false)
     try {
       await onRequestCopy(request)
       setRequested(true)
-    } catch {
-      setFailure({ title: t.failed, hint: t.failedHint })
+    } catch (reason) {
+      setFailure(failureOf(reason, t.failed, t))
     } finally {
       setSaving(false)
     }
@@ -143,7 +145,7 @@ export function MasterCopyRequestForm({
             value={destination}
             onValueChange={(value) => {
               setDestination(value === 'chosen' ? 'chosen' : 'all')
-              setNoTargets(false)
+              setMissing(null)
             }}
             aria-labelledby={`${id}-destination`}
             className="mbc:flex mbc:flex-wrap mbc:gap-4"
@@ -169,23 +171,23 @@ export function MasterCopyRequestForm({
                 value={chosen}
                 onValueChange={(value) => {
                   setChosen(value)
-                  setNoTargets(false)
+                  setMissing(null)
                 }}
                 placeholder={t.tenantsPlaceholder}
                 aria-labelledby={`${id}-tenants`}
-                aria-invalid={noTargets || undefined}
-                aria-describedby={noTargets ? errorId : undefined}
+                aria-invalid={missing !== null || undefined}
+                aria-describedby={missing ? errorId : undefined}
                 className="mbc:mt-3 mbc:w-full"
               />
             </div>
           )}
-          {noTargets && (
+          {missing && (
             <p
               id={errorId}
               role="alert"
               className="mbc:text-destructive mbc:text-sm"
             >
-              {t.noTargets}
+              {missing === 'tenants' ? t.noTenants : t.noTargets}
             </p>
           )}
         </CardContent>
@@ -266,7 +268,9 @@ export function MasterCopyRequestForm({
               </div>
             </form>
             <p aria-live="polite" className="mbc:ml-2 mbc:min-h-5">
-              {selection.size > 0 ? t.selected({ count: selection.size }) : ''}
+              {selection.size > 0
+                ? t.selected({ count: selection.size })
+                : t.allData}
             </p>
             {error !== undefined && error !== null && (
               <ListError
@@ -298,6 +302,7 @@ export function MasterCopyRequestForm({
               }
               selection={selection}
               onSelectionChange={setSelection}
+              rowLabel={(row) => t.selectRow({ code: dataCodeOf(row) })}
             />
           </CardContent>
         </Card>
