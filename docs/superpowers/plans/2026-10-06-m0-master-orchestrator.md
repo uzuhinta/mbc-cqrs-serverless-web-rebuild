@@ -35,9 +35,9 @@ Every sub-plan's tasks implicitly include these.
 Cross-cutting failure modes no single sub-plan's happy-path tests would catch. Each names the sub-plan that must pin it with a test.
 
 1. **v0-stored values that do not match the field's type** (`"12"` for a number, a JSON field stored as a string, a missing array, `"true"` for a boolean, a date with a time part) → the record loads, displays, validates and saves without throwing or silently changing untouched fields. _Owner: M2 (conversion round trips), M5 (form load → save without edits sends the same attributes)._
-2. **Ids and codes containing `#`, `/`, `?` or spaces** (`MASTER#tenant#MASTER_SETTING#a/b`) → `routing.href` targets, API paths and back-navigation round-trip the exact id. _Owner: M3 (links), M7 (API encoding, connected pages)._
-3. **Bulk import of 250 items where the second batch fails, or the client has no realtime** → completed batches are reported, the failure names the items it covers, nothing hangs past the timeout; without realtime the dialog reports "accepted" instead of waiting. _Owner: M1 (`expectedFinishes` with partial finishes and without realtime), M3 (dialog), M7 (batching)._
-4. **A setting or record owned by another tenant (including `common`)** → opens read-only: no Save, Delete, Restore, field reordering or JSON import; links still work. _Owner: M4, M5, M7 (connected pages pass ownership from `client.tenantCode()`)._
+2. **Ids and codes containing `#`, `/`, `?` or spaces** (`MASTER#tenant#MASTER_SETTING#a/b`) → `routing.href` targets, API paths and back-navigation round-trip the exact id. _Owner: M3 (links), M7a (copy task links), M7b (API encoding, connected pages)._
+3. **Bulk import of 250 items where the second batch fails, or the client has no realtime** → completed batches are reported, the failure names the items it covers, nothing hangs past the timeout; without realtime the dialog reports "accepted" instead of waiting. _Owner: M1 (`expectedFinishes` with partial finishes and without realtime), M3 (dialog), M7b (batching)._
+4. **A setting or record owned by another tenant (including `common`)** → opens read-only: no Save, Delete, Restore, field reordering or JSON import; links still work. _Owner: M4, M5, M7b (connected pages pass ownership from `client.tenantCode()`)._
 5. **Server rendering in Next App Router** with dates, the data table, the fields table and the `/editors` renderers → no hydration mismatch, no `window` access during render, editors appear after mount. _Owner: M3–M6 (`renderToString` tests), M8 (`next-smoke` build)._
 
 ---
@@ -50,7 +50,7 @@ Cross-cutting failure modes no single sub-plan's happy-path tests would catch. E
 4. Pass the gate, then one fresh whole-branch review (most capable model); fix Critical/Important findings RED→GREEN; ledger Minors.
 5. Merge to `main` with `git merge --ff-only`, tick the checkbox here, commit.
 
-Screens and new primitives (M1, M3–M7) also use the `evon:ui-ux` skill in **keep-the-look** mode: v0 visuals are the reference; improvements are limited to spacing consistency, states (hover, focus, disabled, error, empty, loading) and accessibility.
+Screens and new primitives (M1, M3–M7b) also use the `evon:ui-ux` skill in **keep-the-look** mode: v0 visuals are the reference; improvements are limited to spacing consistency, states (hover, focus, disabled, error, empty, loading) and accessibility.
 
 v0 reference source: `../mbc-cqrs-serverless-web/packages/master/src` (identical to npm 0.0.50).
 
@@ -95,7 +95,7 @@ git status --porcelain                                        # must be empty af
   - Builds:
     - ui-web: `Table` family, `Accordion` family (`@radix-ui/react-accordion`, caret range), `Command` family (`cmdk`), `MultiSelect`; `useHydrated` moved from survey-web (survey-web imports it from ui-web); `ui` messages for their text; axe + SSR + v0 class parity tests; playground gallery entries.
     - client-web: `command(request, { expectedFinishes, onProgress })`; `useQuery` made public in `client-web/react` (moved from survey-web's private copy; survey-web uses it).
-    - master-web: package scaffold (`package.json` exports for `.`, `./core`, `./styles.css`, `./styles.layer.css` (`/editors` added in M6, `/mbc` in M7)), tsconfig, tsdown entries, CSS build, Vitest project, build-output tests (entries exist, `"use client"` banners, `/core` has no React import, optional peers only in `/editors`), `master` namespace registered with the field-type labels (`masterSetting`/`masterData` in M3, `masterCopy` in M7), Changesets `fixed` group extended, `apps/next-smoke` and playground wiring, CI unchanged except the new package.
+    - master-web: package scaffold (`package.json` exports for `.`, `./core`, `./styles.css`, `./styles.layer.css` (`/editors` added in M6, `/mbc` in M7b)), tsconfig, tsdown entries, CSS build, Vitest project, build-output tests (entries exist, `"use client"` banners, `/core` has no React import, optional peers only in `/editors`), `master` namespace registered with the field-type labels (`masterSetting`/`masterData` in M3, `masterCopy` in M7a), Changesets `fixed` group extended, `apps/next-smoke` and playground wiring, CI unchanged except the new package.
   - Gate: standard gate; `pnpm changeset status` lists four packages.
   - Depends on: —
 
@@ -138,7 +138,7 @@ git status --porcelain                                        # must be empty af
   - Plan: `docs/superpowers/plans/2026-10-08-m5-data-editor.md` — replayed task by task on `main` before hand-over.
   - Deferred minors: edits to attribute keys no field owns are shown in the JSON dialog but dropped on apply; Save stays enabled while delete or restore runs; a soft-deleted record can still be edited (v0); field errors stay until the next submit; an unrelated edit writes `attributes.seq` as the string `'0'` (v0); the date test does not pin `TZ`; the mount test uses empty values only; the playground keeps a stale `data` after delete or restore.
   - Spec: §3.2 (`MasterDataEditor`, field renderers), §3.1 (`toDataPayload`), §5 (auto-number note), Review Focus 1, 4.
-  - Builds: renderer registry + `FieldRendererProps`; built-ins for all ten types; `components` override; form from `/core` validators with focus-first-error; view/edit mode; code locked after create; `generateCode` on save (once per save, StrictMode-safe); delete / restore confirms; JSON dialog; read-only mode; playground page. Also: `/core` `dataJson` / `parseDataJson` (the record JSON); a shared `ConfirmButton` and failure alert, which M4's editor now uses too. The sequence request bodies move to M7 (`createMasterApi`).
+  - Builds: renderer registry + `FieldRendererProps`; built-ins for all ten types; `components` override; form from `/core` validators with focus-first-error; view/edit mode; code locked after create; `generateCode` on save (once per save, StrictMode-safe); delete / restore confirms; JSON dialog; read-only mode; playground page. Also: `/core` `dataJson` / `parseDataJson` (the record JSON); a shared `ConfirmButton` and failure alert, which M4's editor now uses too. The sequence request bodies move to M7b (`createMasterApi`).
   - Gate: standard gate; v0 class parity.
   - Depends on: M4 (JSON dialog, view/edit pattern).
 
@@ -151,37 +151,44 @@ git status --porcelain                                        # must be empty af
   - Gate: standard gate; build test proves `editors.css` has no element, `:root` or `body` rules.
   - Depends on: M5.
 
-- [ ] **M7 — Copy + `/mbc`** (`m7-copy-mbc`)
-  - Spec: §3.2 (copy screens, `tenants`), §3.4 (API, writes, hooks, pages, tenant rules), Review Focus 2, 3, 4.
-  - Builds: `MasterCopyRequest`, `MasterCopyTaskList`, `MasterCopyTaskDetail` screens; `createMasterApi(client, { paths })` with every endpoint in §3.4 (bulk batches of 100, `expectedFinishes` per batch, ids encoded; v0's two sequence requests behind the data editor's `generateCode`, checked against the sequence backend, §5); hooks; seven connected pages; re-exports of `createMbcClient`, `MbcClientProvider` and the client errors; playground fake master backend (commands, tasks, sequence) and connected playground pages.
+- [ ] **M7a — Copy screens** (`m7a-copy-screens`)
+  - Spec: §3.2 (copy screens, `tenants`), §4 (data table row selection), Review Focus 2.
+  - Builds: `/core` copy-task types and helpers (`CopyTask`, its statuses, `MasterTenant`); `masterCopy` messages (v0's text with "tenant" for v0's host-specific term); `MasterCopyRequestForm` (destination: all or chosen tenants; content: setting and all data, setting only, or chosen data rows with v0's search), `MasterCopyTaskList` and `MasterCopyTaskDetail` (v0's columns, status badges, start and end times after hydration, Refresh); the data list's columns shared with the copy form; playground pages on fixture data; smoke render.
+  - Ruling: the copy form is named `MasterCopyRequestForm`, because `/core` already exports the request body as `MasterCopyRequest` (M2).
   - Gate: standard gate.
   - Depends on: M6.
+
+- [ ] **M7b — `/mbc`** (`m7b-mbc`)
+  - Spec: §3.4 (API, writes, hooks, pages, tenant rules), §5 (sequence requests), Review Focus 2, 3, 4.
+  - Builds: `createMasterApi(client, { paths })` with every endpoint in §3.4 (bulk batches of 100, `expectedFinishes` per batch, ids encoded; v0's two sequence requests behind the data editor's `generateCode`, checked against the sequence backend, §5); hooks; seven connected pages; re-exports of `createMbcClient`, `MbcClientProvider` and the client errors; master-web depends on client-web; playground fake master backend (commands, tasks, sequence) and connected playground pages.
+  - Gate: standard gate.
+  - Depends on: M7a.
 
 - [ ] **M8 — Release** (`m8-release`)
   - Spec: §3 (subpaths not kept), §5, §6, §7, §1 success criteria.
   - From M6's review: the README's editors section names the peers to install, `editors.css` (its sprite in `editors-assets/`), `@uiw/react-md-editor/markdown-editor.css` for bundlers that drop CSS imported from JavaScript, the CSP the editors need (Ace injects `<style>` elements; jsoneditor starts its worker from a `data:` URL) and their size (jsoneditor with Ace is about 1 MB minified, loaded after mount); `next-smoke` imports `editors.css` and passes `editorRenderers` from a Server Component.
   - Builds: master-web README (entries, routing examples for Next App Router and React Router, editors opt-in, tenant rules), `MIGRATION.md` (every v0 export and host setup step mapped, with a worked typical-host rewrite), root README update, `apps/next-smoke` pages for every master-web entry, docs-imports and package-files tests cover master-web, changeset (four packages → 1.0.0), final whole-repo review.
   - Gate: standard gate + smoke on React 18 and 19 + `changeset status` shows four 1.0.0 releases.
-  - Depends on: M7.
+  - Depends on: M7b.
 
 ## Spec coverage map
 
-| Spec section                      | Sub-plans                                        |
-| --------------------------------- | ------------------------------------------------ |
-| §1 goal, success criteria         | M8 (verified), all                               |
-| §2 layout, boundaries             | M1                                               |
-| §2 ui-web additions               | M1                                               |
-| §2 client-web addition            | M1                                               |
-| §3 entry table, subpaths not kept | M1 (exports), M8 (migration)                     |
-| §3.1 core                         | M2                                               |
-| §3.2 navigation                   | M3a                                              |
-| §3.2 screens                      | M3a, M3b, M4, M5, M7                             |
-| §3.2 host-specific props          | M4 (`canCopy`, `settingOptions`), M7 (`tenants`) |
-| §3.2 field renderers              | M5                                               |
-| §3.3 editors                      | M6                                               |
-| §3.4 `/mbc`                       | M7                                               |
-| §3.5 messages                     | M1 (namespaces), M2–M7 (strings)                 |
-| §4 internals                      | M3a–M7                                           |
-| §5 behaviour changes              | M3a, M5, M7, M8 (MIGRATION)                      |
-| §6 testing                        | every sub-plan                                   |
-| §7 delivery, release              | M1 (fixed group), M8                             |
+| Spec section                      | Sub-plans                                         |
+| --------------------------------- | ------------------------------------------------- |
+| §1 goal, success criteria         | M8 (verified), all                                |
+| §2 layout, boundaries             | M1                                                |
+| §2 ui-web additions               | M1                                                |
+| §2 client-web addition            | M1                                                |
+| §3 entry table, subpaths not kept | M1 (exports), M8 (migration)                      |
+| §3.1 core                         | M2                                                |
+| §3.2 navigation                   | M3a                                               |
+| §3.2 screens                      | M3a, M3b, M4, M5, M7a                             |
+| §3.2 host-specific props          | M4 (`canCopy`, `settingOptions`), M7a (`tenants`) |
+| §3.2 field renderers              | M5                                                |
+| §3.3 editors                      | M6                                                |
+| §3.4 `/mbc`                       | M7b                                               |
+| §3.5 messages                     | M1 (namespaces), M2–M7a (strings)                 |
+| §4 internals                      | M3a–M7b                                           |
+| §5 behaviour changes              | M3a, M5, M7a, M7b, M8 (MIGRATION)                 |
+| §6 testing                        | every sub-plan                                    |
+| §7 delivery, release              | M1 (fixed group), M8                              |
