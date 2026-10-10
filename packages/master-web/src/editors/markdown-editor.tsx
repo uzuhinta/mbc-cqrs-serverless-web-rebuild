@@ -1,10 +1,16 @@
 'use client'
 
+import rehypeSanitize from 'rehype-sanitize'
+
 import { EditorFallback } from './editor-fallback'
 import type { EditorProps } from './types'
 import { useLibrary } from './use-library'
 
 const loadMarkdown = () => import('@uiw/react-md-editor')
+
+// The preview renders the Markdown's raw HTML (rehype-raw) and keeps every
+// link: sanitise it, or a stored record runs script when it is opened.
+const PREVIEW = { rehypePlugins: [rehypeSanitize] }
 
 /**
  * Markdown in @uiw/react-md-editor with a live preview; the preview only,
@@ -24,6 +30,9 @@ export function MarkdownEditor(props: EditorProps) {
         preview={disabled ? 'preview' : 'live'}
         hideToolbar={disabled}
         overflow={false}
+        previewOptions={PREVIEW}
+        // Tab moves the focus on instead of indenting (WCAG 2.1.2).
+        defaultTabEnable
         textareaProps={{
           id,
           onBlur,

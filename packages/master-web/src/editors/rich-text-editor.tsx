@@ -1,13 +1,15 @@
 'use client'
 
 import { cn } from '@mbc-cqrs-serverless/ui-web'
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { EditorFallback } from './editor-fallback'
 import type { EditorProps } from './types'
 import { useAttributes, useLibrary } from './use-library'
 
 const loadQuill = () => import('react-quill-new')
+
+type ReactQuill = InstanceType<Awaited<ReturnType<typeof loadQuill>>['default']>
 
 // v0's palette and toolbar.
 const COLORS = [
@@ -64,6 +66,28 @@ const MODULES = {
     ['link', 'image', 'video'],
     ['clean'],
   ],
+  // Tab moves the focus on (WCAG 2.1.2): Quill's Tab bindings are off, and
+  // the toolbar's buttons indent.
+  keyboard: {
+    bindings: {
+      tab: null,
+      'remove tab': null,
+      indent: null,
+      outdent: null,
+      'indent code-block': null,
+      'outdent code-block': null,
+      'table tab': null,
+    },
+  },
+}
+
+/**
+ * Quill's semantic HTML as it is stored: it writes every space as `&nbsp;`,
+ * so a lone one becomes a space again (runs keep theirs); an empty document is ''.
+ */
+function storedHtml(html: string, length: number): string {
+  if (length <= 1) return ''
+  return html.replace(/(?<!&nbsp;)&nbsp;(?!&nbsp;)/g, ' ')
 }
 
 /** HTML in Quill (react-quill-new), v0's toolbar; read-only without its toolbar when disabled. */
@@ -72,6 +96,19 @@ export function RichTextEditor(props: EditorProps) {
   const { id, labelId, describedBy, invalid } = props
   const library = useLibrary(loadQuill)
   const wrapper = useRef<HTMLDivElement>(null)
+  const quill = useRef<ReactQuill>(null)
+  const [initial] = useState(value)
+  // The value Quill holds: the user's last edit, or the last one applied.
+  const held = useRef(value)
+
+  // Quill is uncontrolled, so a re-render never re-parses the document. A
+  // value from outside (a reset, an imported JSON) is applied here, silently.
+  useEffect(() => {
+    const editor = quill.current?.getEditor()
+    if (!editor || value === held.current) return
+    held.current = value
+    editor.setContents(editor.clipboard.convert({ html: value }), 'silent')
+  }, [library, value])
 
   // Quill's editing area is a div: name it for screen readers.
   useAttributes(wrapper, '.ql-editor', {
@@ -96,13 +133,17 @@ export function RichTextEditor(props: EditorProps) {
       )}
     >
       <Quill
+        ref={quill}
         theme="snow"
-        value={value}
+        defaultValue={initial}
         modules={MODULES}
         readOnly={disabled}
         // Quill normalises what it loads; only the user's edits count.
-        onChange={(html, _delta, source) => {
-          if (source === 'user') onChange(html)
+        onChange={(html, _delta, source, editor) => {
+          if (source !== 'user') return
+          const next = storedHtml(html, editor.getLength())
+          held.current = next
+          onChange(next)
         }}
         onBlur={() => onBlur?.()}
       />

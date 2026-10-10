@@ -28,17 +28,24 @@ const isJson = (text: string) => {
   }
 }
 
+type Ace = {
+  setReadOnly(readOnly: boolean): void
+  commands: { bindKeys(keys: Record<string, null>): void }
+}
+
 /**
- * Disabled JSON gets the read-only tree view; text that is not JSON has no
- * tree, so it stays in code mode, read-only.
+ * Shows `value`: disabled JSON in the read-only tree view, anything else in
+ * code mode (read-only when disabled). Text always goes in through code
+ * mode: the tree would "repair" text that is not JSON, or throw on it.
  */
-function show(instance: JsonEditorInstance, text: string, disabled: boolean) {
-  const mode = disabled && isJson(text) ? 'view' : 'code'
-  if (instance.getMode() !== mode) instance.setMode(mode)
-  if (mode === 'code')
-    (instance.aceEditor as typeof instance.aceEditor | undefined)?.setReadOnly(
-      disabled
-    )
+function sync(instance: JsonEditorInstance, value: string, disabled: boolean) {
+  if (instance.getMode() !== 'code') instance.setMode('code')
+  if (instance.getText() !== value) instance.setText(value)
+  const ace = instance.aceEditor as unknown as Ace | undefined
+  ace?.setReadOnly(disabled)
+  // Tab moves the focus on instead of indenting (WCAG 2.1.2).
+  ace?.commands.bindKeys({ Tab: null, 'Shift-Tab': null })
+  if (disabled && isJson(value)) instance.setMode('view')
 }
 
 /** JSON in jsoneditor's code mode (v0); its read-only tree view when disabled. */
@@ -49,6 +56,8 @@ export function JsonEditor(props: EditorProps) {
   const container = useRef<HTMLDivElement>(null)
   const editor = useRef<JsonEditorInstance | null>(null)
   const latest = useRef({ value, onChange, disabled })
+  // The `disabled` the editor last showed.
+  const shownDisabled = useRef(disabled)
   useEffect(() => {
     latest.current = { value, onChange, disabled }
   })
@@ -66,8 +75,8 @@ export function JsonEditor(props: EditorProps) {
       // jsoneditor's default is window.alert; its code mode marks errors itself.
       onError: () => {},
     })
-    instance.setText(latest.current.value)
-    show(instance, latest.current.value, latest.current.disabled)
+    sync(instance, latest.current.value, latest.current.disabled)
+    shownDisabled.current = latest.current.disabled
     editor.current = instance
     return () => {
       instance.destroy()
@@ -75,15 +84,18 @@ export function JsonEditor(props: EditorProps) {
     }
   }, [library])
 
+  // While the user types, the value is what the editor holds: nothing moves.
   useEffect(() => {
     const instance = editor.current
-    if (instance && instance.getText() !== value) instance.setText(value)
-  }, [value])
-
-  useEffect(() => {
-    const instance = editor.current
-    if (instance) show(instance, instance.getText(), disabled)
-  }, [disabled])
+    if (!instance) return
+    const shown =
+      instance.getMode() === 'code' &&
+      instance.getText() === value &&
+      shownDisabled.current === disabled
+    if (shown) return
+    sync(instance, value, disabled)
+    shownDisabled.current = disabled
+  }, [value, disabled])
 
   // Ace's input is created again on every mode change.
   useAttributes(container, 'textarea.ace_text-input', {
