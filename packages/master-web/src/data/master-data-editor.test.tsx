@@ -368,6 +368,38 @@ describe('MasterDataEditor', () => {
     expect(lastBody(onSave).attributes.memo).toBe('ABC')
   })
 
+  it('focuses an invalid field’s control by its id, even when it is not an input', async () => {
+    function Editable({ id, labelId, invalid }: FieldRendererProps) {
+      return (
+        <div>
+          <button type="button">太字</button>
+          <div
+            id={id}
+            role="textbox"
+            tabIndex={0}
+            contentEditable
+            aria-labelledby={labelId}
+            aria-invalid={invalid || undefined}
+          />
+        </div>
+      )
+    }
+    const required = setting()
+    required.attributes.fields = required.attributes.fields.map((field) =>
+      field.physicalName === 'memo' ? { ...field, isRequired: true } : field
+    )
+    const { onSave } = setup({
+      setting: required,
+      data: { ...record(), attributes: { ...record().attributes, memo: '' } },
+      components: { 'text-area': Editable },
+    })
+    await userEvent.click(button('編集'))
+    await userEvent.type(input('価格'), '1')
+    await userEvent.click(button('登録'))
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.getByRole('textbox', { name: 'メモ' })).toHaveFocus()
+  })
+
   it('shows loading, then a load failure with a reload button', async () => {
     const onRetry = vi.fn()
     const { rerender } = render(

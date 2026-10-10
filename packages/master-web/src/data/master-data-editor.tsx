@@ -140,11 +140,23 @@ function EditorBody({
   const formRef = useRef<HTMLFormElement>(null)
   const readOnly = !editing || !owned
 
-  // After a refused save: focus the first field with an error.
+  // After a refused save: focus the first field with an error. Its control
+  // carries the id the renderer was given (a rich editor's editing area is
+  // not an input); a group gets its first input instead.
   useEffect(() => {
     if (attempts === 0) return
-    const first = fields.find((field) => errors[field.physicalName])
+    const index = fields.findIndex((field) => errors[field.physicalName])
+    const first = fields[index]
     if (!first) return
+    const control = document.getElementById(`${formId}-${index}-control`)
+    if (
+      control?.matches(
+        'input:not(:disabled), textarea:not(:disabled), select:not(:disabled), button:not(:disabled), [contenteditable="true"], [tabindex]'
+      )
+    ) {
+      control.focus()
+      return
+    }
     const wrapper = [
       ...(formRef.current?.querySelectorAll<HTMLElement>('[data-field]') ?? []),
     ].find((element) => element.dataset.field === first.physicalName)
@@ -153,7 +165,7 @@ function EditorBody({
         'input:not([disabled]), textarea:not([disabled]), button:not([disabled])'
       )
       ?.focus()
-  }, [attempts, errors, fields])
+  }, [attempts, errors, fields, formId])
 
   const changed = JSON.stringify(values) !== JSON.stringify(baseline)
   const codeField = fields.find((field) => field.physicalName === 'code')
