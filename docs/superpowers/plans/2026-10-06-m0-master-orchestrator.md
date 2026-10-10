@@ -165,7 +165,10 @@ git status --porcelain                                        # must be empty af
   - Gate: standard gate.
   - Depends on: M6.
 
-- [ ] **M7b — `/mbc` API and hooks** (`m7b-mbc-api`)
+- [x] **M7b — `/mbc` API and hooks** (`m7b-mbc-api`)
+  - Merged 2026-10-10 (fast-forward): executed inline from the plan; the branch matched the plan. A fresh review checked every request against the backend and ran a realtime probe through client-web's fake WebSocket (batching, partial changes, FAILED, timeout and abort all correct). It found two Important issues, polling that a slow backend could stall for good and write errors a page could not reach, and one Minor finding was re-graded Important (a tenant switch did not reload). All three were fixed test-first: poll after each answer, `runOrThrow`, tenant and paths in the query keys. Gate on React 19 and 18: 875/875, smoke passes.
+  - Plan: `docs/superpowers/plans/2026-10-10-m7b-mbc-api.md` — replayed task by task on `main` before execution.
+  - Deferred minors: `MasterBulkError` shows client-web's generic "Request failed with status N" instead of the backend's message; a create answered without a request id counts as done; a `paths` entry set to `undefined` replaces its default; a cancelled import rejects with `MasterBulkError` rather than the abort error; `MasterBulkError`'s doc says the failed batch did not go in, though part of it may have; `DEFAULT_MASTER_API_PATHS` is mutable and progress repeats the value at a batch boundary; no realtime test in master-web.
   - Spec: §3.4 (API, writes, hooks), §5 (sequence requests), Review Focus 2, 3.
   - From M7a's review:
     - `GET /api/tasks/:id` drops the id's last sort-key segment, so the detail request sends the copy request's id plus `#0` (v0).
@@ -177,6 +180,7 @@ git status --porcelain                                        # must be empty af
 - [ ] **M7c — Connected pages** (`m7c-mbc-pages`)
   - Spec: §3.4 (connected pages, tenant rules), §1 (success criterion 1), Review Focus 2, 4.
   - From M7a's review: the copy form does not report copy-type changes, so the copy page loads its data rows up front; the copy page is keyed by the setting id, so a new setting starts a fresh form.
+  - From M7b's review: the pages write through `runOrThrow`, so the screens get the real error (the data editor locks Save after a timed-out create); without realtime an import ends before the data syncs, so the list page reloads after it but cannot promise the rows are there yet.
   - Builds: seven connected pages with ownership from `client.tenantCode()`; the settings editor's `formats` from the `sequence_setting` master and `loadTenants` for the copy pages; playground fake master backend (commands, tasks, sequence) behind a real `MbcClient`, and connected playground pages; a smoke render of `/mbc`.
   - Gate: standard gate.
   - Depends on: M7b.
