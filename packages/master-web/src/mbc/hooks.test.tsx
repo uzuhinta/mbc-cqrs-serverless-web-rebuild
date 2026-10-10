@@ -1,3 +1,4 @@
+import { MbcTimeoutError } from '@mbc-cqrs-serverless/client-web'
 import { MbcClientProvider } from '@mbc-cqrs-serverless/client-web/react'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { StrictMode, type ReactNode } from 'react'
@@ -104,6 +105,44 @@ describe('master hooks', () => {
     expect(client.get.mock.calls.length).toBeGreaterThan(loads)
   })
 
+  it('waits for each answer before it polls again', async () => {
+    vi.useFakeTimers()
+    const client = createFakeClient()
+    // Every answer is slower than the poll interval.
+    client.get.mockImplementation(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(() => resolve([task('01J9B', 'PROCESSING')]), 3000)
+        )
+    )
+    const { result } = renderHook(
+      () => useCopyTasks('PRODUCT', { pollMs: 2000 }),
+      { wrapper: wrap(client) }
+    )
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000)
+    })
+    expect(result.current.data?.[0]?.status).toBe('PROCESSING')
+  })
+
+  it('loads again when the tenant changes', async () => {
+    let tenant = 'tenant-a'
+    const client = createFakeClient()
+    client.tenantCode = () => tenant
+    client.get.mockResolvedValue({ items: [], total: 0 })
+    const { result, rerender } = renderHook(
+      () => useMasterSettings(initialSettingListState()),
+      { wrapper: wrap(client) }
+    )
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    const loads = client.get.mock.calls.length
+    tenant = 'tenant-b'
+    rerender()
+    await waitFor(() =>
+      expect(client.get.mock.calls.length).toBeGreaterThan(loads)
+    )
+  })
+
   it('does not poll without pollMs', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     const client = createFakeClient()
@@ -134,6 +173,38 @@ describe('master hooks', () => {
       method: 'PUT',
       body: { isDeleted: false },
     })
+  })
+
+  it('lets a page get at a failed write’s own error', async () => {
+    const timeout = new MbcTimeoutError(60_000)
+    let fail = true
+    const client = createFakeClient(() =>
+      fail ? timeout : { requestId: 'req-1' }
+    )
+    const { result } = renderHook(() => useMasterMutations(), {
+      wrapper: wrap(client),
+    })
+    const body = {
+      settingCode: 'PRODUCT',
+      code: 'P-9',
+      name: '商品 9',
+      attributes: {},
+    }
+    let caught: unknown
+    await act(async () => {
+      caught = await result.current.createData
+        .runOrThrow(body)
+        .catch((reason: unknown) => reason)
+    })
+    expect(caught).toBe(timeout)
+    expect(result.current.createData.status).toBe('error')
+    fail = false
+    await act(async () => {
+      await expect(
+        result.current.createData.runOrThrow(body)
+      ).resolves.toBeUndefined()
+    })
+    expect(result.current.createData.status).toBe('done')
   })
 
   it('uses the paths a host gives, kept across renders', () => {

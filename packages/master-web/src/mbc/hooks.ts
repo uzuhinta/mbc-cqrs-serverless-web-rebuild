@@ -1,13 +1,13 @@
 'use client'
 
-import type { MbcClient } from '@mbc-cqrs-serverless/client-web'
+import { MbcAbortError } from '@mbc-cqrs-serverless/client-web'
 import {
   useCommand,
   useMbcClient,
   useQuery,
   type QueryState,
 } from '@mbc-cqrs-serverless/client-web/react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import type { BulkJsonItem } from '../core/bulk'
 import type { MasterCopyRequest } from '../core/copy'
@@ -26,6 +26,7 @@ import {
   type MasterApi,
   type MasterApiOptions,
   type MasterApiPaths,
+  type WriteOptions,
 } from './api'
 
 export type { QueryState }
@@ -33,25 +34,35 @@ export type { QueryState }
 /** The copy result hooks reload every `pollMs` ms when it is set. */
 export type CopyTaskQueryOptions = MasterApiOptions & { pollMs?: number }
 
-/** `createMasterApi` on the provider's client, kept while the client and paths stay. */
-export function useMasterApi(options?: MasterApiOptions): MasterApi {
+/**
+ * The API on the provider's client, and the scope its queries load in: the
+ * current tenant (`client.tenantCode()`) and the paths. A tenant switch
+ * loads again.
+ */
+function useMasterScope(options?: MasterApiOptions) {
   const client = useMbcClient()
   const paths = JSON.stringify(options?.paths ?? {})
-  return useMemo(
+  const api = useMemo(
     () =>
       createMasterApi(client, {
         paths: JSON.parse(paths) as Partial<MasterApiPaths>,
       }),
     [client, paths]
   )
+  return { api, scope: `${client.tenantCode()}\u0000${paths}` }
+}
+
+/** `createMasterApi` on the provider's client, kept while the client and paths stay. */
+export function useMasterApi(options?: MasterApiOptions): MasterApi {
+  return useMasterScope(options).api
 }
 
 export function useMasterSettings(
   state: MasterSettingListState,
   options?: MasterApiOptions
 ) {
-  const api = useMasterApi(options)
-  return useQuery(JSON.stringify(state), (signal) =>
+  const { api, scope } = useMasterScope(options)
+  return useQuery(`${scope}\u0000${JSON.stringify(state)}`, (signal) =>
     api.settings.list(state, { signal })
   )
 }
@@ -60,9 +71,9 @@ export function useMasterSetting(
   id: string | undefined,
   options?: MasterApiOptions
 ) {
-  const api = useMasterApi(options)
+  const { api, scope } = useMasterScope(options)
   return useQuery(
-    id ?? '',
+    `${scope}\u0000${id ?? ''}`,
     id ? (signal) => api.settings.get(id, { signal }) : null
   )
 }
@@ -73,9 +84,9 @@ export function useMasterDataList(
   state: MasterDataListState,
   options?: MasterApiOptions
 ) {
-  const api = useMasterApi(options)
+  const { api, scope } = useMasterScope(options)
   return useQuery(
-    `${settingId ?? ''}\u0000${JSON.stringify(state)}`,
+    `${scope}\u0000${settingId ?? ''}\u0000${JSON.stringify(state)}`,
     settingId
       ? (signal) => api.data.list(settingCodeOfId(settingId), state, { signal })
       : null
@@ -86,16 +97,17 @@ export function useMasterData(
   id: string | undefined,
   options?: MasterApiOptions
 ) {
-  const api = useMasterApi(options)
+  const { api, scope } = useMasterScope(options)
   return useQuery(
-    id ?? '',
+    `${scope}\u0000${id ?? ''}`,
     id ? (signal) => api.data.get(id, { signal }) : null
   )
 }
 
 /**
- * A query that reloads every `pollMs` ms, and keeps showing its last data
- * while a reload runs, so rows stay on screen.
+ * A query that loads again `pollMs` ms after each answer, and keeps showing
+ * its last data while a reload runs, so rows stay on screen. Waiting for the
+ * answer means a slow backend is never cut off by the next poll.
  */
 function usePolled<T>(
   key: string,
@@ -103,13 +115,13 @@ function usePolled<T>(
   pollMs: number | undefined
 ): QueryState<T> {
   const query = useQuery(key, load)
-  const { refetch } = query
+  const { refetch, loading } = query
   const active = load !== null
   useEffect(() => {
-    if (!active || !pollMs) return
-    const timer = setInterval(refetch, pollMs)
-    return () => clearInterval(timer)
-  }, [active, pollMs, refetch])
+    if (!active || !pollMs || loading) return
+    const timer = setTimeout(refetch, pollMs)
+    return () => clearTimeout(timer)
+  }, [active, pollMs, loading, refetch])
   const [kept, setKept] = useState<{ key: string; data: T }>()
   if (
     query.data !== undefined &&
@@ -124,9 +136,9 @@ export function useCopyTasks(
   settingCode: string | undefined,
   options?: CopyTaskQueryOptions
 ) {
-  const api = useMasterApi(options)
+  const { api, scope } = useMasterScope(options)
   return usePolled(
-    settingCode ?? '',
+    `${scope}\u0000${settingCode ?? ''}`,
     settingCode ? (signal) => api.copy.tasks(settingCode, { signal }) : null,
     options?.pollMs
   )
@@ -136,99 +148,95 @@ export function useCopyTask(
   id: string | undefined,
   options?: CopyTaskQueryOptions
 ) {
-  const api = useMasterApi(options)
+  const { api, scope } = useMasterScope(options)
   return usePolled(
-    id ?? '',
+    `${scope}\u0000${id ?? ''}`,
     id ? (signal) => api.copy.task(id, { signal }) : null,
     options?.pollMs
   )
 }
 
+type Failure = { error?: unknown }
+
 /**
- * Every write, as client-web commands: each has `run(...)`, `status`
- * (`sending`, `waiting`, `done`, `error`) and `error`.
+ * One write as a client-web command. `run` resolves `true`, or `undefined`
+ * when it failed or was cancelled (the error is in `error`); `runOrThrow`
+ * rejects with the write's own error, so a screen can tell a timeout from
+ * a refusal.
+ */
+function useWrite<A extends unknown[]>(
+  paths: Partial<MasterApiPaths> | undefined,
+  write: (api: MasterApi, options: WriteOptions, ...args: A) => Promise<void>
+) {
+  const command = useCommand(
+    async ({ client, signal, onPhase }, failure: Failure, ...args: A) => {
+      try {
+        await write(
+          createMasterApi(client, { paths }),
+          { signal, onPhase },
+          ...args
+        )
+      } catch (error) {
+        failure.error = error
+        throw error
+      }
+      return true as const
+    }
+  )
+  const { run: start } = command
+  const run = useCallback((...args: A) => start({}, ...args), [start])
+  const runOrThrow = useCallback(
+    async (...args: A): Promise<void> => {
+      const failure: Failure = {}
+      if (await start(failure, ...args)) return
+      throw failure.error ?? new MbcAbortError()
+    },
+    [start]
+  )
+  return { ...command, run, runOrThrow }
+}
+
+/**
+ * Every write, as client-web commands: each has `run(...)`, `runOrThrow(...)`,
+ * `status` (`sending`, `waiting`, `done`, `error`) and `error`.
  */
 export function useMasterMutations(options?: MasterApiOptions) {
   const paths = options?.paths
-  const api = (client: MbcClient) => createMasterApi(client, { paths })
-  const createSetting = useCommand(
-    async ({ client, signal, onPhase }, body: MasterSettingCreateBody) => {
-      await api(client).settings.create(body, { signal, onPhase })
-      return true as const
-    }
-  )
-  const updateSetting = useCommand(
-    async (
-      { client, signal, onPhase },
-      id: string,
-      body: MasterSettingUpdateBody
-    ) => {
-      await api(client).settings.update(id, body, { signal, onPhase })
-      return true as const
-    }
-  )
-  const deleteSetting = useCommand(
-    async ({ client, signal, onPhase }, id: string) => {
-      await api(client).settings.delete(id, { signal, onPhase })
-      return true as const
-    }
-  )
-  const createData = useCommand(
-    async ({ client, signal, onPhase }, body: MasterDataCreateBody) => {
-      await api(client).data.create(body, { signal, onPhase })
-      return true as const
-    }
-  )
-  const updateData = useCommand(
-    async (
-      { client, signal, onPhase },
-      id: string,
-      body: MasterDataUpdateBody
-    ) => {
-      await api(client).data.update(id, body, { signal, onPhase })
-      return true as const
-    }
-  )
-  const deleteData = useCommand(
-    async ({ client, signal, onPhase }, id: string) => {
-      await api(client).data.delete(id, { signal, onPhase })
-      return true as const
-    }
-  )
-  const restoreData = useCommand(
-    async ({ client, signal, onPhase }, id: string) => {
-      await api(client).data.restore(id, { signal, onPhase })
-      return true as const
-    }
-  )
-  const importItems = useCommand(
-    async (
-      { client, signal, onPhase },
-      items: readonly BulkJsonItem[],
-      onProgress?: (done: number, total: number) => void
-    ) => {
-      await api(client).bulk.importItems(items, onProgress, {
-        signal,
-        onPhase,
-      })
-      return true as const
-    }
-  )
-  const requestCopy = useCommand(
-    async ({ client, signal }, body: MasterCopyRequest) => {
-      await api(client).copy.request(body, { signal })
-      return true as const
-    }
-  )
   return {
-    createSetting,
-    updateSetting,
-    deleteSetting,
-    createData,
-    updateData,
-    deleteData,
-    restoreData,
-    importItems,
-    requestCopy,
+    createSetting: useWrite(paths, (api, o, body: MasterSettingCreateBody) =>
+      api.settings.create(body, o)
+    ),
+    updateSetting: useWrite(
+      paths,
+      (api, o, id: string, body: MasterSettingUpdateBody) =>
+        api.settings.update(id, body, o)
+    ),
+    deleteSetting: useWrite(paths, (api, o, id: string) =>
+      api.settings.delete(id, o)
+    ),
+    createData: useWrite(paths, (api, o, body: MasterDataCreateBody) =>
+      api.data.create(body, o)
+    ),
+    updateData: useWrite(
+      paths,
+      (api, o, id: string, body: MasterDataUpdateBody) =>
+        api.data.update(id, body, o)
+    ),
+    deleteData: useWrite(paths, (api, o, id: string) => api.data.delete(id, o)),
+    restoreData: useWrite(paths, (api, o, id: string) =>
+      api.data.restore(id, o)
+    ),
+    importItems: useWrite(
+      paths,
+      (
+        api,
+        o,
+        items: readonly BulkJsonItem[],
+        onProgress?: (done: number, total: number) => void
+      ) => api.bulk.importItems(items, onProgress, o)
+    ),
+    requestCopy: useWrite(paths, (api, o, body: MasterCopyRequest) =>
+      api.copy.request(body, { signal: o.signal })
+    ),
   }
 }
