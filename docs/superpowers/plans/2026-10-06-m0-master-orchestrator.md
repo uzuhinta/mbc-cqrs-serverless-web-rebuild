@@ -129,7 +129,10 @@ git status --porcelain                                        # must be empty af
   - Gate: standard gate; v0 class parity.
   - Depends on: M3b (`MasterRouting`, `DataTable`, the JSON dialog pattern).
 
-- [ ] **M5 — Data editor** (`m5-data-editor`)
+- [x] **M5 — Data editor** (`m5-data-editor`)
+  - Merged 2026-10-10 (fast-forward): implemented by an external agent from the plan; the branch matches the plan exactly. The implementer's review found two Important issues, both fixed test-first: a timed-out create now keeps Save off (a retry could number a second record), and the JSON a new auto-numbered record opens with (empty code) applies. Gate on React 19 and 18: 782/782, smoke passes.
+  - Plan: `docs/superpowers/plans/2026-10-08-m5-data-editor.md` — replayed task by task on `main` before hand-over.
+  - Deferred minors: edits to attribute keys no field owns are shown in the JSON dialog but dropped on apply; Save stays enabled while delete or restore runs; a soft-deleted record can still be edited (v0); field errors stay until the next submit; an unrelated edit writes `attributes.seq` as the string `'0'` (v0); the date test does not pin `TZ`; the mount test uses empty values only; the playground keeps a stale `data` after delete or restore.
   - Spec: §3.2 (`MasterDataEditor`, field renderers), §3.1 (`toDataPayload`), §5 (auto-number note), Review Focus 1, 4.
   - Builds: renderer registry + `FieldRendererProps`; built-ins for all ten types; `components` override; form from `/core` validators with focus-first-error; view/edit mode; code locked after create; `generateCode` on save (once per save, StrictMode-safe); delete / restore confirms; JSON dialog; read-only mode; playground page. Also: `/core` `dataJson` / `parseDataJson` (the record JSON); a shared `ConfirmButton` and failure alert, which M4's editor now uses too. The sequence request bodies move to M7 (`createMasterApi`).
   - Gate: standard gate; v0 class parity.
