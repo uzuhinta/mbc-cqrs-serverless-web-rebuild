@@ -125,6 +125,28 @@ describe('MbcMasterCopyRequestPage', () => {
     ).toBeVisible()
   })
 
+  it('shows tenants that could not be asked for, instead of crashing', async () => {
+    const client = createFakeClient()
+    serveSetting(client)
+    const noSession = new Error('no session')
+    const onError = vi.fn()
+    renderPage(
+      client,
+      <MbcMasterCopyRequestPage
+        routing={createRouting()}
+        settingId={SETTING_ID}
+        loadTenants={() => {
+          throw noSession
+        }}
+        onError={onError}
+      />
+    )
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      '読み込みに失敗しました。'
+    )
+    expect(onError).toHaveBeenCalledWith(noSession)
+  })
+
   it('says when the request failed, stays, and reports it', async () => {
     const client = createFakeClient()
     serveSetting(client)

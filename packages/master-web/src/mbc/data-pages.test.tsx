@@ -1,4 +1,8 @@
-import { MbcTimeoutError } from '@mbc-cqrs-serverless/client-web'
+import {
+  MbcAbortError,
+  MbcTimeoutError,
+  type CommandOptions,
+} from '@mbc-cqrs-serverless/client-web'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
@@ -70,6 +74,49 @@ describe('MbcMasterDataListPage', () => {
       within(alert).getByRole('button', { name: '再読み込み' })
     )
     expect(await screen.findByRole('link', { name: 'P-001' })).toBeVisible()
+  })
+})
+
+describe('MbcMasterDataListPage, re-used for another setting', () => {
+  it('starts afresh, without the last setting’s search', async () => {
+    const client = createFakeClient()
+    const other = 'MASTER#tenant-a#MASTER_SETTING#OTHER'
+    client.get.mockImplementation(async (path: string) =>
+      path.startsWith('/api/master-setting/detail/')
+        ? V0_SETTING
+        : { items: DATA_ROWS, total: 2 }
+    )
+    const routing = createRouting()
+    const view = renderPage(
+      client,
+      <MbcMasterDataListPage routing={routing} settingId={SETTING_ID} />
+    )
+    await userEvent.type(
+      await screen.findByRole('textbox', { name: 'コード' }),
+      'zz'
+    )
+    await userEvent.click(screen.getByRole('button', { name: '検索' }))
+    await waitFor(() =>
+      expect(client.get.mock.calls.at(-1)?.[1].query.code).toBe('zz')
+    )
+    view.rerenderPage(
+      <MbcMasterDataListPage routing={routing} settingId={other} />
+    )
+    await waitFor(() =>
+      expect(
+        client.get.mock.calls.filter(
+          ([path, options]) =>
+            path === '/api/master-data/list' &&
+            options.query.settingCode === 'OTHER'
+        ).length
+      ).toBeGreaterThan(0)
+    )
+    for (const [path, options] of client.get.mock.calls)
+      if (
+        path === '/api/master-data/list' &&
+        options.query.settingCode === 'OTHER'
+      )
+        expect(options.query.code).toBeUndefined()
   })
 })
 
@@ -214,6 +261,73 @@ describe('MbcMasterDataEditorPage', () => {
       )
     )
     expect(client.command).not.toHaveBeenCalled()
+  })
+
+  it('does not report a write cut short by leaving the page', async () => {
+    const client = createFakeClient()
+    // The command waits until the page aborts it, as client-web's does.
+    client.command.mockImplementation(
+      (_request: unknown, options: CommandOptions = {}) =>
+        new Promise((_resolve, reject) =>
+          options.signal?.addEventListener('abort', () =>
+            reject(new MbcAbortError())
+          )
+        )
+    )
+    serveGets(client, { [settingPath]: V0_SETTING, [dataPath]: V0_DATA })
+    const onError = vi.fn()
+    const view = renderPage(
+      client,
+      <MbcMasterDataEditorPage
+        routing={createRouting()}
+        settingId={SETTING_ID}
+        id={DATA_ID}
+        onError={onError}
+      />
+    )
+    await userEvent.click(await screen.findByRole('button', { name: '編集' }))
+    await userEvent.clear(input('価格'))
+    await userEvent.type(input('価格'), '1300')
+    await userEvent.click(button('登録'))
+    await waitFor(() => expect(client.command).toHaveBeenCalled())
+    view.unmount()
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(onError).not.toHaveBeenCalled()
+  })
+
+  it('does not move the user when a create finishes after the page moved on', async () => {
+    const client = createFakeClient()
+    let finish = () => {}
+    client.command.mockImplementation(
+      (_request: unknown, options: CommandOptions = {}) =>
+        new Promise((resolve, reject) => {
+          finish = () => resolve({ data: {}, requestId: 'req-1' })
+          options.signal?.addEventListener('abort', () =>
+            reject(new MbcAbortError())
+          )
+        })
+    )
+    client.get.mockImplementation(async () => V0_SETTING)
+    client.post.mockResolvedValue({ formattedNo: 'P-100' })
+    const routing = createRouting()
+    const other = 'MASTER#tenant-a#MASTER_SETTING#OTHER'
+    const view = renderPage(
+      client,
+      <MbcMasterDataEditorPage routing={routing} settingId={SETTING_ID} />
+    )
+    await userEvent.type(
+      await screen.findByRole('textbox', { name: '名称' }),
+      'なし'
+    )
+    await userEvent.type(input('価格'), '500')
+    await userEvent.click(button('登録'))
+    await waitFor(() => expect(client.command).toHaveBeenCalled())
+    view.rerenderPage(
+      <MbcMasterDataEditorPage routing={routing} settingId={other} />
+    )
+    finish()
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(routing.navigate).not.toHaveBeenCalled()
   })
 
   it('opens another tenant’s record read-only', async () => {

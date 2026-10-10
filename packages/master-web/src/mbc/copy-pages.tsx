@@ -66,7 +66,8 @@ function CopyRequest({
   const setting = useMasterSetting(settingId, { paths })
   // The form does not say when "chosen data" is picked: load the rows now.
   const list = useMasterDataList(settingId, current, { paths })
-  const tenants = useQuery(tenantCode, () => loadTenants())
+  // A loadTenants that throws at once becomes a failed load, not a crash.
+  const tenants = useQuery(tenantCode, async () => loadTenants())
   const { requestCopy } = useMasterMutations({ paths })
   useReport(setting.error, onError)
   useReport(tenants.error, onError)

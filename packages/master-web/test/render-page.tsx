@@ -51,11 +51,19 @@ export function serveGets(
   )
 }
 
-/** Renders a connected page under StrictMode with the client. */
+/**
+ * Renders a connected page under StrictMode with the client. `rerenderPage`
+ * renders another element in its place, as a router re-using it would.
+ */
 export function renderPage(client: FakeClient, page: ReactElement) {
-  return render(
+  const wrap = (element: ReactElement) => (
     <StrictMode>
-      <MbcClientProvider client={client}>{page}</MbcClientProvider>
+      <MbcClientProvider client={client}>{element}</MbcClientProvider>
     </StrictMode>
   )
+  const view = render(wrap(page))
+  return {
+    ...view,
+    rerenderPage: (next: ReactElement) => view.rerender(wrap(next)),
+  }
 }

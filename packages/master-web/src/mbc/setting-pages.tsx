@@ -102,9 +102,16 @@ export type MbcMasterSettingEditorPageProps = MbcPageProps & {
 
 /**
  * v0's settings editor on the mbc backend. A create goes to the new
- * setting's data list, a delete to the settings list (v0).
+ * setting's data list, a delete to the settings list (v0). Another `id`
+ * starts a fresh editor, also when a router re-uses the page.
  */
-export function MbcMasterSettingEditorPage({
+export function MbcMasterSettingEditorPage(
+  props: MbcMasterSettingEditorPageProps
+) {
+  return <SettingEditor key={props.id ?? ''} {...props} />
+}
+
+function SettingEditor({
   routing,
   onError,
   paths,

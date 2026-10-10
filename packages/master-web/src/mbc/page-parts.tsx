@@ -37,7 +37,20 @@ export function useReport(
   }, [error])
 }
 
-/** A write that reports its failure to `onError`, then rejects as before. */
+/** A write cut short by leaving the page (client-web aborts it), not a failure. */
+function isAbort(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    (error.name === 'MbcAbortError' ||
+      (error.name === 'MasterBulkError' && isAbort(error.cause)))
+  )
+}
+
+/**
+ * A write that reports its failure to `onError`, then rejects as before. A
+ * write cut short by leaving the page is not reported: it was most likely
+ * sent, and the host has moved on.
+ */
 export async function reported<T>(
   work: Promise<T>,
   onError: ((error: unknown) => void) | undefined
@@ -45,7 +58,7 @@ export async function reported<T>(
   try {
     return await work
   } catch (error) {
-    onError?.(error)
+    if (!isAbort(error)) onError?.(error)
     throw error
   }
 }

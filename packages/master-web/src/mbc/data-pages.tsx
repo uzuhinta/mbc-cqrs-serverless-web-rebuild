@@ -36,8 +36,16 @@ export type MbcMasterDataListPageProps = MbcPageProps & {
   mapRawItem?: BulkMapper
 }
 
-/** v0's data list of one setting on the mbc backend, with bulk import. */
-export function MbcMasterDataListPage({
+/**
+ * v0's data list of one setting on the mbc backend, with bulk import.
+ * Another setting starts a fresh list (its own search), also when a router
+ * re-uses the page.
+ */
+export function MbcMasterDataListPage(props: MbcMasterDataListPageProps) {
+  return <DataList key={props.settingId} {...props} />
+}
+
+function DataList({
   routing,
   onError,
   paths,
@@ -103,8 +111,19 @@ export type MbcMasterDataEditorPageProps = MbcPageProps & {
   components?: FieldRenderers
 }
 
-/** v0's data editor on the mbc backend, numbering auto-numbered codes from the sequence API. */
-export function MbcMasterDataEditorPage({
+/**
+ * v0's data editor on the mbc backend, numbering auto-numbered codes from
+ * the sequence API. Another setting or record starts a fresh editor, and a
+ * write still running for the last one is cut short (it does not move the
+ * user).
+ */
+export function MbcMasterDataEditorPage(props: MbcMasterDataEditorPageProps) {
+  return (
+    <DataEditor key={`${props.settingId}\u0000${props.id ?? ''}`} {...props} />
+  )
+}
+
+function DataEditor({
   routing,
   onError,
   paths,
