@@ -40,15 +40,38 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@types/jsoneditor": "^9.9.6",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "@uiw/react-md-editor": "^4.1.2",
+    "jsoneditor": "^10.4.3",
+    "quill-delta": "^5.1.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "react-quill-new": "^3.8.3",
     "tw-animate-css": "^1.4.0"
   },
   "peerDependencies": {
+    "@uiw/react-md-editor": "^4.1.2",
+    "jsoneditor": "^10.4.3",
+    "quill-delta": "^5.1.0",
     "react": "^18.2.0 || ^19.0.0",
-    "react-dom": "^18.2.0 || ^19.0.0"
+    "react-dom": "^18.2.0 || ^19.0.0",
+    "react-quill-new": "^3.8.3"
+  },
+  "peerDependenciesMeta": {
+    "@uiw/react-md-editor": {
+      "optional": true
+    },
+    "jsoneditor": {
+      "optional": true
+    },
+    "quill-delta": {
+      "optional": true
+    },
+    "react-quill-new": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

@@ -34,6 +34,8 @@ describe('master-web output', () => {
     expect(
       unprefixedClasses(root, [
         'dark',
+        // The rich-text editor hides Quill's toolbar from an mbc: class.
+        'ql-toolbar',
         'rdp-button_next',
         'rdp-button_previous',
       ])

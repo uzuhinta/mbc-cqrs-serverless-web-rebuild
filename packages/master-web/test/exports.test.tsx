@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import * as root from '../src/index'
 import * as core from '../src/core/index'
+import * as editors from '../src/editors/index'
 import {
   MASTER_FIELD_TYPES,
   MbcProvider,
@@ -76,6 +77,17 @@ describe('master-web entries', () => {
         'useMessages',
       ].sort()
     )
+  })
+
+  it('exports the rich editors and their renderers from /editors only', () => {
+    expect(Object.keys(editors).sort()).toEqual([
+      'JsonEditor',
+      'MarkdownEditor',
+      'RichTextEditor',
+      'editorRenderers',
+    ])
+    for (const name of Object.keys(editors))
+      expect(Object.keys(root)).not.toContain(name)
   })
 
   it('labels every field type in Japanese by default and in English', () => {
