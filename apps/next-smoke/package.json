@@ -11,9 +11,13 @@
     "@mbc-cqrs-serverless/master-web": "workspace:*",
     "@mbc-cqrs-serverless/survey-web": "workspace:*",
     "@mbc-cqrs-serverless/ui-web": "workspace:*",
+    "@uiw/react-md-editor": "^4.1.2",
+    "jsoneditor": "^10.4.3",
     "next": "^16.3.8",
+    "quill-delta": "^5.1.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "react-quill-new": "^3.8.3"
   },
   "devDependencies": {
     "@types/node": "^24.19.1",

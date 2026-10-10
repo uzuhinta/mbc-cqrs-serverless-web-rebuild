@@ -71,6 +71,10 @@ Added by the M4 probe:
 - Dropdown menus have a border of about 1.23:1 on white, heavier than a decorative line needs.
 - On a phone the fields table scrolls sideways with no column pinned (v0 pinned three columns, which covered the screen at 375px; they stay pinned from `md` up).
 
+Added by M6:
+
+- The Markdown editor stays light in dark mode (`data-color-mode="light"`); its toolbar titles and Quill's picker labels ("Normal", "Heading 1") are the libraries' English.
+
 ### Standard gate (every sub-plan)
 
 ```bash
@@ -140,7 +144,7 @@ git status --porcelain                                        # must be empty af
 
 - [ ] **M6 — `/editors`** (`m6-editors`)
   - Spec: §3.3, Review Focus 5.
-  - Builds: `RichTextEditor`, `MarkdownEditor`, `JsonEditor` (lazy, client-only, built-in fallback until loaded), `editorRenderers`; `editors.css` build script that keeps only rules containing the libraries' own root classes; build test; React 18 and 19 verification of each library, documented fallback for any that fails; playground toggle between built-ins and editors.
+  - Builds: `RichTextEditor`, `MarkdownEditor`, `JsonEditor` (lazy, client-only, built-in fallback until loaded), `editorRenderers`; `editors.css` build script that keeps only rules containing the libraries' own root classes; build test; React 18 and 19 verification of each library, documented fallback for any that fails; playground toggle between built-ins and editors. Also: the data editor focuses an invalid field's control by its id (a rich editor's editing area is not an input).
   - Gate: standard gate; build test proves `editors.css` has no element, `:root` or `body` rules.
   - Depends on: M5.
 

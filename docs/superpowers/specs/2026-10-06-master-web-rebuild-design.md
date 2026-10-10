@@ -58,7 +58,7 @@ rebuild/
 ### Package boundaries
 
 - `master-web` depends on `ui-web` and `client-web` (same version, `workspace:^`), `zod` 4, `@dnd-kit/*`, `lucide-react`. Peer: `react`, `react-dom` `^18.2 || ^19`.
-- Optional peers (only `/editors` imports them): `react-quill-new`, `@uiw/react-md-editor`, `jsoneditor`.
+- Optional peers (only `/editors` imports them): `react-quill-new` (with its peer `quill-delta`), `@uiw/react-md-editor`, `jsoneditor`.
 - Not used: axios, `@apollo/client`, aws-amplify, `aws-appsync-*`, mobx, swr, nuqs, `next-usequerystate`, next, `react-draggable`, `react-resizable`, `patch-package`, `usehooks-ts`.
 - master-web's `DataTable` is a small internal component (fixed columns, server-side sorting and paging, checkbox selection; no TanStack, ruling in M3a); ui-web gains the plain `Table` primitives and the `PaginationBar` both lists share.
 - The survey spec's library rules apply: no env vars, no `window` during render, no global CSS outside the `mbc:` prefix, `'use client'` on client modules only, ESM only.
@@ -90,7 +90,7 @@ Each gets the ui-web standard: `ui` messages for its built-in text, axe test, SS
 | `…/editors`                          | `RichTextEditor`, `MarkdownEditor`, `JsonEditor`, `editorRenderers`                                                       |
 | `…/mbc`                              | `createMasterApi`, hooks, connected pages, re-exports of `createMbcClient`, `MbcClientProvider`, client errors            |
 | `…/styles.css`, `…/styles.layer.css` | as survey-web (contains ui-web's styles)                                                                                  |
-| `…/editors.css`                      | the three editors' CSS, scoped (section 3.3)                                                                              |
+| `…/editors.css`                      | the rich-text and JSON editors' CSS, scoped (section 3.3)                                                                 |
 
 Entries ship with their content: `.` and `/core` from M1, `/editors` and `editors.css` from M6, `/mbc` from M7.
 
@@ -229,10 +229,10 @@ Backend-dependent behaviour enters as async props: `checkCodeUnique(code)`, `gen
 
 ### 3.3 Editors (`/editors`)
 
-- `RichTextEditor` (react-quill-new), `MarkdownEditor` (`@uiw/react-md-editor`), `JsonEditor` (`jsoneditor`), each a client component that loads its library with `React.lazy` / dynamic `import()` after mount, so SSR renders the built-in fallback.
+- `RichTextEditor` (react-quill-new), `MarkdownEditor` (`@uiw/react-md-editor`), `JsonEditor` (`jsoneditor`), each a client component that loads its library with a dynamic `import()` after mount, so SSR renders a plain text box (the built-in fallback) until it arrives. They report only the user's edits: Quill normalises the HTML it loads without reporting it, and `setText` does not call jsoneditor's `onChangeText`. They label the library's own input (Quill's editing area, the Markdown text box, Ace's input) and keep that label when the library rebuilds it.
 - `editorRenderers = { 'text-html': …, 'text-markdown': …, json: … }` to pass as `components`. Opt-in by design: a bundler fails at build time on an import of a package that is not installed, so nothing detects them automatically.
-- `editors.css` is built from the three libraries' CSS by a script that keeps only rules whose selectors contain the library's own root class (`.ql-`, `.w-md-editor` / `.wmde-markdown`, `.jsoneditor`) and drops element, `:root` and `body` rules; a build test asserts it. Colours map to ui-web tokens where the libraries use variables.
-- Each editor is verified on React 18 and 19 in sub-plan M6. An editor that cannot run on one version is documented in the README, and its renderer falls back to the built-in on that version.
+- `editors.css` is built from Quill's snow CSS and jsoneditor's CSS by a script that keeps only selectors containing `ql-` or `jsoneditor` and none of `:root`, `html` or `body`, drops at-rules left empty and keyframes no kept rule uses, and copies the files the CSS points at (jsoneditor's icon sprite) to `editors-assets/` beside it; a build test asserts it. `@uiw/react-md-editor` is not in it: its JavaScript imports its own CSS, already scoped to `.w-md-editor` / `.wmde-markdown`. The libraries use fixed colours, not variables, so no colour is mapped to ui-web tokens; the Markdown editor stays light (`data-color-mode="light"`).
+- Each editor is verified on React 18 and 19 in sub-plan M6: the real libraries run in the unit tests (jsdom), which the standard gate runs on both versions, and in a browser through the playground's editors toggle. All three work on both, so no fallback is needed.
 
 ### 3.4 Backend integration (`/mbc`)
 

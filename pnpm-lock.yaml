@@ -110,15 +110,27 @@ importers:
       '@mbc-cqrs-serverless/ui-web':
         specifier: workspace:*
         version: link:../../packages/ui-web
+      '@uiw/react-md-editor':
+        specifier: ^4.1.2
+        version: 4.1.2(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      jsoneditor:
+        specifier: ^10.4.3
+        version: 10.4.3
       next:
         specifier: ^16.3.8
         version: 16.3.8(@babel/core@7.29.7)(@types/node@24.19.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      quill-delta:
+        specifier: ^5.1.0
+        version: 5.1.0
       react:
         specifier: 19.3.0
         version: 19.3.0
       react-dom:
         specifier: 19.3.0
         version: 19.3.0(react@19.3.0)
+      react-quill-new:
+        specifier: ^3.8.3
+        version: 3.8.3(quill-delta@5.1.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
     devDependencies:
       '@types/node':
         specifier: ^24.19.1
@@ -147,12 +159,24 @@ importers:
       '@mbc-cqrs-serverless/ui-web':
         specifier: workspace:*
         version: link:../../packages/ui-web
+      '@uiw/react-md-editor':
+        specifier: ^4.1.2
+        version: 4.1.2(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      jsoneditor:
+        specifier: ^10.4.3
+        version: 10.4.3
+      quill-delta:
+        specifier: ^5.1.0
+        version: 5.1.0
       react:
         specifier: 19.3.0
         version: 19.3.0
       react-dom:
         specifier: 19.3.0
         version: 19.3.0(react@19.3.0)
+      react-quill-new:
+        specifier: ^3.8.3
+        version: 3.8.3(quill-delta@5.1.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
     devDependencies:
       '@tailwindcss/vite':
         specifier: ^4.3.3

@@ -22,6 +22,7 @@ import {
   type SequenceFormat,
   type SettingOption,
 } from '@mbc-cqrs-serverless/master-web'
+import { editorRenderers } from '@mbc-cqrs-serverless/master-web/editors'
 import { useState } from 'react'
 
 const TENANT = 'tenant-a'
@@ -97,6 +98,20 @@ function settingOf(code: string, name: string, tenant = TENANT): MasterSetting {
           isRequired: false,
           isShowedOnList: true,
         },
+        {
+          physicalName: 'body',
+          name: '本文',
+          dataType: 'text-html',
+          isRequired: false,
+          isShowedOnList: false,
+        },
+        {
+          physicalName: 'notes',
+          name: '備考',
+          dataType: 'text-markdown',
+          isRequired: false,
+          isShowedOnList: false,
+        },
       ],
     },
   })
@@ -152,6 +167,8 @@ const records = new Map<string, MasterData>(
         price: String((i + 1) * 120),
         released: `2026-${String((i % 12) + 1).padStart(2, '0')}-07T00:00:00+09:00`,
         spec: i % 3 === 0 ? { size: 'L' } : {},
+        body: '<p>甘い<strong>りんご</strong></p>',
+        notes: '# りんご\n\n- 赤い\n- 甘い',
       },
     }
     return [record.id, record]
@@ -329,6 +346,7 @@ function DataEditorPage({ settingId, id }: { settingId: string; id?: string }) {
   const [data, setData] = useState(() =>
     id === undefined ? undefined : records.get(id)
   )
+  const [rich, setRich] = useState(true)
   const save = async (body: MasterDataCreateBody | MasterDataUpdateBody) => {
     await wait(600)
     if (!setting) return
@@ -358,24 +376,36 @@ function DataEditorPage({ settingId, id }: { settingId: string; id?: string }) {
     if (data) records.set(data.id, { ...data, isDeleted })
   }
   return (
-    <MasterDataEditor
-      mode={id === undefined ? 'create' : 'edit'}
-      setting={setting}
-      data={data}
-      routing={routing}
-      tenantCode={TENANT}
-      checkCodeUnique={async (code) => {
-        await wait(200)
-        return ![...records.values()].some((record) => record.code === code)
-      }}
-      generateCode={async () => {
-        await wait(300)
-        return `P-${String(nextNumber++).padStart(3, '0')}`
-      }}
-      onSave={save}
-      onDelete={mark(true)}
-      onRestore={mark(false)}
-    />
+    <>
+      <label style={{ display: 'block', marginBottom: 8 }}>
+        <input
+          type="checkbox"
+          checked={rich}
+          onChange={(event) => setRich(event.target.checked)}
+        />{' '}
+        Rich editors (/editors)
+      </label>
+      <MasterDataEditor
+        key={rich ? 'rich' : 'plain'}
+        components={rich ? editorRenderers : undefined}
+        mode={id === undefined ? 'create' : 'edit'}
+        setting={setting}
+        data={data}
+        routing={routing}
+        tenantCode={TENANT}
+        checkCodeUnique={async (code) => {
+          await wait(200)
+          return ![...records.values()].some((record) => record.code === code)
+        }}
+        generateCode={async () => {
+          await wait(300)
+          return `P-${String(nextNumber++).padStart(3, '0')}`
+        }}
+        onSave={save}
+        onDelete={mark(true)}
+        onRestore={mark(false)}
+      />
+    </>
   )
 }
 

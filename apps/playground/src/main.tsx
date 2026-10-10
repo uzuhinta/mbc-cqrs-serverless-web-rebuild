@@ -1,5 +1,6 @@
 import '@mbc-cqrs-serverless/survey-web/styles.css'
 import '@mbc-cqrs-serverless/master-web/styles.css'
+import '@mbc-cqrs-serverless/master-web/editors.css'
 
 import { MbcProvider } from '@mbc-cqrs-serverless/ui-web'
 import { StrictMode, useEffect, useState } from 'react'

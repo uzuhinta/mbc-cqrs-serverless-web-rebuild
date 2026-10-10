@@ -18,6 +18,7 @@ import {
   initialSettingListState,
   parseMasterSetting,
 } from '@mbc-cqrs-serverless/master-web/core'
+import { editorRenderers } from '@mbc-cqrs-serverless/master-web/editors'
 import { MultiSelect } from '@mbc-cqrs-serverless/ui-web'
 
 function FieldTypes() {
@@ -57,6 +58,9 @@ const parsed = parseMasterSetting({
         dataType: 'string',
         isShowedOnList: true,
       },
+      { physicalName: 'body', name: '本文', dataType: 'text-html' },
+      { physicalName: 'notes', name: '備考', dataType: 'text-markdown' },
+      { physicalName: 'spec', name: '仕様', dataType: 'json' },
     ],
   },
 })
@@ -107,6 +111,7 @@ export function MasterScreens() {
         mode="create"
         setting={setting}
         routing={routing}
+        components={editorRenderers}
         onSave={async () => {}}
       />
       <MasterSettingEditor
