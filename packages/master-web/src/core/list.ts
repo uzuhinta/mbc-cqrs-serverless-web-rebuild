@@ -93,3 +93,30 @@ export function dateParts(
   const [, year, month, day] = DATE.exec(value) ?? []
   return year && month && day ? { year, month, day } : undefined
 }
+
+/** A moment's parts in the runtime's time zone (the browser's, after hydration). */
+export type TimeParts = {
+  year: string
+  month: string
+  day: string
+  hour: string
+  minute: string
+  second: string
+}
+
+const pad = (n: number) => String(n).padStart(2, '0')
+
+/** The parts of a stored timestamp, or `undefined` when it is not one. */
+export function localTimeParts(value: unknown): TimeParts | undefined {
+  if (typeof value !== 'string' && typeof value !== 'number') return undefined
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return undefined
+  return {
+    year: String(date.getFullYear()),
+    month: pad(date.getMonth() + 1),
+    day: pad(date.getDate()),
+    hour: pad(date.getHours()),
+    minute: pad(date.getMinutes()),
+    second: pad(date.getSeconds()),
+  }
+}

@@ -6,6 +6,7 @@ import {
   dateParts,
   initialDataListState,
   initialSettingListState,
+  localTimeParts,
 } from './list'
 
 describe('list state', () => {
@@ -56,5 +57,27 @@ describe('dataCodeOf', () => {
     expect(dataCodeOf({ ...row, masterCode: 'P-1', code: 'X#P-1' })).toBe('P-1')
     expect(dataCodeOf({ ...row, code: 'P-2' })).toBe('P-2')
     expect(dataCodeOf(row)).toBe('')
+  })
+})
+
+describe('localTimeParts', () => {
+  it('reads a stored timestamp in the runtime’s time zone', () => {
+    const moment = new Date(2026, 9, 10, 9, 5, 7)
+    expect(localTimeParts(moment.toISOString())).toEqual({
+      year: '2026',
+      month: '10',
+      day: '10',
+      hour: '09',
+      minute: '05',
+      second: '07',
+    })
+    expect(localTimeParts(moment.getTime())?.minute).toBe('05')
+  })
+
+  it('gives nothing for a value that is not a timestamp', () => {
+    expect(localTimeParts(undefined)).toBeUndefined()
+    expect(localTimeParts('')).toBeUndefined()
+    expect(localTimeParts('soon')).toBeUndefined()
+    expect(localTimeParts({})).toBeUndefined()
   })
 })
