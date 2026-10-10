@@ -8,6 +8,7 @@ import { createRoot } from 'react-dom/client'
 
 import { Gallery } from './gallery'
 import { MasterPage } from './master-pages'
+import { MbcMasterPage } from './mbc-pages'
 import { SurveyCreatorPage } from './survey-creator-page'
 import { SurveyFormPage } from './survey-form-page'
 import { TemplatesPage } from './templates-page'
@@ -39,7 +40,9 @@ export function App() {
   return (
     <MbcProvider locale={settings.locale}>
       <Toolbar settings={settings} onChange={setSettings} />
-      {hash.startsWith('#master') ? (
+      {hash.startsWith('#mbc') ? (
+        <MbcMasterPage route={hash.slice(1)} />
+      ) : hash.startsWith('#master') ? (
         <MasterPage route={hash.slice(1)} />
       ) : hash.startsWith('#templates') ? (
         <TemplatesPage route={hash.slice(1)} />

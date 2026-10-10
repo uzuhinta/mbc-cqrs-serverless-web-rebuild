@@ -22,6 +22,11 @@ import {
   parseMasterSetting,
 } from '@mbc-cqrs-serverless/master-web/core'
 import { editorRenderers } from '@mbc-cqrs-serverless/master-web/editors'
+import {
+  createMbcClient,
+  MbcClientProvider,
+  MbcMasterSettingListPage,
+} from '@mbc-cqrs-serverless/master-web/mbc'
 import { MultiSelect } from '@mbc-cqrs-serverless/ui-web'
 
 function FieldTypes() {
@@ -69,6 +74,13 @@ const parsed = parseMasterSetting({
 })
 if (!parsed.success) throw parsed.error
 const setting = parsed.data
+
+// The connected page renders its loading state on the server; it loads
+// after hydration (this smoke app has no backend).
+const client = createMbcClient({
+  apiUrl: 'https://example.invalid',
+  tenantCode: 'tenant-a',
+})
 
 const copyTask = {
   id: 'SFN_TASK#tenant-a#MASTER_COPY_PRODUCT#01J9A',
@@ -156,6 +168,9 @@ export function MasterScreens() {
         tasks={[copyTask]}
         routing={routing}
       />
+      <MbcClientProvider client={client}>
+        <MbcMasterSettingListPage routing={routing} />
+      </MbcClientProvider>
       <MultiSelect
         options={[{ value: 'a', label: 'A' }]}
         value={['a']}
