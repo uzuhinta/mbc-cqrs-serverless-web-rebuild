@@ -142,7 +142,10 @@ git status --porcelain                                        # must be empty af
   - Gate: standard gate; v0 class parity.
   - Depends on: M4 (JSON dialog, view/edit pattern).
 
-- [ ] **M6 — `/editors`** (`m6-editors`)
+- [x] **M6 — `/editors`** (`m6-editors`)
+  - Merged 2026-10-10 (fast-forward): executed inline from the plan; the branch matched the plan. A fresh review found one Critical issue (the Markdown preview rendered a record's raw HTML and `javascript:` links) and three Important ones (Quill's HTML wrote every space as `&nbsp;` and was re-read on every render; Tab could not leave the editors; a disabled `JsonEditor` sent text that is not JSON to its tree view). All four were fixed test-first (`rehype-sanitize`, an uncontrolled Quill, Tab released in all three, text always loaded in code mode). Gate on React 19 and 18: 809/809, smoke passes.
+  - Plan: `docs/superpowers/plans/2026-10-10-m6-editors.md` — replayed task by task on `main` before execution.
+  - Deferred minors: focus is lost when a library replaces a focused text box; the text box flashes on every mount even when the library is cached; read-only Quill has no `aria-readonly` and the disabled Markdown preview no label; `JsonEditor` ignores `onBlur`; the Markdown preview's CSS has `body[data-color-mode]` rules (the spec calls it scoped); read-only Quill loses its top border; no SSR test for `MarkdownEditor` / `JsonEditor` and none for relabelling Ace's input; the data editor's focus lookup is not scoped to its form; jsoneditor's menus follow `navigator.language`.
   - Spec: §3.3, Review Focus 5.
   - Builds: `RichTextEditor`, `MarkdownEditor`, `JsonEditor` (lazy, client-only, built-in fallback until loaded), `editorRenderers`; `editors.css` build script that keeps only rules containing the libraries' own root classes; build test; React 18 and 19 verification of each library, documented fallback for any that fails; playground toggle between built-ins and editors. Also: the data editor focuses an invalid field's control by its id (a rich editor's editing area is not an input).
   - Gate: standard gate; build test proves `editors.css` has no element, `:root` or `body` rules.
@@ -156,6 +159,7 @@ git status --porcelain                                        # must be empty af
 
 - [ ] **M8 — Release** (`m8-release`)
   - Spec: §3 (subpaths not kept), §5, §6, §7, §1 success criteria.
+  - From M6's review: the README's editors section names the peers to install, `editors.css` (its sprite in `editors-assets/`), `@uiw/react-md-editor/markdown-editor.css` for bundlers that drop CSS imported from JavaScript, the CSP the editors need (Ace injects `<style>` elements; jsoneditor starts its worker from a `data:` URL) and their size (jsoneditor with Ace is about 1 MB minified, loaded after mount); `next-smoke` imports `editors.css` and passes `editorRenderers` from a Server Component.
   - Builds: master-web README (entries, routing examples for Next App Router and React Router, editors opt-in, tenant rules), `MIGRATION.md` (every v0 export and host setup step mapped, with a worked typical-host rewrite), root README update, `apps/next-smoke` pages for every master-web entry, docs-imports and package-files tests cover master-web, changeset (four packages → 1.0.0), final whole-repo review.
   - Gate: standard gate + smoke on React 18 and 19 + `changeset status` shows four 1.0.0 releases.
   - Depends on: M7.
