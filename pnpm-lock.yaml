@@ -223,6 +223,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.3.0)
+      '@mbc-cqrs-serverless/client-web':
+        specifier: workspace:^
+        version: link:../client-web
       '@mbc-cqrs-serverless/ui-web':
         specifier: workspace:^
         version: link:../ui-web
