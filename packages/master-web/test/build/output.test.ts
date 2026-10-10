@@ -20,9 +20,14 @@ import {
 const dist = distDir(fileURLToPath(new URL('../..', import.meta.url)))
 
 describe('master-web output', () => {
-  it('ships the root, /core and /editors entries and the three stylesheets', () => {
+  it('ships the root, /core, /editors and /mbc entries and the three stylesheets', () => {
     expect(listFiles(dist, '.js')).toEqual(
-      expect.arrayContaining(['index.js', 'core/index.js', 'editors/index.js'])
+      expect.arrayContaining([
+        'index.js',
+        'core/index.js',
+        'editors/index.js',
+        'mbc/index.js',
+      ])
     )
     expect(listFiles(dist, '.css')).toEqual([
       'editors.css',
@@ -100,6 +105,15 @@ describe('master-web output', () => {
     )) {
       expect(hasUseClientDirective(readText(dist, file)), file).toBe(false)
     }
+  })
+
+  it('keeps the root, /core and /editors free of client-web; /mbc uses it', () => {
+    const CLIENT = '@mbc-cqrs-serverless/client-web'
+    const usesClient = (entry: string) =>
+      [...externalsOf(dist, entry)].some((name) => name.startsWith(CLIENT))
+    for (const entry of ['index.js', 'core/index.js', 'editors/index.js'])
+      expect(usesClient(entry), entry).toBe(false)
+    expect(usesClient('mbc/index.js')).toBe(true)
   })
 
   it('marks every module that renders as a client module', () => {

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import * as root from '../src/index'
 import * as core from '../src/core/index'
 import * as editors from '../src/editors/index'
+import * as mbc from '../src/mbc/index'
 import {
   MASTER_FIELD_TYPES,
   MbcProvider,
@@ -98,6 +99,38 @@ describe('master-web entries', () => {
       'editorRenderers',
     ])
     for (const name of Object.keys(editors))
+      expect(Object.keys(root)).not.toContain(name)
+  })
+
+  it('exports the backend integration and client-web’s parts from /mbc only', () => {
+    expect(Object.keys(mbc).sort()).toEqual(
+      [
+        'BULK_BATCH_SIZE',
+        'createMasterApi',
+        'createMbcClient',
+        'DEFAULT_MASTER_API_PATHS',
+        'MasterBulkError',
+        'MbcAbortError',
+        'MbcApiError',
+        'MbcClientProvider',
+        'MbcCommandError',
+        'MbcError',
+        'MbcRealtimeError',
+        'MbcTimeoutError',
+        'settingCodeOfId',
+        'useCommand',
+        'useCopyTask',
+        'useCopyTasks',
+        'useMasterApi',
+        'useMasterData',
+        'useMasterDataList',
+        'useMasterMutations',
+        'useMasterSetting',
+        'useMasterSettings',
+        'useMbcClient',
+      ].sort()
+    )
+    for (const name of Object.keys(mbc))
       expect(Object.keys(root)).not.toContain(name)
   })
 

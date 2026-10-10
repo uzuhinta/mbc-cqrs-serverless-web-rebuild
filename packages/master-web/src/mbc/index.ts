@@ -1,0 +1,48 @@
+export {
+  createMasterApi,
+  DEFAULT_MASTER_API_PATHS,
+  settingCodeOfId,
+  type MasterApi,
+  type MasterApiOptions,
+  type MasterApiPaths,
+  type MasterListPage,
+  type ReadOptions,
+  type WriteOptions,
+} from './api'
+export {
+  BULK_BATCH_SIZE,
+  MasterBulkError,
+  type BulkImportOptions,
+} from './bulk'
+export {
+  useCopyTask,
+  useCopyTasks,
+  useMasterApi,
+  useMasterData,
+  useMasterDataList,
+  useMasterMutations,
+  useMasterSetting,
+  useMasterSettings,
+  type CopyTaskQueryOptions,
+  type QueryState,
+} from './hooks'
+
+// What hosts need from client-web to use /mbc, re-exported so a host that
+// installs only master-web gets the same copy (one MbcClientProvider context).
+export {
+  createMbcClient,
+  MbcAbortError,
+  MbcApiError,
+  MbcCommandError,
+  MbcError,
+  MbcRealtimeError,
+  MbcTimeoutError,
+  type MbcClient,
+  type MbcClientConfig,
+} from '@mbc-cqrs-serverless/client-web'
+export {
+  MbcClientProvider,
+  useCommand,
+  useMbcClient,
+  type CommandStatus,
+} from '@mbc-cqrs-serverless/client-web/react'

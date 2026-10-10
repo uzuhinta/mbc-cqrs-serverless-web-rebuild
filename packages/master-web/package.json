@@ -21,6 +21,10 @@
       "types": "./dist/editors/index.d.ts",
       "default": "./dist/editors/index.js"
     },
+    "./mbc": {
+      "types": "./dist/mbc/index.d.ts",
+      "default": "./dist/mbc/index.js"
+    },
     "./styles.css": "./dist/styles.css",
     "./styles.layer.css": "./dist/styles.layer.css",
     "./editors.css": "./dist/editors.css",
