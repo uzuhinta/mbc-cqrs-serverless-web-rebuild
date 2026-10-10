@@ -52,6 +52,14 @@ describe('MultiSelect', () => {
     )
   })
 
+  it('wraps a long placeholder or many chips inside its box', () => {
+    render(<Harness />)
+    expect(screen.getByRole('combobox', { name: 'Tenants' })).toHaveClass(
+      'mbc:whitespace-normal',
+      'mbc:text-left'
+    )
+  })
+
   it('searches and toggles options from the keyboard', async () => {
     render(<Harness />)
     const trigger = screen.getByRole('combobox', { name: 'Tenants' })
@@ -83,7 +91,7 @@ describe('MultiSelect', () => {
       classes(
         cn(
           buttonVariants({ variant: 'outline' }),
-          'mbc:h-auto mbc:w-full mbc:justify-between'
+          'mbc:h-auto mbc:w-full mbc:justify-between mbc:whitespace-normal mbc:text-left'
         )
       )
     )

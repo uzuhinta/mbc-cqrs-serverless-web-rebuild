@@ -61,7 +61,8 @@ export const MultiSelect = forwardRef<HTMLButtonElement, MultiSelectProps>(
             aria-expanded={open}
             {...control}
             className={cn(
-              'mbc:h-auto mbc:w-full mbc:justify-between',
+              // Long placeholders and many chips wrap inside the box.
+              'mbc:h-auto mbc:w-full mbc:justify-between mbc:whitespace-normal mbc:text-left',
               className
             )}
           >

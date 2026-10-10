@@ -25,17 +25,14 @@ import {
   type MasterDataListState,
 } from '../core/list'
 import { settingCodeOf } from '../core/payload'
-import type { MasterField, MasterSetting } from '../core/types'
-import {
-  masterDataMessages,
-  type MasterDataMessages,
-} from '../i18n/master-data-messages'
+import type { MasterSetting } from '../core/types'
+import { masterDataMessages } from '../i18n/master-data-messages'
 import { ListError } from '../list/list-error'
 import { useFilters } from '../list/use-filters'
 import { MasterLink } from '../routing/master-link'
 import type { MasterRouting } from '../routing/routing'
-import { DataTable, type DataTableColumn } from '../table/data-table'
-import { DataCell } from './data-cell'
+import { DataTable } from '../table/data-table'
+import { dataColumns } from './data-columns'
 
 export type MasterDataListProps = {
   setting: MasterSetting
@@ -65,71 +62,6 @@ const SECTION = 'mbc:border-none mbc:shadow-sm'
 const HEADER =
   'mbc:bg-emphasis mbc:text-emphasis-foreground mbc:w-full mbc:overflow-hidden mbc:text-ellipsis mbc:px-6 mbc:py-3 mbc:text-lg mbc:outline-none mbc:focus-visible:ring-2 mbc:focus-visible:ring-ring mbc:focus-visible:ring-offset-2'
 const LABEL = 'mbc:flex mbc:h-9 mbc:items-center mbc:text-sm mbc:font-semibold'
-
-const own = (record: Record<string, unknown> | undefined, key: string) =>
-  record && Object.hasOwn(record, key) ? record[key] : undefined
-
-/** v0's columns: the fields shown on the list; code and name first when the setting lacks them. */
-function dataColumns(
-  setting: MasterSetting,
-  routing: MasterRouting,
-  t: MasterDataMessages['list']
-): DataTableColumn<MasterDataListItem>[] {
-  const fields = setting.attributes.fields
-  const shown = fields.filter((field) => field.isShowedOnList)
-  const codeColumn = (header: string): DataTableColumn<MasterDataListItem> => ({
-    id: 'code',
-    header,
-    sortable: true,
-    width: '25%',
-    cell: (row) => (
-      <MasterLink
-        routing={routing}
-        to={{ screen: 'dataItem', settingId: setting.id, id: row.id }}
-        className="mbc:text-primary mbc:block mbc:w-full mbc:overflow-hidden mbc:text-ellipsis mbc:hover:underline"
-      >
-        {dataCodeOf(row)}
-      </MasterLink>
-    ),
-  })
-  const column = (field: MasterField): DataTableColumn<MasterDataListItem> => {
-    const name = field.physicalName
-    if (name === 'code') return codeColumn(field.name)
-    if (name === 'name')
-      return {
-        id: 'name',
-        header: field.name,
-        sortable: true,
-        cell: (row) => row.name,
-      }
-    if (name === 'seq')
-      return {
-        id: 'seq',
-        header: field.name,
-        sortable: true,
-        cell: (row) => row.seq ?? '',
-      }
-    return {
-      id: `attr-${name}`,
-      header: field.name,
-      cell: (row) => (
-        <DataCell field={field} value={own(row.attributes, name)} />
-      ),
-    }
-  }
-  const columns = shown.map(column)
-  if (fields.some((field) => field.physicalName === 'code')) return columns
-  const lead = [codeColumn(t.code)]
-  if (!shown.some((field) => field.physicalName === 'name'))
-    lead.push({
-      id: 'name',
-      header: t.name,
-      sortable: true,
-      width: '25%',
-      cell: (row) => row.name,
-    })
-  return [...lead, ...columns]
-}
 
 /** v0's data list of one setting: its details, a search, the table, back to the settings. */
 export function MasterDataList({
@@ -313,7 +245,19 @@ export function MasterDataList({
             <div className="mbc:px-3">
               <DataTable
                 label={t.list.table}
-                columns={dataColumns(setting, routing, t.list)}
+                columns={dataColumns(setting, t.list, (row) => (
+                  <MasterLink
+                    routing={routing}
+                    to={{
+                      screen: 'dataItem',
+                      settingId: setting.id,
+                      id: row.id,
+                    }}
+                    className="mbc:text-primary mbc:block mbc:w-full mbc:overflow-hidden mbc:text-ellipsis mbc:hover:underline"
+                  >
+                    {dataCodeOf(row)}
+                  </MasterLink>
+                ))}
                 rows={items}
                 rowKey={(row) => row.id}
                 total={total}
