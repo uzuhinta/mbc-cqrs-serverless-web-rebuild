@@ -155,7 +155,10 @@ git status --porcelain                                        # must be empty af
   - Gate: standard gate; build test proves `editors.css` has no element, `:root` or `body` rules.
   - Depends on: M5.
 
-- [ ] **M7a — Copy screens** (`m7a-copy-screens`)
+- [x] **M7a — Copy screens** (`m7a-copy-screens`)
+  - Merged 2026-10-10 (fast-forward): executed inline from the plan; the branch matched the plan. A fresh review found one Important issue: "chosen data only" with no row ticked copied all data to every tenant without a word (v0). Three Minor findings were re-graded Important by their effect: a timed-out request asked for another try, the no-tenant message could sit beside a success, and every row checkbox had the same name. All four were fixed test-first. Gate on React 19 and 18: 840/840, smoke passes.
+  - Plan: `docs/superpowers/plans/2026-10-10-m7a-copy-screens.md` — replayed task by task on `main` before execution.
+  - Deferred minors: chosen tenants that leave `tenants` are still copied to, and their chip cannot be removed; the form keeps its state when `setting` changes; the tenant list's name omits the chosen tenants; a timestamp without a time zone gives a `dateTime` hydration mismatch, and a completed task without `updatedAt` shows an empty end cell; the form's card titles are body size (v0: `text-2xl`); the form's link tests use ids with `#` only.
   - Spec: §3.2 (copy screens, `tenants`), §4 (data table row selection), Review Focus 2.
   - Builds: `/core` copy-task types and helpers (`CopyTask`, its statuses, `MasterTenant`); `masterCopy` messages (v0's text with "tenant" for v0's host-specific term); `MasterCopyRequestForm` (destination: all or chosen tenants; content: setting and all data, setting only, or chosen data rows with v0's search), `MasterCopyTaskList` and `MasterCopyTaskDetail` (v0's columns, status badges, start and end times after hydration, Refresh); the data list's columns shared with the copy form; playground pages on fixture data; smoke render.
   - Ruling: the copy form is named `MasterCopyRequestForm`, because `/core` already exports the request body as `MasterCopyRequest` (M2).
@@ -164,6 +167,10 @@ git status --porcelain                                        # must be empty af
 
 - [ ] **M7b — `/mbc`** (`m7b-mbc`)
   - Spec: §3.4 (API, writes, hooks, pages, tenant rules), §5 (sequence requests), Review Focus 2, 3, 4.
+  - From M7a's review:
+    - `GET /api/tasks/:id` drops the id's last sort-key segment, so the detail request sends the copy request's id plus `#0` (v0).
+    - `sfn-task-parent` matches the setting code as a prefix, so the list keeps only tasks whose `copyTaskName` starts with `<code>#`.
+    - The copy form does not report copy-type changes, so the page loads its data rows up front. The page is keyed by the setting id, so a new setting starts a fresh form.
   - Builds: `createMasterApi(client, { paths })` with every endpoint in §3.4 (bulk batches of 100, `expectedFinishes` per batch, ids encoded; v0's two sequence requests behind the data editor's `generateCode`, checked against the sequence backend, §5); hooks; seven connected pages; re-exports of `createMbcClient`, `MbcClientProvider` and the client errors; master-web depends on client-web; playground fake master backend (commands, tasks, sequence) and connected playground pages.
   - Gate: standard gate.
   - Depends on: M7a.
