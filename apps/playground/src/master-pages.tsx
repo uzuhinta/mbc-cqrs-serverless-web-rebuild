@@ -1,13 +1,19 @@
 import {
+  copyTaskTenant,
   initialDataListState,
   initialSettingListState,
+  MasterCopyRequestForm,
+  MasterCopyTaskDetail,
+  MasterCopyTaskList,
   MasterDataEditor,
   MasterDataList,
   MasterSettingEditor,
   MasterSettingList,
   parseMasterSetting,
   type BulkJsonItem,
+  type CopyTask,
   type ListSort,
+  type MasterCopyRequest,
   type MasterData,
   type MasterDataCreateBody,
   type MasterDataListItem,
@@ -19,6 +25,7 @@ import {
   type MasterSettingListItem,
   type MasterSettingListState,
   type MasterSettingUpdateBody,
+  type MasterTenant,
   type SequenceFormat,
   type SettingOption,
 } from '@mbc-cqrs-serverless/master-web'
@@ -218,17 +225,94 @@ async function fakeImport(
   }
 }
 
+const TENANTS: MasterTenant[] = [
+  { code: 'tenant-b', name: 'テナントB' },
+  { code: 'tenant-c', name: 'テナントC' },
+  { code: 'tenant-d', name: 'テナントD' },
+]
+
+/** Copy requests by setting id (newest first), and each one's tenant tasks. */
+const copies = new Map<string, CopyTask[]>()
+const tenantTasks = new Map<string, CopyTask[]>()
+
+/** The parent's counts, as the backend keeps them; done when no tenant waits. */
+function count(parent: CopyTask) {
+  const tasks = tenantTasks.get(parent.id) ?? []
+  const of = (status: string) =>
+    tasks.filter((task) => task.status === status).length
+  parent.attributes = {
+    subTaskCount: tasks.length,
+    subTaskRunningCount: of('QUEUED'),
+    subTaskSucceedCount: of('COMPLETED'),
+    subTaskFailedCount: of('FAILED'),
+  }
+  if (of('QUEUED') === 0) {
+    parent.status = 'COMPLETED'
+    parent.updatedAt = new Date().toISOString()
+  }
+}
+
+function requestCopy(setting: MasterSetting, request: MasterCopyRequest) {
+  const now = new Date().toISOString()
+  const sk = `MASTER_COPY_${setting.code}#${Date.now().toString(36).toUpperCase()}`
+  const parent: CopyTask = {
+    id: `SFN_TASK#${TENANT}#${sk}`,
+    pk: `SFN_TASK#${TENANT}`,
+    sk,
+    status: 'PROCESSING',
+    createdAt: now,
+    updatedAt: now,
+  }
+  tenantTasks.set(
+    parent.id,
+    request.targetTenants.map((tenant, n) => ({
+      id: `${parent.id}#${n}`,
+      pk: parent.pk,
+      sk: `${sk}#${n}`,
+      status: 'QUEUED',
+      createdAt: now,
+      input: { ...request, targetTenants: [tenant] },
+    }))
+  )
+  copies.set(setting.id, [parent, ...(copies.get(setting.id) ?? [])])
+  count(parent)
+}
+
+/** Pretends the copy runs: each refresh finishes one more tenant; the last of several fails. */
+function advance(parent: CopyTask) {
+  const tasks = tenantTasks.get(parent.id) ?? []
+  const next = tasks.find((task) => task.status === 'QUEUED')
+  if (next) {
+    const fails = tasks.length > 1 && next === tasks.at(-1)
+    next.status = fails ? 'FAILED' : 'COMPLETED'
+    next.updatedAt = new Date().toISOString()
+    if (fails)
+      next.attributes = {
+        error: `Error: ${copyTaskTenant(next)} is not ready\n    at copy (playground)`,
+      }
+  }
+  count(parent)
+}
+
 const routing: MasterRouting = {
-  href: (to) =>
-    to.screen === 'data'
-      ? `#master/data/${encodeURIComponent(to.settingId)}`
-      : to.screen === 'setting'
-        ? `#master/setting/${encodeURIComponent(to.id)}`
-        : to.screen === 'newData'
-          ? `#master/newData/${encodeURIComponent(to.settingId)}`
-          : to.screen === 'dataItem'
-            ? `#master/dataItem/${encodeURIComponent(to.settingId)}/${encodeURIComponent(to.id)}`
-            : `#master/${to.screen}`,
+  href: (to) => {
+    const id = encodeURIComponent
+    switch (to.screen) {
+      case 'setting':
+        return `#master/setting/${id(to.id)}`
+      case 'dataItem':
+        return `#master/dataItem/${id(to.settingId)}/${id(to.id)}`
+      case 'copyTask':
+        return `#master/copyTask/${id(to.settingId)}/${id(to.taskId)}`
+      case 'data':
+      case 'newData':
+      case 'copyRequest':
+      case 'copyTasks':
+        return `#master/${to.screen}/${id(to.settingId)}`
+      default:
+        return `#master/${to.screen}`
+    }
+  },
   navigate: (to) => {
     location.hash = routing.href(to)
   },
@@ -310,9 +394,8 @@ function SettingPage({ id }: { id?: string }) {
   )
 }
 
-function DataPage({ settingId }: { settingId: string }) {
-  const [state, setState] = useState<MasterDataListState>(initialDataListState)
-  const setting = store.get(settingId) ?? [...store.values()][0]!
+/** A setting's records, filtered, sorted and paged as the backend's list does. */
+function dataPage(setting: MasterSetting, state: MasterDataListState) {
   const source = setting.code === 'PRODUCT' ? dataRows() : []
   const matches = source.filter(
     (row) =>
@@ -327,11 +410,18 @@ function DataPage({ settingId }: { settingId: string }) {
         ? (row.seq ?? 0)
         : (row.masterCode ?? '')
   )
+  return { items: pageOf(rows, state), total: rows.length }
+}
+
+function DataPage({ settingId }: { settingId: string }) {
+  const [state, setState] = useState<MasterDataListState>(initialDataListState)
+  const setting = store.get(settingId) ?? [...store.values()][0]!
+  const { items, total } = dataPage(setting, state)
   return (
     <MasterDataList
       setting={setting}
-      items={pageOf(rows, state)}
-      total={rows.length}
+      items={items}
+      total={total}
       state={state}
       onStateChange={setState}
       routing={routing}
@@ -409,10 +499,87 @@ function DataEditorPage({ settingId, id }: { settingId: string; id?: string }) {
   )
 }
 
+function CopyRequestPage({ settingId }: { settingId: string }) {
+  const [state, setState] = useState<MasterDataListState>(initialDataListState)
+  const setting = store.get(settingId)
+  if (!setting) return null
+  const { items, total } = dataPage(setting, state)
+  return (
+    <MasterCopyRequestForm
+      setting={setting}
+      tenants={TENANTS}
+      items={items}
+      total={total}
+      state={state}
+      onStateChange={setState}
+      routing={routing}
+      onRequestCopy={async (request) => {
+        await wait(600)
+        requestCopy(setting, request)
+      }}
+    />
+  )
+}
+
+/** Copies of the store's tasks, so React sees each refresh. */
+const fresh = (tasks: CopyTask[] | undefined) =>
+  (tasks ?? []).map((task) => ({ ...task }))
+
+function CopyTasksPage({ settingId }: { settingId: string }) {
+  const [tasks, setTasks] = useState(() => fresh(copies.get(settingId)))
+  const [loading, setLoading] = useState(false)
+  const refresh = async () => {
+    setLoading(true)
+    await wait(400)
+    for (const parent of copies.get(settingId) ?? []) advance(parent)
+    setTasks(fresh(copies.get(settingId)))
+    setLoading(false)
+  }
+  return (
+    <MasterCopyTaskList
+      settingId={settingId}
+      tasks={tasks}
+      routing={routing}
+      loading={loading}
+      onRefresh={() => void refresh()}
+    />
+  )
+}
+
+function CopyTaskPage({
+  settingId,
+  taskId,
+}: {
+  settingId: string
+  taskId: string
+}) {
+  const [tasks, setTasks] = useState(() => fresh(tenantTasks.get(taskId)))
+  const [loading, setLoading] = useState(false)
+  const refresh = async () => {
+    setLoading(true)
+    await wait(400)
+    const parent = copies.get(settingId)?.find((task) => task.id === taskId)
+    if (parent) advance(parent)
+    setTasks(fresh(tenantTasks.get(taskId)))
+    setLoading(false)
+  }
+  return (
+    <MasterCopyTaskDetail
+      settingId={settingId}
+      tasks={tasks}
+      routing={routing}
+      loading={loading}
+      onRefresh={() => void refresh()}
+    />
+  )
+}
+
 /**
  * `#master` (settings list), `#master/newSetting`, `#master/setting/<id>`,
- * `#master/data/<setting id>`, `#master/newData/<setting id>` and
- * `#master/dataItem/<setting id>/<id>`, on in-memory data.
+ * `#master/data/<setting id>`, `#master/newData/<setting id>`,
+ * `#master/dataItem/<setting id>/<id>`, `#master/copyRequest/<setting id>`,
+ * `#master/copyTasks/<setting id>` and `#master/copyTask/<setting id>/<task
+ * id>`, on in-memory data.
  */
 export function MasterPage({ route }: { route: string }) {
   const [, screen, id, item] = route.split('/')
@@ -426,6 +593,12 @@ export function MasterPage({ route }: { route: string }) {
         <DataEditorPage key={`new:${decoded}`} settingId={decoded} />
       ) : screen === 'dataItem' && decoded && itemId ? (
         <DataEditorPage key={itemId} settingId={decoded} id={itemId} />
+      ) : screen === 'copyRequest' && decoded ? (
+        <CopyRequestPage key={decoded} settingId={decoded} />
+      ) : screen === 'copyTasks' && decoded ? (
+        <CopyTasksPage key={decoded} settingId={decoded} />
+      ) : screen === 'copyTask' && decoded && itemId ? (
+        <CopyTaskPage key={itemId} settingId={decoded} taskId={itemId} />
       ) : screen === 'setting' && decoded ? (
         <SettingPage key={decoded} id={decoded} />
       ) : screen === 'newSetting' ? (

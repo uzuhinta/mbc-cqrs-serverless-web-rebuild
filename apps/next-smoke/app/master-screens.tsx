@@ -3,6 +3,9 @@
 import {
   BulkImportDialog,
   MASTER_FIELD_TYPES,
+  MasterCopyRequestForm,
+  MasterCopyTaskDetail,
+  MasterCopyTaskList,
   MasterDataEditor,
   MasterDataList,
   MasterLink,
@@ -67,6 +70,17 @@ const parsed = parseMasterSetting({
 if (!parsed.success) throw parsed.error
 const setting = parsed.data
 
+const copyTask = {
+  id: 'SFN_TASK#tenant-a#MASTER_COPY_PRODUCT#01J9A',
+  pk: 'SFN_TASK#tenant-a',
+  sk: 'MASTER_COPY_PRODUCT#01J9A',
+  status: 'COMPLETED',
+  createdAt: '2026-10-10T00:05:07.000Z',
+  updatedAt: '2026-10-10T00:06:40.000Z',
+  input: { targetTenants: ['tenant-b'] },
+  attributes: { subTaskCount: 1, subTaskSucceedCount: 1 },
+}
+
 /** master-web's client entry and the new ui-web parts, rendered on the server and hydrated. */
 export function MasterScreens() {
   return (
@@ -120,6 +134,27 @@ export function MasterScreens() {
         routing={routing}
         onSave={async () => {}}
         onDelete={async () => {}}
+      />
+      <MasterCopyRequestForm
+        setting={setting}
+        tenants={[{ code: 'tenant-b', name: 'テナントB' }]}
+        items={[]}
+        total={0}
+        state={initialDataListState()}
+        onStateChange={() => {}}
+        routing={routing}
+        onRequestCopy={async () => {}}
+      />
+      <MasterCopyTaskList
+        settingId={setting.id}
+        tasks={[copyTask]}
+        routing={routing}
+        onRefresh={() => {}}
+      />
+      <MasterCopyTaskDetail
+        settingId={setting.id}
+        tasks={[copyTask]}
+        routing={routing}
       />
       <MultiSelect
         options={[{ value: 'a', label: 'A' }]}

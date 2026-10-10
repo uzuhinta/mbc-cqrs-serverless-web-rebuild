@@ -75,6 +75,10 @@ Added by M6:
 
 - The Markdown editor stays light in dark mode (`data-color-mode="light"`); its toolbar titles and Quill's picker labels ("Normal", "Heading 1") are the libraries' English.
 
+Added by M7a:
+
+- The copy results centre their counts under left-aligned headers (v0); their tables scroll sideways on a phone like the other lists.
+
 ### Standard gate (every sub-plan)
 
 ```bash
