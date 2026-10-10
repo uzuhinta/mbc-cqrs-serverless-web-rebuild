@@ -177,7 +177,10 @@ git status --porcelain                                        # must be empty af
   - Gate: standard gate.
   - Depends on: M7a.
 
-- [ ] **M7c — Connected pages** (`m7c-mbc-pages`)
+- [x] **M7c — Connected pages** (`m7c-mbc-pages`)
+  - Merged 2026-10-10 (fast-forward): executed inline from the plan; the branch matched the plan. A fresh review probed odd ids, server rendering of all seven pages with a real client, and StrictMode; all held. It found one Important issue: a write cut short by leaving the page reached `onError`. Two Minor findings were re-graded Important, a page re-used for another id kept its state and a `loadTenants` that throws at once crashed the app. All three were fixed test-first: aborts not reported, pages keyed by their ids, `loadTenants` run as a promise. Gate on React 19 and 18: 903/903, smoke passes.
+  - Plan: `docs/superpowers/plans/2026-10-10-m7c-mbc-pages.md` — replayed task by task on `main` before execution.
+  - Deferred minors: every failed poll reaches `onError`; a failed sequence-master load leaves the format list empty without a message; a new item's id is built from the tenant and code rather than read from the backend's answer (return the created id before 1.0.0); test gaps (settings timeout on create, ids with spaces or `/`, `formats=[]`); the playground's fake backend (copies advance twice per open under StrictMode, no default sort, duplicate creates accepted, no `seq` on create, case-sensitive filters, a deleted setting's records listed).
   - Spec: §3.4 (connected pages, tenant rules), §1 (success criterion 1), Review Focus 2, 4.
   - From M7a's review: the copy form does not report copy-type changes, so the copy page loads its data rows up front; the copy page is keyed by the setting id, so a new setting starts a fresh form.
   - From M7b's review: the pages write through `runOrThrow`, so the screens get the real error (the data editor locks Save after a timed-out create); without realtime an import ends before the data syncs, so the list page reloads after it but cannot promise the rows are there yet.
@@ -187,6 +190,7 @@ git status --porcelain                                        # must be empty af
 
 - [ ] **M8 — Release** (`m8-release`)
   - Spec: §3 (subpaths not kept), §5, §6, §7, §1 success criteria.
+  - From M7c's review: the README says that `client.tenantCode()` runs during render (on the server too), that the pages assume realtime (without it a new item may open before the backend has synced it), and that the pages key themselves by their ids.
   - From M6's review: the README's editors section names the peers to install, `editors.css` (its sprite in `editors-assets/`), `@uiw/react-md-editor/markdown-editor.css` for bundlers that drop CSS imported from JavaScript, the CSP the editors need (Ace injects `<style>` elements; jsoneditor starts its worker from a `data:` URL) and their size (jsoneditor with Ace is about 1 MB minified, loaded after mount); `next-smoke` imports `editors.css` and passes `editorRenderers` from a Server Component.
   - Builds: master-web README (entries, routing examples for Next App Router and React Router, editors opt-in, tenant rules), `MIGRATION.md` (every v0 export and host setup step mapped, with a worked typical-host rewrite), root README update, `apps/next-smoke` pages for every master-web entry, docs-imports and package-files tests cover master-web, changeset (four packages → 1.0.0), final whole-repo review.
   - Gate: standard gate + smoke on React 18 and 19 + `changeset status` shows four 1.0.0 releases.
