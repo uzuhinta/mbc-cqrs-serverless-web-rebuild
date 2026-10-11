@@ -17,7 +17,7 @@ function packed(pkg: string): string[] {
 }
 
 describe('published files', () => {
-  it.each(['ui-web', 'client-web', 'survey-web'])(
+  it.each(['ui-web', 'client-web', 'survey-web', 'master-web'])(
     '%s ships its licence, readme and changelog',
     (pkg) => {
       expect(packed(pkg)).toEqual(

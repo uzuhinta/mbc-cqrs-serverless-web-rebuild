@@ -10,7 +10,7 @@ pnpm add @mbc-cqrs-serverless/ui-web react react-dom
 
 ## Styles
 
-Import one stylesheet once (if you use `survey-web`, import its `styles.css` instead — it contains every ui-web class it uses):
+Import one stylesheet once (if you use `survey-web` or `master-web`, import its `styles.css` instead — it contains every ui-web class it uses):
 
 ```ts
 import '@mbc-cqrs-serverless/ui-web/styles.css'
@@ -59,7 +59,7 @@ export function Providers({ children }: { children: ReactNode }) {
 ```
 
 - `locale`: `'ja'` (default) or `'en'`; anything else is treated as `'ja'`.
-- `messages`: partial overrides per namespace (`ui` here; `survey`, `surveyCreator`, `surveyTemplates` in survey-web). Keep the object stable — a module constant or `useMemo` — because a new object re-renders every component that shows text.
+- `messages`: partial overrides per namespace (`ui` here; `survey`, `surveyCreator`, `surveyTemplates` in survey-web; `master`, `masterSetting`, `masterData`, `masterCopy` in master-web). Keep the object stable — a module constant or `useMemo` — because a new object re-renders every component that shows text.
 - `dir`: `'ltr' | 'rtl'`; `portalContainer`: where dialogs, menus and popovers mount.
 
 Add your own namespace with `defineMessages` and read it with `useMessages`:
