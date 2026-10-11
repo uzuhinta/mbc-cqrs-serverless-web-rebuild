@@ -310,6 +310,17 @@ describe('MasterSettingEditor', () => {
     expect(button('保存')).toBeEnabled()
   })
 
+  it('treats its own tenant’s setting as its own in any case (the backend lowercases it)', () => {
+    setup({
+      setting: { ...stored(), tenantCode: 'tenant-a' },
+      tenantCode: 'TENANT-A',
+    })
+    expect(button('編集')).toBeVisible()
+    expect(
+      screen.queryByText('他のテナントの設定のため、編集できません。')
+    ).toBeNull()
+  })
+
   it('opens another tenant’s setting read-only with a way back', () => {
     const setting = { ...stored(), tenantCode: 'common' }
     setup({ setting, onDelete: async () => {}, canCopy: true })

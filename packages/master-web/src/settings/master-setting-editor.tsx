@@ -26,6 +26,7 @@ import {
   type SettingOption,
 } from '../core/setting-form'
 import { parseSettingJson, settingJson } from '../core/setting-json'
+import { isSameTenant } from '../core/tenant'
 import type { MasterField, MasterSetting } from '../core/types'
 import { ConfirmButton } from '../form/confirm-button'
 import { FailureAlert, failureOf, type Failure } from '../form/failure'
@@ -134,7 +135,7 @@ function EditorBody({
   const owned =
     mode === 'create' ||
     tenantCode === undefined ||
-    setting?.tenantCode === tenantCode
+    isSameTenant(setting?.tenantCode, tenantCode)
 
   const [baseline, setBaseline] = useState<Snapshot>(() => {
     const form = settingToForm(setting, optionKeys)

@@ -358,6 +358,14 @@ describe('MasterDataEditor', () => {
     )
   })
 
+  it('treats its own tenant’s record as its own in any case (the backend lowercases it)', () => {
+    setup({
+      data: { ...record(), tenantCode: 'tenant-a' },
+      tenantCode: 'TENANT-A',
+    })
+    expect(button('編集')).toBeVisible()
+  })
+
   it('opens another tenant’s record read-only with a way back to the list', () => {
     setup({
       data: { ...record(), tenantCode: 'common' },

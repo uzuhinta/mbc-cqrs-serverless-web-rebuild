@@ -1,3 +1,5 @@
+import { isSameTenant } from './tenant'
+
 /** One item of `POST /api/master-bulk`; `settingCode` makes it a data record. */
 export type BulkJsonItem = {
   name: string
@@ -139,7 +141,7 @@ export function parseBulkJson(
     if (
       tenantCode !== undefined &&
       item.tenantCode !== undefined &&
-      item.tenantCode !== tenantCode
+      !isSameTenant(item.tenantCode, tenantCode)
     )
       errors.push({ key: 'otherTenant', index })
     else items.push(item)

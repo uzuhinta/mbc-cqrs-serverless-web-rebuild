@@ -152,6 +152,13 @@ describe('parseBulkJson with a mapper', () => {
 })
 
 describe('parseBulkJson with the current tenant', () => {
+  it('accepts entries for the current tenant written in another case', () => {
+    const text = JSON.stringify([{ ...data, tenantCode: 'tenant-a' }])
+    expect(
+      parseBulkJson(text, { screen: 'data', tenantCode: 'TENANT-A' }).errors
+    ).toEqual([])
+  })
+
   it('refuses entries for another tenant, mapped or not (the backend would reject the batch)', () => {
     const text = JSON.stringify([
       { ...data, tenantCode: 't1' },

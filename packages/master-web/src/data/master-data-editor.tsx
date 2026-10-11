@@ -16,6 +16,7 @@ import {
   type MasterDataCreateBody,
   type MasterDataUpdateBody,
 } from '../core/payload'
+import { isSameTenant } from '../core/tenant'
 import type { MasterData, MasterField, MasterSetting } from '../core/types'
 import { validateMasterData } from '../core/validate'
 import {
@@ -126,7 +127,7 @@ function EditorBody({
   const owned =
     mode === 'create' ||
     tenantCode === undefined ||
-    data?.tenantCode === tenantCode
+    isSameTenant(data?.tenantCode, tenantCode)
 
   const [baseline, setBaseline] = useState<MasterFormValues>(() =>
     toFormValues(fields, data)
