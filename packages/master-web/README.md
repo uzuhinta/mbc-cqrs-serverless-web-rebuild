@@ -198,7 +198,7 @@ React Router's `useParams()` gives decoded values: pass them to the pages as the
 
 ### Hooks and the API
 
-For your own pages: `useMasterApi()` (the API on the provider's client), `useMasterSettings(state)`, `useMasterSetting(id)`, `useMasterDataList(settingId, state)`, `useMasterData(id)`, `useCopyTasks(settingCode, { pollMs })`, `useCopyTask(id, { pollMs })`, and `useMasterMutations()`. Each write there has `run` (resolves `undefined` on failure, the error is in `error`) and `runOrThrow` (rejects with the write's own error, which the screens need).
+For your own pages: `useMasterApi()` (the API on the provider's client), `useMasterSettings(state)`, `useMasterSetting(id)`, `useMasterDataList(settingId, state)`, `useMasterData(id)`, `useCopyTasks(settingCode, { pollMs })`, `useCopyTask(id, { pollMs })`, and `useMasterMutations()`. Each write there has `run` (resolves `undefined` on failure, the error is in `error`) and `runOrThrow` (resolves with the write's result and rejects with the write's own error, which the screens need). A create resolves with the new item's id as the backend wrote it: open that, not an id built from the tenant code, which the backend lowercases (core 1.1.0).
 
 `createMasterApi(client, { paths })` works without React, on a server too. Bulk import sends batches of 100 (the backend's limit); a failed batch rejects with `MasterBulkError` (`done`, `from`, `to`). Every path can be changed:
 
