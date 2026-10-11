@@ -184,6 +184,21 @@ describe('MasterDataEditor', () => {
     expect(input('価格')).toHaveValue('1300')
   })
 
+  it('clears in a later save a value an earlier save added', async () => {
+    const data = record()
+    delete data.attributes.sku
+    const { onSave } = setup({ data })
+    await userEvent.click(button('編集'))
+    await userEvent.type(input('SKU'), 'AP-9')
+    await userEvent.click(button('登録'))
+    await userEvent.click(await screen.findByRole('button', { name: '編集' }))
+    await userEvent.clear(input('SKU'))
+    await userEvent.click(button('登録'))
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(2))
+    // The backend keeps a key an update leaves out.
+    expect(lastBody(onSave).attributes).toHaveProperty('sku', '')
+  })
+
   it('saves values v0 stored in other types unchanged when they were not edited', async () => {
     const parsed = parseMasterData(V0_DATA_ODD)
     if (!parsed.success) throw parsed.error

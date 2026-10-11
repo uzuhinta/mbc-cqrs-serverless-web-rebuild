@@ -131,6 +131,9 @@ function EditorBody({
   const [baseline, setBaseline] = useState<MasterFormValues>(() =>
     toFormValues(fields, data)
   )
+  // What the backend holds after this editor's last update: the next update
+  // is worked out against it (a host need not reload `data` in between).
+  const [stored, setStored] = useState(data)
   const [values, setValues] = useState(baseline)
   const [editing, setEditing] = useState(mode === 'create')
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -211,10 +214,13 @@ function EditorBody({
           toDataPayload(setting, values, { mode: 'create', generatedCode })
         )
         setCreated(true)
-      } else if (data) {
-        await onSave(
-          toDataPayload(setting, values, { mode: 'update', previous: data })
-        )
+      } else if (stored) {
+        const body = toDataPayload(setting, values, {
+          mode: 'update',
+          previous: stored,
+        })
+        await onSave(body)
+        setStored({ ...stored, ...body })
         setBaseline(values)
         setEditing(false)
       }
