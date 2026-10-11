@@ -181,7 +181,8 @@ export function toSettingPayload(
   fields: readonly MasterField[],
   options: { mode: 'create' } | { mode: 'update'; previous: MasterSetting }
 ): MasterSettingCreateBody | MasterSettingUpdateBody {
-  const previous = options.mode === 'update' ? options.previous.attributes : {}
+  const previous: Readonly<Record<string, unknown>> =
+    options.mode === 'update' ? options.previous.attributes : {}
   // A switch left as it was keeps the stored value, type included.
   const flags = Object.fromEntries(
     Object.entries(values.options).map(([key, on]) =>
