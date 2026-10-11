@@ -36,7 +36,7 @@ Seen in a production host's integration of v0:
 - Radix portals lose the theme — the host toggles a body class while the widget is mounted.
 - The React context breaks unless every entry is loaded with `ssr: false`.
 - The default Apollo client does not know the host's AppSync endpoint — the host must pass its own (or a mock).
-- `next/navigation` inside the package; a fixed URL scheme (`IUrlProvider`, including entries for one particular app such as `FAQ_CATEGORY_PAGE_URL` and `TOP_URL`).
+- `next/navigation` inside the package; a fixed URL scheme (`IUrlProvider`, including entries for one particular app).
 - One app's constants inside the library: a hard-coded system tenant code, a host-specific tenant-list endpoint read by fixed Japanese column names, a host-specific copy endpoint, and labels for two host-specific setting flags.
 - A health-check request to `/` on every page; a global loading overlay (mobx); toasts for every outcome.
 - Bulk import sends all items in one request; the backend rejects more than 100.
