@@ -146,26 +146,33 @@ export function createCommand(
           }
 
           if (realtime) {
-            const subscription = realtime.subscribe(
-              {
-                query: ON_MESSAGE,
-                variables: {
-                  tenantCode: http.resolveTenantCode(),
-                  action: 'command-status',
+            // The backend sends a message under the tenant in its keys, which
+            // it lowercases (core 1.1.0); earlier backends kept the case. Each
+            // message goes out under one of them, so it is heard once.
+            const tenantCode = http.resolveTenantCode()
+            const tenants = [...new Set([tenantCode, tenantCode.toLowerCase()])]
+            const subscriptions = tenants.map((tenant) =>
+              realtime.subscribe(
+                {
+                  query: ON_MESSAGE,
+                  variables: { tenantCode: tenant, action: 'command-status' },
                 },
-              },
-              {
-                next: (payload) => {
-                  const message = parseMessage(payload)
-                  if (!message) return
-                  if (sent.expected === undefined) buffered.push(message)
-                  else check(message)
-                },
-                error: (error) => reject(error),
-              }
+                {
+                  next: (payload) => {
+                    const message = parseMessage(payload)
+                    if (!message) return
+                    if (sent.expected === undefined) buffered.push(message)
+                    else check(message)
+                  },
+                  error: (error) => reject(error),
+                }
+              )
             )
-            cleanups.push(() => subscription.unsubscribe())
-            await subscription.ready
+            for (const subscription of subscriptions)
+              cleanups.push(() => subscription.unsubscribe())
+            await Promise.all(
+              subscriptions.map((subscription) => subscription.ready)
+            )
           }
 
           options.onPhase?.('sending')

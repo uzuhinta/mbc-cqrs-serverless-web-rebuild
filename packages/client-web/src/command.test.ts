@@ -108,6 +108,38 @@ describe('command', () => {
     ).toEqual(['tenant-a', 'tenant-b'])
   })
 
+  it('also listens under the lowercased tenant, as the backend sends it (core 1.1.0)', async () => {
+    const { command, responses } = setup('TENANT-A')
+    const pending = command<{ requestId: string }>({
+      method: 'POST',
+      path: '/a',
+    })
+    const socket = await connected()
+    const starts = socket.starts()
+    expect(
+      starts.map(
+        (start) => JSON.parse(start.payload?.data ?? '{}').variables.tenantCode
+      )
+    ).toEqual(['TENANT-A', 'tenant-a'])
+    responses[0]?.resolve({ requestId: 'req-1' })
+    await flush()
+    socket.receive({
+      type: 'data',
+      id: starts[1]?.id,
+      payload: {
+        data: {
+          onMessage: {
+            id: 'req-1',
+            tenantCode: 'tenant-a',
+            action: 'command-status',
+            content: JSON.stringify({ status: 'finish:FINISHED' }),
+          },
+        },
+      },
+    })
+    await expect(pending).resolves.toMatchObject({ requestId: 'req-1' })
+  })
+
   it('subscribes before sending, then resolves on finish:FINISHED', async () => {
     const { command, responses } = setup()
     const phases: string[] = []
