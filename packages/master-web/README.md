@@ -14,7 +14,7 @@ pnpm add @mbc-cqrs-serverless/master-web react react-dom
 import '@mbc-cqrs-serverless/master-web/styles.css'
 ```
 
-If your app has its own CSS layers or Tailwind v3, import `@mbc-cqrs-serverless/master-web/styles.layer.css` instead (it contains ui-web's styles too). See ui-web's README for layer order and theming. Using survey-web as well? Import both packages' stylesheets; the ui-web rules they share are identical.
+If your app has its own CSS layers or Tailwind v3, import `@mbc-cqrs-serverless/master-web/styles.layer.css` instead (it contains ui-web's styles too). See ui-web's README for layer order and theming. Using survey-web as well? Its stylesheet is the same file as master-web's (each covers both packages), so import either one, or both.
 
 ## Entry points
 
@@ -115,7 +115,6 @@ export function useMasterRouting(): MasterRouting {
 'use client'
 // app/master/[settingId]/data/[id]/page.tsx
 import { useParams } from 'next/navigation'
-import { editorRenderers } from '@mbc-cqrs-serverless/master-web/editors'
 import { MbcMasterDataEditorPage } from '@mbc-cqrs-serverless/master-web/mbc'
 import { useMasterRouting } from '@/app/master/routing'
 
@@ -127,22 +126,23 @@ export default function DataItemPage() {
       // Next gives the URL-encoded segment; the page encodes ids itself.
       settingId={decodeURIComponent(params.settingId)}
       id={decodeURIComponent(params.id)}
-      components={editorRenderers}
       onError={(error) => console.error(error)}
     />
   )
 }
 ```
 
-| Page                          | Route (above)                       | Props besides `routing`, `onError`, `paths`                                                                      |
-| ----------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `MbcMasterSettingListPage`    | `/master`                           | `state` / `onStateChange` (kept inside without them), `inputSampleJson`, `mapRawItem`, `onBack`                  |
-| `MbcMasterSettingEditorPage`  | `/master/new`, `/master/[id]`       | `id` (none creates), `onSaved(id)`, `onDeleted()`, `canCopy`, `settingOptions`, `formats` or `formatSettingCode` |
-| `MbcMasterDataListPage`       | `/master/[settingId]/data`          | `settingId`, `state` / `onStateChange`, `inputSampleJson`, `mapRawItem`                                          |
-| `MbcMasterDataEditorPage`     | `…/data/new`, `…/data/[id]`         | `settingId`, `id` (none creates), `onSaved(id)`, `onDeleted()`, `components`                                     |
-| `MbcMasterCopyRequestPage`    | `/master/[settingId]/copy/new`      | `settingId`, `loadTenants(): Promise<{ code; name }[]>`, `onRequested()`, `state` / `onStateChange`              |
-| `MbcMasterCopyTaskListPage`   | `/master/[settingId]/copy`          | `settingId`, `pollMs`                                                                                            |
-| `MbcMasterCopyTaskDetailPage` | `/master/[settingId]/copy/[taskId]` | `settingId`, `taskId`, `pollMs`                                                                                  |
+| Page                          | Route (above)                        | Props besides `routing`, `onError`, `paths`                                                                      |
+| ----------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `MbcMasterSettingListPage`    | `/master`                            | `state` / `onStateChange` (kept inside without them), `inputSampleJson`, `mapRawItem`, `onBack`                  |
+| `MbcMasterSettingEditorPage`  | `/master/new`, `/master/[settingId]` | `id` (none creates), `onSaved(id)`, `onDeleted()`, `canCopy`, `settingOptions`, `formats` or `formatSettingCode` |
+| `MbcMasterDataListPage`       | `/master/[settingId]/data`           | `settingId`, `state` / `onStateChange`, `inputSampleJson`, `mapRawItem`                                          |
+| `MbcMasterDataEditorPage`     | `…/data/new`, `…/data/[id]`          | `settingId`, `id` (none creates), `onSaved(id)`, `onDeleted()`, `components`                                     |
+| `MbcMasterCopyRequestPage`    | `/master/[settingId]/copy/new`       | `settingId`, `loadTenants(): Promise<{ code; name }[]>`, `onRequested()`, `state` / `onStateChange`              |
+| `MbcMasterCopyTaskListPage`   | `/master/[settingId]/copy`           | `settingId`, `pollMs`                                                                                            |
+| `MbcMasterCopyTaskDetailPage` | `/master/[settingId]/copy/[taskId]`  | `settingId`, `taskId`, `pollMs`                                                                                  |
+
+Next allows one slug name per path level, so the settings editor's folder is `[settingId]` as well: its page passes `params.settingId` as `id`. The data editor in step 3 has no editors' libraries; to add them, see "Rich editors" below.
 
 - **After a write** the pages go on as 0.0.x did: a new setting opens its data list, a new record opens itself, a deleted setting returns to the settings list, a copy request opens the copy results. `onSaved` and `onDeleted` only tell you; do not navigate in them as well.
 - **Errors** show on the page, and every failed load or write also reaches `onError` (show a toast there, if your app has them). A write cut short by leaving the page is not reported. A `MbcTimeoutError` means the outcome is unknown: the data editor keeps Save off so that a second save cannot number a duplicate.
@@ -213,7 +213,8 @@ const api = createMasterApi(
     apiUrl: 'https://api.example.com',
     tenantCode: 'my-tenant',
   }),
-  // The sequence package mounts nowhere by itself; these are 0.0.x's paths.
+  // The defaults are 0.0.x's paths (/api/sequence, /api/sequence/with-provided-setting).
+  // For a backend that mounts the sequence package's controller as is, here at /api/seq:
   {
     paths: {
       sequence: '/api/seq',
@@ -327,7 +328,7 @@ export function DataItem(props: { settingId: string; id: string }) {
 
 - Each editor shows a plain text box on the server and until its library has loaded (with `import()` after mount), so nothing else waits for them. `RichTextEditor`, `MarkdownEditor` and `JsonEditor` are also exported for your own forms.
 - **Styles:** `editors.css` holds Quill's and jsoneditor's styles, scoped to their own classes. Keep `editors-assets/` beside it if you copy the file. The Markdown editor imports its own CSS from JavaScript; if your bundler drops CSS imported that way, add `import '@uiw/react-md-editor/markdown-editor.css'`.
-- **CSP:** Ace (inside jsoneditor) adds `<style>` elements, so `style-src` needs `'unsafe-inline'`, and jsoneditor starts its JSON worker from a `data:` URL, so `worker-src` needs `data:`. Where that cannot be allowed, leave `json` out of `components`.
+- **CSP:** Ace (inside jsoneditor) adds `<style>` elements, so `style-src` needs `'unsafe-inline'`. It also starts its JSON worker from a `blob:` URL that loads a `data:` script, so `worker-src` needs `blob:` and `script-src` needs `data:`. Where that cannot be allowed, leave `json` out of `components`.
 - **Size:** jsoneditor with Ace is about 1 MB minified. Only pages that render a JSON field with `JsonEditor` load it.
 - The editors stay light in dark mode, and their own toolbar text is the libraries' English.
 

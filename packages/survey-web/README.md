@@ -18,7 +18,7 @@ pnpm add @mbc-cqrs-serverless/ui-web@<survey-web's version>
 import '@mbc-cqrs-serverless/survey-web/styles.css'
 ```
 
-If your app has its own CSS layers or Tailwind v3, import `@mbc-cqrs-serverless/survey-web/styles.layer.css` instead (it contains ui-web's styles too). See ui-web's README for layer order and theming.
+If your app has its own CSS layers or Tailwind v3, import `@mbc-cqrs-serverless/survey-web/styles.layer.css` instead (it contains ui-web's styles too). See ui-web's README for layer order and theming. The stylesheet is the same file as master-web's (each covers both packages), so an app using both can import either one, or both.
 
 ## Entry points
 

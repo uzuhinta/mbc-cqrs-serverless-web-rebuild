@@ -44,6 +44,9 @@ describe('survey-web output', () => {
     expect(
       unprefixedClasses(root, [
         'dark',
+        // The stylesheet covers master-web too, whose rich-text editor hides
+        // Quill's toolbar from an mbc: class.
+        'ql-toolbar',
         'rdp-button_next',
         'rdp-button_previous',
       ])

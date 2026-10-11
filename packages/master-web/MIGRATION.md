@@ -57,38 +57,47 @@ export default function MasterLayout({ children }) {
 
 ```tsx
 'use client'
+// app/admin/[tenant]/master/layout.tsx
 import type { ReactNode } from 'react'
+import { useParams } from 'next/navigation'
 import { MbcProvider } from '@mbc-cqrs-serverless/master-web'
 import {
   createMbcClient,
   MbcClientProvider,
+  type MbcClient,
 } from '@mbc-cqrs-serverless/master-web/mbc'
 import { fetchAuthSession } from 'aws-amplify/auth'
 
-let tenant = 'common'
-/** Call from your layout when the tenant in the URL changes. */
-export const setTenant = (code: string) => {
-  tenant = code
+/** One client per tenant, kept for the app's life (also safe on a server). */
+const clients = new Map<string, MbcClient>()
+
+function clientFor(tenant: string): MbcClient {
+  let client = clients.get(tenant)
+  if (!client) {
+    client = createMbcClient({
+      // The origin: the API paths include /api.
+      apiUrl: process.env.NEXT_PUBLIC_API_ENDPOINT!,
+      tenantCode: tenant,
+      getAuthToken: async () =>
+        (await fetchAuthSession()).tokens?.idToken?.toString(),
+      realtime: {
+        url: process.env.NEXT_PUBLIC_AWS_APPSYNC_GRAPHQLENDPOINT!,
+        auth: {
+          type: 'API_KEY',
+          apiKey: process.env.NEXT_PUBLIC_AWS_APPSYNC_APIKEY!,
+        },
+      },
+    })
+    clients.set(tenant, client)
+  }
+  return client
 }
 
-const client = createMbcClient({
-  // The origin: the API paths include /api.
-  apiUrl: process.env.NEXT_PUBLIC_API_ENDPOINT!,
-  tenantCode: () => tenant,
-  getAuthToken: async () =>
-    (await fetchAuthSession()).tokens?.idToken?.toString(),
-  realtime: {
-    url: process.env.NEXT_PUBLIC_AWS_APPSYNC_GRAPHQLENDPOINT!,
-    auth: {
-      type: 'API_KEY',
-      apiKey: process.env.NEXT_PUBLIC_AWS_APPSYNC_APIKEY!,
-    },
-  },
-})
-
-export function MasterProviders({ children }: { children: ReactNode }) {
+export default function MasterLayout({ children }: { children: ReactNode }) {
+  const { tenant } = useParams<{ tenant: string }>()
+  // Chosen while rendering, before the pages: they read the tenant as they render.
   return (
-    <MbcClientProvider client={client}>
+    <MbcClientProvider client={clientFor(decodeURIComponent(tenant))}>
       <MbcProvider locale="ja">{children}</MbcProvider>
     </MbcClientProvider>
   )
@@ -97,7 +106,7 @@ export function MasterProviders({ children }: { children: ReactNode }) {
 
 - `httpClient` → `apiUrl`, `getAuthToken` and `tenantCode`. The client sends the `x-tenant-code` header and the token itself.
 - `apolloClient` (and the AppSync endpoint it needed) → `realtime`. The pages wait for each change's completion message over it (README, "Realtime").
-- `user.tenantCode` → `tenantCode`. A function is read on every request and every render, so it can follow the URL; it must also work on the server. `user.tenantRole` is gone: 0.0.x did not use it.
+- `user.tenantCode` → the client's `tenantCode`. When the tenant comes from the URL, keep one client per tenant as above: a switch gives the pages another client, and they load again. (A `tenantCode` function is accepted too; it is read on every request and on every render, also on the server.) `user.tenantRole` is gone: 0.0.x did not use it.
 - `urlProvider` → the `routing` prop of each page (section 3).
 - The package reads no environment variables; your app does.
 
