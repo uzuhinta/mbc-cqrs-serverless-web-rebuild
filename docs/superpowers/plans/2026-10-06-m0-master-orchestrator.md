@@ -188,7 +188,26 @@ git status --porcelain                                        # must be empty af
   - Gate: standard gate.
   - Depends on: M7b.
 
-- [ ] **M8 — Release** (`m8-release`)
+- [x] **M8 — Release** (`m8-release`)
+  - Merged 2026-10-11 (fast-forward): executed inline from the plan; the branch matched the plan. A fresh review typechecked every example and checked packing, the changeset and the smoke app. It found six Important issues, all fixed:
+    - survey-web's and master-web's stylesheets conflicted when an app imported both; they are now built from both packages' sources and are the same file (a test checks it);
+    - the README's Next route layout used two slug names at one level;
+    - a sequence-paths example said the opposite of what it did;
+    - the CSP for Ace's worker was wrong (it needs `blob:` workers and `data:` scripts);
+    - the migration guide's tenant setup loaded the previous tenant first;
+    - the quick start used the rich editors without their libraries.
+
+    A test found flaky at the finishing run (an `onError` reported from an effect) now waits. Gate on React 19 and 18: 909/909, smoke passes; `changeset status` shows four 1.0.0 releases.
+
+  - Plan: `docs/superpowers/plans/2026-10-10-m8-release.md` — replayed task by task on `main` before execution.
+  - Fixed after the merge, from playground use:
+    - Quill's source map comment in `editors.css` made Vite look for a missing `.map` (fixed, 910/910);
+    - the creator's floating action bar on the template page sat in a corner on desktop (fixed by the shared stylesheet).
+  - Deferred minors:
+    - **README:** a copy request "opens the copy results as 0.0.x did" (0.0.x went back); the timeout rule is stated for all saves, not only creates; `BulkImportDialog` takes no `routing`; the tenant-word example covers 2 of 11 strings.
+    - **Migration guide:** no word on `JsonEditor`'s new props, `RichTextEditor`'s dropped `placeholder`, every 0.0.x page's URL reads, `<Suspense>` for `useSearchParams` on static routes, 0.0.x's environment variables, or ESM-only; "ids are URL-encoded" is listed as a change though 0.0.x already encoded them.
+    - **Elsewhere:** survey-web's README says "three packages"; two stacked JSDoc blocks in the smoke app; no permanent typecheck of the docs' examples.
+  - Still to do: the final whole-repo review.
   - Spec: §3 (subpaths not kept), §5, §6, §7, §1 success criteria.
   - From M7c's review: the README says that `client.tenantCode()` runs during render (on the server too), that the pages assume realtime (without it a new item may open before the backend has synced it), and that the pages key themselves by their ids.
   - From M6's review: the README's editors section names the peers to install, `editors.css` (its sprite in `editors-assets/`), `@uiw/react-md-editor/markdown-editor.css` for bundlers that drop CSS imported from JavaScript, the CSP the editors need (Ace injects `<style>` elements; jsoneditor starts its worker from a `data:` URL) and their size (jsoneditor with Ace is about 1 MB minified, loaded after mount); `next-smoke` imports `editors.css` and passes `editorRenderers` from a Server Component.
