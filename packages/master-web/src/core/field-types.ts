@@ -94,11 +94,13 @@ const number: FieldTypeDefinition = {
   hasDefault: true,
   empty: 0,
   toFormValue: toText,
-  // v0 saves what the input holds (a string); a value stored as a number stays a number.
+  // v0 saves what the input holds (a string); a value stored as a number stays
+  // a number. A cleared input is sent as '' (as v0 did): the backend keeps a
+  // key an update leaves out.
   fromFormValue: (form, previous) => {
     const value = asString(form).trim()
-    if (typeof previous !== 'number') return value
-    return value === '' ? undefined : Number(value)
+    if (typeof previous !== 'number' || value === '') return value
+    return Number(value)
   },
   validate: (form, field) => {
     const value = asString(form).trim()

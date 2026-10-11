@@ -108,6 +108,17 @@ describe('fromFormValues', () => {
     ).toMatchObject({ importedBy: 'batch-7', sku: 'AP-2' })
   })
 
+  it('sends a cleared number as empty: the backend keeps a key left out', () => {
+    const fields = dataFields(setting())
+    const data = odd()
+    expect(data.attributes.price).toBe(980)
+    const values = { ...toFormValues(fields, data), price: '' }
+    expect(fromFormValues(fields, values, data.attributes)).toHaveProperty(
+      'price',
+      ''
+    )
+  })
+
   it('never writes the record-level code / name inputs into attributes', () => {
     const bare = { ...setting(), attributes: { description: '', fields: [] } }
     expect(fromFormValues(dataFields(bare), { code: 'X', name: 'Y' })).toEqual(

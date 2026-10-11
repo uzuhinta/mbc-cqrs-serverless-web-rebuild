@@ -54,7 +54,7 @@ describe('fieldTypes', () => {
     expect(fieldTypes.number.fromFormValue(' 12 ', undefined)).toBe('12')
     expect(fieldTypes.number.fromFormValue('12', '7')).toBe('12')
     expect(fieldTypes.number.fromFormValue('12', 7)).toBe(12)
-    expect(fieldTypes.number.fromFormValue('', 7)).toBeUndefined()
+    expect(fieldTypes.number.fromFormValue('', 7)).toBe('')
     expect(fieldTypes.boolean.fromFormValue(true, undefined)).toBe(true)
     expect(fieldTypes.boolean.fromFormValue(false, 'true')).toBe('false')
     expect(fieldTypes.json.fromFormValue('{"a":1}', undefined)).toEqual({
