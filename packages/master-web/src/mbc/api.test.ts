@@ -162,6 +162,42 @@ describe('createMasterApi: writes', () => {
     expect(client.command.mock.calls[0]?.[1]).toEqual({ signal })
   })
 
+  it('resolves a create with the new item’s id, as the backend wrote it', async () => {
+    // The backend lowercases the tenant (core 1.1.0) and answers with the
+    // command's keys, the sort key carrying its version.
+    const client = createFakeClient((request) =>
+      request.path.endsWith('/create')
+        ? { requestId: 'r', pk: 'MASTER#tenant-a', sk: 'PRODUCT#P@002@1' }
+        : { requestId: 'r', pk: 'MASTER#tenant-a', sk: 'MASTER_SETTING#P@3' }
+    )
+    const api = createMasterApi(client)
+    await expect(
+      api.settings.create({
+        code: 'P',
+        name: 'P',
+        attributes: { description: '', fields: [] },
+        settingValue: { description: '', fields: [] },
+      })
+    ).resolves.toBe('MASTER#tenant-a#MASTER_SETTING#P')
+    await expect(
+      api.data.create({
+        settingCode: 'PRODUCT',
+        code: 'P@002',
+        name: 'P',
+        attributes: {},
+      })
+    ).resolves.toBe('MASTER#tenant-a#PRODUCT#P@002')
+    // An answer without the keys gives no id.
+    await expect(
+      createMasterApi(createFakeClient()).data.create({
+        settingCode: 'PRODUCT',
+        code: 'P',
+        name: 'P',
+        attributes: {},
+      })
+    ).resolves.toBeUndefined()
+  })
+
   it('treats a write that changed nothing as done', async () => {
     const client = createFakeClient(
       () => new MbcApiError(200, {}, 'The command response has no requestId')

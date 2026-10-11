@@ -172,8 +172,10 @@ function DataEditor({
       onSave={async (body) => {
         // A create's body carries the setting and the record's codes.
         if ('settingCode' in body) {
-          await reported(createData.runOrThrow(body), onError)
-          const created = dataIdOf(tenantCode, body.settingCode, body.code)
+          // The backend's own id: it may store the tenant in another case.
+          const created =
+            (await reported(createData.runOrThrow(body), onError)) ??
+            dataIdOf(tenantCode, body.settingCode, body.code)
           onSaved?.(created)
           routing.navigate({ screen: 'dataItem', settingId, id: created })
           return

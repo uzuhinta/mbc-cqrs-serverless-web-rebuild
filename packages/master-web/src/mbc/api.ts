@@ -79,7 +79,14 @@ export type MasterApi = {
       options?: ReadOptions
     ): Promise<MasterListPage<MasterSettingListItem>>
     get(id: string, options?: ReadOptions): Promise<MasterSetting>
-    create(body: MasterSettingCreateBody, options?: WriteOptions): Promise<void>
+    /**
+     * Resolves with the new setting's id as the backend wrote it (from its
+     * answer's keys), or `undefined` when the answer has none.
+     */
+    create(
+      body: MasterSettingCreateBody,
+      options?: WriteOptions
+    ): Promise<string | undefined>
     update(
       id: string,
       body: MasterSettingUpdateBody,
@@ -96,7 +103,14 @@ export type MasterApi = {
       options?: ReadOptions
     ): Promise<MasterListPage<MasterDataListItem>>
     get(id: string, options?: ReadOptions): Promise<MasterData>
-    create(body: MasterDataCreateBody, options?: WriteOptions): Promise<void>
+    /**
+     * Resolves with the new record's id as the backend wrote it (from its
+     * answer's keys), or `undefined` when the answer has none.
+     */
+    create(
+      body: MasterDataCreateBody,
+      options?: WriteOptions
+    ): Promise<string | undefined>
     update(
       id: string,
       body: MasterDataUpdateBody,
@@ -186,17 +200,34 @@ function isUnchanged(error: unknown): boolean {
   )
 }
 
+/**
+ * The id of an item a create wrote, from the backend's answer: its `pk` and
+ * `sk` without the version (`@1`), joined by `#` as the backend joins them.
+ * Undefined when the answer has no keys. Use it, not one built from the
+ * client's tenant: the backend may store the tenant in another case.
+ */
+function createdIdOf(answer: unknown): string | undefined {
+  const { pk, sk } = (answer ?? {}) as { pk?: unknown; sk?: unknown }
+  if (typeof pk !== 'string' || typeof sk !== 'string') return undefined
+  const version = sk.lastIndexOf('@')
+  return `${pk}#${version === -1 ? sk : sk.slice(0, version)}`
+}
+
 export function createMasterApi(
   client: MbcClient,
   options: MasterApiOptions = {}
 ): MasterApi {
   const paths = { ...DEFAULT_MASTER_API_PATHS, ...options.paths }
-  const write = async (request: CommandRequest, settings?: WriteOptions) => {
+  /** Sends a write; resolves with the backend's answer (none when nothing changed). */
+  const send = async (request: CommandRequest, settings?: WriteOptions) => {
     try {
-      await client.command(request, settings)
+      return (await client.command<unknown>(request, settings)).data
     } catch (error) {
       if (!isUnchanged(error)) throw error
     }
+  }
+  const write = async (request: CommandRequest, settings?: WriteOptions) => {
+    await send(request, settings)
   }
   const exists = async (path: string, signal?: AbortSignal) =>
     (await client.post<unknown>(path, undefined, { signal })) === true
@@ -227,8 +258,10 @@ export function createMasterApi(
           )
         )
       },
-      create: (body, settings) =>
-        write({ method: 'POST', path: paths.setting, body }, settings),
+      create: async (body, settings) =>
+        createdIdOf(
+          await send({ method: 'POST', path: paths.setting, body }, settings)
+        ),
       update: (id, body, settings) =>
         write(
           { method: 'PUT', path: `${paths.setting}/${encode(id)}`, body },
@@ -268,8 +301,13 @@ export function createMasterApi(
           )
         )
       },
-      create: (body, settings) =>
-        write({ method: 'POST', path: `${paths.data}/create`, body }, settings),
+      create: async (body, settings) =>
+        createdIdOf(
+          await send(
+            { method: 'POST', path: `${paths.data}/create`, body },
+            settings
+          )
+        ),
       update: (id, body, settings) =>
         write(
           { method: 'PUT', path: `${paths.data}/${encode(id)}`, body },

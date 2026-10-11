@@ -180,6 +180,31 @@ describe('MbcMasterSettingEditorPage', () => {
     expect(onSaved).toHaveBeenCalledWith('MASTER#tenant-a#MASTER_SETTING#NEW')
   })
 
+  it('opens a new setting by the id the backend wrote, whatever the tenant’s case', async () => {
+    // The backend lowercases the tenant (core 1.1.0) and answers with its keys.
+    const client = Object.assign(
+      createFakeClient(() => ({
+        requestId: 'r',
+        pk: 'MASTER#tenant-a',
+        sk: 'MASTER_SETTING#NEW@1',
+      })),
+      { tenantCode: () => 'TENANT-A' }
+    )
+    serveGets(client, { '/api/master-data/list': sequences })
+    client.post.mockResolvedValue(false)
+    const routing = createRouting()
+    renderPage(client, <MbcMasterSettingEditorPage routing={routing} />)
+    await userEvent.type(input('コード'), 'NEW')
+    await userEvent.type(input('名称'), '新規')
+    await userEvent.click(button('保存'))
+    await waitFor(() =>
+      expect(routing.navigate).toHaveBeenCalledWith({
+        screen: 'data',
+        settingId: 'MASTER#tenant-a#MASTER_SETTING#NEW',
+      })
+    )
+  })
+
   it('refuses a code that is taken', async () => {
     const client = createFakeClient()
     serveGets(client, { '/api/master-data/list': sequences })

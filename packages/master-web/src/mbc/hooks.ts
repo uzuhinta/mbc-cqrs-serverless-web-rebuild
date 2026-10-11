@@ -156,28 +156,28 @@ export function useCopyTask(
   )
 }
 
-type Failure = { error?: unknown }
+type Outcome<R> = { value?: R; error?: unknown }
 
 /**
  * One write as a client-web command. `run` resolves `true`, or `undefined`
  * when it failed or was cancelled (the error is in `error`); `runOrThrow`
- * rejects with the write's own error, so a screen can tell a timeout from
- * a refusal.
+ * resolves with the write's result (a create's new id) and rejects with the
+ * write's own error, so a screen can tell a timeout from a refusal.
  */
-function useWrite<A extends unknown[]>(
+function useWrite<A extends unknown[], R = void>(
   paths: Partial<MasterApiPaths> | undefined,
-  write: (api: MasterApi, options: WriteOptions, ...args: A) => Promise<void>
+  write: (api: MasterApi, options: WriteOptions, ...args: A) => Promise<R>
 ) {
   const command = useCommand(
-    async ({ client, signal, onPhase }, failure: Failure, ...args: A) => {
+    async ({ client, signal, onPhase }, outcome: Outcome<R>, ...args: A) => {
       try {
-        await write(
+        outcome.value = await write(
           createMasterApi(client, { paths }),
           { signal, onPhase },
           ...args
         )
       } catch (error) {
-        failure.error = error
+        outcome.error = error
         throw error
       }
       return true as const
@@ -186,10 +186,10 @@ function useWrite<A extends unknown[]>(
   const { run: start } = command
   const run = useCallback((...args: A) => start({}, ...args), [start])
   const runOrThrow = useCallback(
-    async (...args: A): Promise<void> => {
-      const failure: Failure = {}
-      if (await start(failure, ...args)) return
-      throw failure.error ?? new MbcAbortError()
+    async (...args: A): Promise<R> => {
+      const outcome: Outcome<R> = {}
+      if (await start(outcome, ...args)) return outcome.value as R
+      throw outcome.error ?? new MbcAbortError()
     },
     [start]
   )

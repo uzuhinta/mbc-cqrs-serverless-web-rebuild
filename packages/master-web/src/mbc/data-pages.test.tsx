@@ -162,6 +162,38 @@ describe('MbcMasterDataEditorPage', () => {
     expect(onSaved).toHaveBeenCalledWith(created)
   })
 
+  it('opens a new record by the id the backend wrote, whatever the tenant’s case', async () => {
+    // The backend lowercases the tenant (core 1.1.0) and answers with its keys.
+    const client = Object.assign(
+      createFakeClient(() => ({
+        requestId: 'r',
+        pk: 'MASTER#tenant-a',
+        sk: 'PRODUCT#P-100@1',
+      })),
+      { tenantCode: () => 'TENANT-A' }
+    )
+    serveGets(client, { [settingPath]: V0_SETTING })
+    client.post.mockResolvedValue({ formattedNo: 'P-100' })
+    const routing = createRouting()
+    renderPage(
+      client,
+      <MbcMasterDataEditorPage routing={routing} settingId={SETTING_ID} />
+    )
+    await userEvent.type(
+      await screen.findByRole('textbox', { name: '名称' }),
+      'なし'
+    )
+    await userEvent.type(input('価格'), '500')
+    await userEvent.click(button('登録'))
+    await waitFor(() =>
+      expect(routing.navigate).toHaveBeenCalledWith({
+        screen: 'dataItem',
+        settingId: SETTING_ID,
+        id: 'MASTER#tenant-a#PRODUCT#P-100',
+      })
+    )
+  })
+
   it('keeps Save off after a create that timed out, as the editor does', async () => {
     const timeout = new MbcTimeoutError(60_000)
     const client = createFakeClient(() => timeout)

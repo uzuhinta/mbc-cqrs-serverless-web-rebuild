@@ -171,8 +171,10 @@ function SettingEditor({
         }
         // A create's body carries settingValue (v0).
         if (!('settingValue' in body)) return
-        await reported(createSetting.runOrThrow(body), onError)
-        const created = settingIdOf(tenantCode, body.code)
+        // The backend's own id: it may store the tenant in another case.
+        const created =
+          (await reported(createSetting.runOrThrow(body), onError)) ??
+          settingIdOf(tenantCode, body.code)
         onSaved?.(created)
         routing.navigate({ screen: 'data', settingId: created })
       }}
