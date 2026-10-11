@@ -16,6 +16,15 @@ describe('scopeEditorCss', () => {
     )
   })
 
+  it('drops the libraries’ source map comments, keeping their other comments', () => {
+    // A map comment makes a bundler look for a .map file that is not shipped.
+    const css = `/*! Quill | MIT */ .ql-a { color: red }
+/*# sourceMappingURL=quill.snow.css.map*/`
+    const out = scopeEditorCss(css, 'ql-')
+    expect(out).not.toMatch(/sourceMappingURL/)
+    expect(squash(out)).toBe('/*! Quill | MIT */ .ql-a { color: red }')
+  })
+
   it('looks inside @media and @supports, and drops the ones left empty', () => {
     const css = `
       @media (pointer: coarse) { .ql-a { color: red } a { color: blue } }

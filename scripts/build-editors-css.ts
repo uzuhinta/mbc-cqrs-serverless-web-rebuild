@@ -28,7 +28,8 @@ function isKeyframe(node: { parent?: unknown }): boolean {
 /**
  * Keeps only selectors that contain the library's `marker` and none of
  * `:root`, `html` or `body`; drops at-rules left empty and keyframes no kept
- * rule uses. `rewriteUrl` gives the new address of a file the CSS points at.
+ * rule uses, and the library's source map comment (its .map is not shipped).
+ * `rewriteUrl` gives the new address of a file the CSS points at.
  */
 export function scopeEditorCss(
   css: string,
@@ -36,6 +37,9 @@ export function scopeEditorCss(
   rewriteUrl?: (url: string) => string
 ): string {
   const root = postcss.parse(css)
+  root.walkComments((comment) => {
+    if (/^[#@]\s*sourceMappingURL=/.test(comment.text)) comment.remove()
+  })
   root.walkRules((rule) => {
     if (isKeyframe(rule)) return
     const kept = rule.selectors.filter(

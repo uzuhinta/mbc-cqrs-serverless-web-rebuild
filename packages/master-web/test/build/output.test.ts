@@ -56,6 +56,8 @@ describe('master-web output', () => {
       )
     )
     expect([...urls]).toEqual(['./editors-assets/jsoneditor-icons.svg'])
+    // No map comment: bundlers would look for a .map file that is not shipped.
+    expect(readText(dist, 'editors.css')).not.toMatch(/sourceMappingURL/)
     expect(listFiles(dist, '.svg')).toEqual([
       'editors-assets/jsoneditor-icons.svg',
     ])
