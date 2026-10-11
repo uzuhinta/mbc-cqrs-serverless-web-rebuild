@@ -179,4 +179,9 @@ describe('FieldDialog', () => {
     const results = await axe.run(document.body)
     expect(results.violations).toEqual([])
   })
+
+  it('spaces its title, form and buttons apart, as 0.0.x did', () => {
+    setup()
+    expect(screen.getByRole('dialog')).toHaveClass('mbc:grid', 'mbc:gap-4')
+  })
 })

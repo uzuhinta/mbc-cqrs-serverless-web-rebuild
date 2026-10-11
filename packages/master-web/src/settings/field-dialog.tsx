@@ -120,7 +120,8 @@ export function FieldDialog(props: FieldDialogProps) {
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <DialogContent
         aria-describedby={undefined}
-        className="mbc:max-h-[calc(100dvh-2rem)] mbc:overflow-y-auto mbc:sm:max-w-3xl"
+        // A grid spaces the parts (ui-web's Dialog is not one; 0.0.x master's was).
+        className="mbc:grid mbc:max-h-[calc(100dvh-2rem)] mbc:overflow-y-auto mbc:sm:max-w-3xl"
       >
         <DialogHeader>
           <DialogTitle>

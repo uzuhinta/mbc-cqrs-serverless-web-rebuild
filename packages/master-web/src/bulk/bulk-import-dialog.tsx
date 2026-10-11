@@ -139,8 +139,9 @@ export function BulkImportDialog({
       </DialogTrigger>
       <DialogContent
         aria-describedby={undefined}
-        // The textarea grows with its text: keep the buttons reachable.
-        className="mbc:max-h-[calc(100dvh-2rem)] mbc:overflow-y-auto mbc:sm:max-w-3xl"
+        // The textarea grows with its text: keep the buttons reachable. A grid
+        // spaces the parts (ui-web's Dialog is not one; 0.0.x master's was).
+        className="mbc:grid mbc:max-h-[calc(100dvh-2rem)] mbc:overflow-y-auto mbc:sm:max-w-3xl"
       >
         <DialogHeader>
           <DialogTitle>{t.bulkDialog.title}</DialogTitle>

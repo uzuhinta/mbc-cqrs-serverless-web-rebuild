@@ -100,4 +100,10 @@ describe('JsonDialog', () => {
     const results = await axe.run(document.body)
     expect(results.violations).toEqual([])
   })
+
+  it('spaces its title, text and buttons apart, as 0.0.x did', async () => {
+    setup()
+    await open()
+    expect(screen.getByRole('dialog')).toHaveClass('mbc:grid', 'mbc:gap-4')
+  })
 })

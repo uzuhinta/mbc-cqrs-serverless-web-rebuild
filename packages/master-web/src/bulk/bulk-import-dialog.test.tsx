@@ -231,4 +231,10 @@ describe('BulkImportDialog', () => {
     await userEvent.click(screen.getByRole('button', { name: 'データ反映' }))
     await waitFor(() => expect(onImport).toHaveBeenCalledTimes(1))
   })
+
+  it('spaces its title, text and buttons apart, as 0.0.x did', async () => {
+    setup()
+    await open()
+    expect(screen.getByRole('dialog')).toHaveClass('mbc:grid', 'mbc:gap-4')
+  })
 })
