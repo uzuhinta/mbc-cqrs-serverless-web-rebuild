@@ -194,6 +194,34 @@ describe('MasterSettingEditor', () => {
     expect(names).not.toContain('価格')
   })
 
+  it('returns focus to the button that opened the field dialog', async () => {
+    setup()
+    await userEvent.click(button('編集'))
+    await userEvent.click(button('項目追加'))
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(button('項目追加')).toHaveFocus())
+
+    await userEvent.click(button('「名称」の操作'))
+    await userEvent.click(await screen.findByRole('menuitem', { name: '編集' }))
+    const edit = screen.getByRole('dialog', { name: '項目編集' })
+    await userEvent.click(
+      within(edit).getByRole('button', { name: 'キャンセル' })
+    )
+    await waitFor(() => expect(button('「名称」の操作')).toHaveFocus())
+  })
+
+  it('moves focus to a neighbouring row’s actions after removing a field', async () => {
+    setup()
+    await userEvent.click(button('編集'))
+    await userEvent.click(button('「価格」の操作'))
+    await userEvent.click(await screen.findByRole('menuitem', { name: '削除' }))
+    await waitFor(() => expect(button('「有効」の操作')).toHaveFocus())
+
+    await userEvent.click(button('「SKU」の操作'))
+    await userEvent.click(await screen.findByRole('menuitem', { name: '削除' }))
+    await waitFor(() => expect(button('「備考」の操作')).toHaveFocus())
+  })
+
   it('edits the setting JSON in the host’s JSON editor', async () => {
     setup({ jsonEditor: FakeJsonEditor })
     await userEvent.click(button('編集'))

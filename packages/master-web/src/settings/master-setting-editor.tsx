@@ -156,6 +156,8 @@ function EditorBody({
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [failure, setFailure] = useState<Failure | null>(null)
+  // The button that opened the field dialog, which gets the focus back.
+  const opener = useRef<HTMLElement | null>(null)
   const [dialog, setDialog] = useState<{ open: boolean; key?: string }>({
     open: false,
   })
@@ -443,7 +445,10 @@ function EditorBody({
                 <Button
                   type="button"
                   disabled={readOnly}
-                  onClick={() => setDialog({ open: true })}
+                  onClick={(event) => {
+                    opener.current = event.currentTarget
+                    setDialog({ open: true })
+                  }}
                 >
                   <PlusIcon aria-hidden />
                   {messages.fieldDialog.add}
@@ -457,7 +462,10 @@ function EditorBody({
               onMove={(from, to) =>
                 setRows((current) => arrayMove(current, from, to))
               }
-              onEdit={(key) => setDialog({ open: true, key })}
+              onEdit={(key, trigger) => {
+                opener.current = trigger ?? null
+                setDialog({ open: true, key })
+              }}
               onRemove={(key) =>
                 setRows((current) => current.filter((row) => row.key !== key))
               }
@@ -474,6 +482,7 @@ function EditorBody({
           .map((row) => row.field)}
         formats={formats}
         onSubmit={submitField}
+        returnFocusTo={() => opener.current}
       />
       <div className="mbc:bg-background mbc:flex mbc:justify-evenly mbc:py-3">
         <Button asChild variant="outline" className="mbc:min-w-[200px]">

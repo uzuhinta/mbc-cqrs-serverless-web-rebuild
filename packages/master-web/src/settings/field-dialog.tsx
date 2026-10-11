@@ -54,6 +54,8 @@ export type FieldDialogProps = {
   /** Sequences an auto-numbered code field can use. */
   formats: readonly SequenceFormat[]
   onSubmit(field: MasterField): void
+  /** Where focus goes when the dialog closes (it has no trigger of its own). */
+  returnFocusTo?(): HTMLElement | null | undefined
 }
 
 const NEW_FIELD: MasterField = {
@@ -120,6 +122,12 @@ export function FieldDialog(props: FieldDialogProps) {
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <DialogContent
         aria-describedby={undefined}
+        onCloseAutoFocus={(event) => {
+          const target = props.returnFocusTo?.()
+          if (!target) return
+          event.preventDefault()
+          target.focus()
+        }}
         // A grid spaces the parts (ui-web's Dialog is not one; 0.0.x master's was).
         className="mbc:grid mbc:max-h-[calc(100dvh-2rem)] mbc:overflow-y-auto mbc:sm:max-w-3xl"
       >

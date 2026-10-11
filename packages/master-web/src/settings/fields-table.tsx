@@ -33,7 +33,7 @@ import {
   useMessages,
 } from '@mbc-cqrs-serverless/ui-web'
 import { Edit3, GripVertical, MoreVertical, Trash2 } from 'lucide-react'
-import { useId, useMemo, type ReactNode } from 'react'
+import { useEffect, useId, useMemo, useRef, type ReactNode } from 'react'
 
 import { FIXED_FIELD_NAMES } from '../core/field-definition'
 import { isMasterFieldType } from '../core/field-type-names'
@@ -55,7 +55,8 @@ export type FieldsTableProps = {
   readOnly: boolean
   /** Moves the field at `from` to `to` (indexes into `rows`). */
   onMove(from: number, to: number): void
-  onEdit(key: string): void
+  /** `opener` is the row's actions button, for the dialog to return focus to. */
+  onEdit(key: string, opener: HTMLElement | undefined): void
   onRemove(key: string): void
 }
 
@@ -173,6 +174,20 @@ export function FieldsTable({
   const t = messages.fieldsTable
   const m = useMessages(masterMessages)
   const dndId = useId()
+  // Each row's actions button: a removed row's neighbour takes the focus.
+  const triggers = useRef(new Map<string, HTMLButtonElement>())
+  const focusAfterRemove = useRef<string | null>(null)
+  useEffect(() => {
+    const key = focusAfterRemove.current
+    if (key === null) return
+    focusAfterRemove.current = null
+    triggers.current.get(key)?.focus()
+  }, [rows])
+  const remove = (key: string) => {
+    const index = rows.findIndex((row) => row.key === key)
+    focusAfterRemove.current = (rows[index + 1] ?? rows[index - 1])?.key ?? null
+    onRemove(key)
+  }
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -305,6 +320,10 @@ export function FieldsTable({
                           className="mbc:h-8 mbc:w-8"
                           disabled={readOnly}
                           aria-label={t.actionsFor({ name: label(field) })}
+                          ref={(element) => {
+                            if (element) triggers.current.set(row.key, element)
+                            else triggers.current.delete(row.key)
+                          }}
                         >
                           <MoreVertical
                             aria-hidden
@@ -313,7 +332,11 @@ export function FieldsTable({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => onEdit(row.key)}>
+                        <DropdownMenuItem
+                          onSelect={() =>
+                            onEdit(row.key, triggers.current.get(row.key))
+                          }
+                        >
                           <Edit3
                             aria-hidden
                             className="mbc:text-muted-foreground mbc:mr-2 mbc:h-4 mbc:w-4"
@@ -323,7 +346,7 @@ export function FieldsTable({
                         {!FIXED_FIELD_NAMES.includes(field.physicalName) && (
                           <DropdownMenuItem
                             className="mbc:text-destructive"
-                            onSelect={() => onRemove(row.key)}
+                            onSelect={() => remove(row.key)}
                           >
                             <Trash2
                               aria-hidden

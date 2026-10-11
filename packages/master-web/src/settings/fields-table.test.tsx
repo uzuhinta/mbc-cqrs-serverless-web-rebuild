@@ -160,7 +160,11 @@ describe('FieldsTable', () => {
     )
     expect(screen.queryByRole('menuitem', { name: '削除' })).toBeNull()
     await userEvent.click(screen.getByRole('menuitem', { name: '編集' }))
-    expect(onEdit).toHaveBeenCalledWith('f1')
+    // With the row's actions button, for the dialog to return focus to.
+    expect(onEdit).toHaveBeenCalledWith(
+      'f1',
+      screen.getByRole('button', { name: '「名称」の操作' })
+    )
   })
 
   it('moves a field with the keyboard and says so', async () => {
