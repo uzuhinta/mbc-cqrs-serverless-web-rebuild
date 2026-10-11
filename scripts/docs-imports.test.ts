@@ -11,6 +11,7 @@ const DOCS = [
   'packages/survey-web/README.md',
   'packages/survey-web/MIGRATION.md',
   'packages/master-web/README.md',
+  'packages/master-web/MIGRATION.md',
 ]
 
 /** `@mbc-cqrs-serverless/<pkg>[/<entry>]` → the built module. */

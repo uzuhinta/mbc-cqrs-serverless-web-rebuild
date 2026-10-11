@@ -27,7 +27,11 @@ describe('published files', () => {
     30_000
   )
 
-  it('survey-web ships the migration guide', () => {
-    expect(packed('survey-web')).toContain('MIGRATION.md')
-  }, 30_000)
+  it.each(['survey-web', 'master-web'])(
+    '%s ships its migration guide',
+    (pkg) => {
+      expect(packed(pkg)).toContain('MIGRATION.md')
+    },
+    30_000
+  )
 })

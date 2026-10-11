@@ -32,7 +32,8 @@
   },
   "files": [
     "dist",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "MIGRATION.md"
   ],
   "scripts": {
     "build": "tsdown && node ../../scripts/build-css.ts && node ../../scripts/build-editors-css.ts",
