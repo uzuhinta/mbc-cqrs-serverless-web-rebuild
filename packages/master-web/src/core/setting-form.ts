@@ -80,6 +80,9 @@ export function fieldFromForm(field: MasterField): MasterField {
   return next
 }
 
+/** A flag v0's switch showed as on: `true`, or the string `"true"` an import may have stored. */
+const isOn = (value: unknown) => value === true || value === 'true'
+
 /**
  * The editor's starting point. A stored setting without a `code` field gets
  * the fixed fields it lacks in front (v0 added them on load).
@@ -90,7 +93,7 @@ export function settingToForm(
 ): { values: SettingFormValues; fields: MasterField[] } {
   const attributes = setting?.attributes
   const options = Object.fromEntries(
-    optionKeys.map((key) => [key, attributes?.[key] === true])
+    optionKeys.map((key) => [key, isOn(attributes?.[key])])
   )
   const values: SettingFormValues = {
     code: setting?.code ?? '',
@@ -179,9 +182,17 @@ export function toSettingPayload(
   options: { mode: 'create' } | { mode: 'update'; previous: MasterSetting }
 ): MasterSettingCreateBody | MasterSettingUpdateBody {
   const previous = options.mode === 'update' ? options.previous.attributes : {}
+  // A switch left as it was keeps the stored value, type included.
+  const flags = Object.fromEntries(
+    Object.entries(values.options).map(([key, on]) =>
+      Object.hasOwn(previous, key) && isOn(previous[key]) === on
+        ? [key, previous[key]]
+        : [key, on]
+    )
+  )
   const attributes: MasterSettingAttributes = {
     ...previous,
-    ...values.options,
+    ...flags,
     description: values.description,
     fields: fields.map(fieldFromForm),
   }

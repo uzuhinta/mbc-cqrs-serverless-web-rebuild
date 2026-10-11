@@ -63,6 +63,14 @@ describe('settingToForm', () => {
     )
   })
 
+  it('reads a flag stored as the string "true" as on (v0’s switch did)', () => {
+    const setting = stored()
+    setting.attributes.flagA = 'true'
+    setting.attributes.flagB = 'false'
+    const form = settingToForm(setting, ['flagA', 'flagB'])
+    expect(form.values.options).toEqual({ flagA: true, flagB: false })
+  })
+
   it('adds the fixed fields a stored setting lacks, in front (v0)', () => {
     const setting = stored()
     setting.attributes.fields = [field({ physicalName: 'name', name: '名前' })]
@@ -206,5 +214,29 @@ describe('toSettingPayload', () => {
     expect(body.attributes.fields).toHaveLength(
       previous.attributes.fields.length
     )
+  })
+
+  it('keeps a flag stored as a string while its switch is unchanged', () => {
+    const previous = stored()
+    previous.attributes.flagA = 'true'
+    previous.attributes.flagB = 'false'
+    const form = settingToForm(previous, ['flagA', 'flagB'])
+    const body = toSettingPayload(form.values, form.fields, {
+      mode: 'update',
+      previous,
+    })
+    expect(body.attributes).toMatchObject({ flagA: 'true', flagB: 'false' })
+  })
+
+  it('saves a boolean for a flag whose switch was changed', () => {
+    const previous = stored()
+    previous.attributes.flagA = 'true'
+    const form = settingToForm(previous, ['flagA'])
+    const body = toSettingPayload(
+      { ...form.values, options: { flagA: false } },
+      form.fields,
+      { mode: 'update', previous }
+    )
+    expect(body.attributes.flagA).toBe(false)
   })
 })
