@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  Textarea,
   useMessages,
 } from '@mbc-cqrs-serverless/ui-web'
 import { Download, Save, Upload } from 'lucide-react'
@@ -28,6 +27,7 @@ import {
 import { formatBulkError } from '../i18n/format-error'
 import { masterMessages } from '../i18n/master-messages'
 import { downloadJson, readJsonFile } from '../json/json-file'
+import { JsonText, type JsonTextEditor } from '../json/json-text'
 
 export type BulkImportDialogProps = {
   /** `settings`: the settings list (settings and data); `data`: one setting's data list. */
@@ -51,6 +51,8 @@ export type BulkImportDialogProps = {
   /** After a successful import, e.g. to reload the list. */
   onImported?(): void
   disabled?: boolean
+  /** Edits the JSON instead of the text box, e.g. `/editors`' JsonEditor. */
+  jsonEditor?: JsonTextEditor
 }
 
 const FILE_NAMES: Record<BulkScreen, string> = {
@@ -68,6 +70,7 @@ export function BulkImportDialog({
   onImport,
   onImported,
   disabled = false,
+  jsonEditor,
 }: BulkImportDialogProps) {
   const t = useMessages(masterMessages)
   const errorsId = useId()
@@ -142,15 +145,14 @@ export function BulkImportDialog({
         <DialogHeader>
           <DialogTitle>{t.bulkDialog.title}</DialogTitle>
         </DialogHeader>
-        <Textarea
+        <JsonText
           value={text}
-          onChange={(event) => setText(event.target.value)}
-          aria-label={t.bulkDialog.json}
-          aria-invalid={errors.length > 0 || undefined}
-          aria-describedby={errors.length > 0 ? errorsId : undefined}
-          spellCheck={false}
+          onChange={setText}
+          label={t.bulkDialog.json}
+          invalid={errors.length > 0}
+          describedBy={errors.length > 0 ? errorsId : undefined}
           disabled={submitting}
-          className="mbc:max-h-[50vh] mbc:min-h-[50vh] mbc:font-mono mbc:text-xs"
+          editor={jsonEditor}
         />
         {errors.length > 0 && (
           <Alert variant="destructive" id={errorsId}>

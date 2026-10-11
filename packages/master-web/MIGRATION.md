@@ -261,7 +261,7 @@ The package no longer navigates with Next's router or shows toasts: `onSaved`, `
 pnpm add react-quill-new quill-delta @uiw/react-md-editor jsoneditor
 ```
 
-Then `import '@mbc-cqrs-serverless/master-web/editors.css'` and pass `components={editorRenderers}` (from `/editors`) to the data editor page. Without them, HTML, Markdown and JSON fields are text boxes. HTML that 0.0.x saved with `<div>` blocks loads unchanged; new edits are saved with `<p>` blocks (0.0.x changed Quill's blocks for every Quill on the page).
+Then `import '@mbc-cqrs-serverless/master-web/editors.css'` and pass `components={editorRenderers}` (from `/editors`) to the data editor page. Without them, HTML, Markdown and JSON fields are text boxes. 0.0.x's JSON dialogs used jsoneditor too: pass `jsonEditor={JsonEditor}` (from `/editors`) to the settings and data pages for it there. HTML that 0.0.x saved with `<div>` blocks loads unchanged; new edits are saved with `<p>` blocks (0.0.x changed Quill's blocks for every Quill on the page).
 
 ## 7. Behaviour changes
 

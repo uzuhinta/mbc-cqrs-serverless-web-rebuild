@@ -7,6 +7,7 @@ import { initialDataListState, type MasterDataListState } from '../core/list'
 import { MasterDataEditor } from '../data/master-data-editor'
 import { MasterDataList } from '../data/master-data-list'
 import { masterDataMessages } from '../i18n/master-data-messages'
+import type { JsonTextEditor } from '../json/json-text'
 import type { FieldRenderers } from '../renderers/registry'
 import { settingCodeOfId } from './api'
 import {
@@ -34,6 +35,8 @@ export type MbcMasterDataListPageProps = MbcPageProps & {
   onStateChange?(state: MasterDataListState): void
   inputSampleJson?: string
   mapRawItem?: BulkMapper
+  /** The import dialog's JSON editor instead of a text box, e.g. `/editors`' JsonEditor. */
+  jsonEditor?: JsonTextEditor
 }
 
 /**
@@ -54,6 +57,7 @@ function DataList({
   onStateChange,
   inputSampleJson,
   mapRawItem,
+  jsonEditor,
 }: MbcMasterDataListPageProps) {
   const t = useMessages(masterDataMessages).list
   const [current, change] = useListState(
@@ -94,6 +98,7 @@ function DataList({
       tenantCode={tenantCode}
       inputSampleJson={inputSampleJson}
       mapRawItem={mapRawItem}
+      jsonEditor={jsonEditor}
     />
   )
 }
@@ -109,6 +114,8 @@ export type MbcMasterDataEditorPageProps = MbcPageProps & {
   onDeleted?(): void
   /** Renderers that replace the built-ins, by field type (e.g. `/editors`). */
   components?: FieldRenderers
+  /** The JSON dialog's editor instead of a text box, e.g. `/editors`' JsonEditor. */
+  jsonEditor?: JsonTextEditor
 }
 
 /**
@@ -132,6 +139,7 @@ function DataEditor({
   onSaved,
   onDeleted,
   components,
+  jsonEditor,
 }: MbcMasterDataEditorPageProps) {
   const api = useMasterApi({ paths })
   const tenantCode = useTenantCode()
@@ -190,6 +198,7 @@ function DataEditor({
           : undefined
       }
       components={components}
+      jsonEditor={jsonEditor}
     />
   )
 }

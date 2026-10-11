@@ -2,7 +2,10 @@ import type {
   MasterRouting,
   MasterTarget,
 } from '@mbc-cqrs-serverless/master-web'
-import { editorRenderers } from '@mbc-cqrs-serverless/master-web/editors'
+import {
+  editorRenderers,
+  JsonEditor,
+} from '@mbc-cqrs-serverless/master-web/editors'
 import {
   MbcClientProvider,
   MbcMasterCopyRequestPage,
@@ -66,17 +69,34 @@ export function MbcMasterPage({ route }: { route: string }) {
     <MbcClientProvider client={backend}>
       <div style={{ padding: 16 }}>
         {screen === 'newSetting' ? (
-          <MbcMasterSettingEditorPage key="new" {...common} canCopy />
+          <MbcMasterSettingEditorPage
+            key="new"
+            {...common}
+            canCopy
+            jsonEditor={JsonEditor}
+          />
         ) : screen === 'setting' && a ? (
-          <MbcMasterSettingEditorPage key={a} {...common} id={a} canCopy />
+          <MbcMasterSettingEditorPage
+            key={a}
+            {...common}
+            id={a}
+            canCopy
+            jsonEditor={JsonEditor}
+          />
         ) : screen === 'data' && a ? (
-          <MbcMasterDataListPage key={a} {...common} settingId={a} />
+          <MbcMasterDataListPage
+            key={a}
+            {...common}
+            settingId={a}
+            jsonEditor={JsonEditor}
+          />
         ) : screen === 'newData' && a ? (
           <MbcMasterDataEditorPage
             key={`new:${a}`}
             {...common}
             settingId={a}
             components={editorRenderers}
+            jsonEditor={JsonEditor}
           />
         ) : screen === 'dataItem' && a && b ? (
           <MbcMasterDataEditorPage
@@ -85,6 +105,7 @@ export function MbcMasterPage({ route }: { route: string }) {
             settingId={a}
             id={b}
             components={editorRenderers}
+            jsonEditor={JsonEditor}
           />
         ) : screen === 'copyRequest' && a ? (
           <MbcMasterCopyRequestPage
@@ -108,7 +129,7 @@ export function MbcMasterPage({ route }: { route: string }) {
             pollMs={3000}
           />
         ) : (
-          <MbcMasterSettingListPage {...common} />
+          <MbcMasterSettingListPage {...common} jsonEditor={JsonEditor} />
         )}
       </div>
     </MbcClientProvider>

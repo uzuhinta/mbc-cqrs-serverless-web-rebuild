@@ -29,7 +29,10 @@ import {
   type SequenceFormat,
   type SettingOption,
 } from '@mbc-cqrs-serverless/master-web'
-import { editorRenderers } from '@mbc-cqrs-serverless/master-web/editors'
+import {
+  editorRenderers,
+  JsonEditor,
+} from '@mbc-cqrs-serverless/master-web/editors'
 import { useState } from 'react'
 
 const TENANT = 'tenant-a'
@@ -340,6 +343,7 @@ function SettingsPage() {
       routing={routing}
       tenantCode={TENANT}
       onImport={fakeImport}
+      jsonEditor={JsonEditor}
       onBack={() => {
         location.hash = ''
       }}
@@ -380,6 +384,7 @@ function SettingPage({ id }: { id?: string }) {
       canCopy
       settingOptions={OPTIONS}
       formats={FORMATS}
+      jsonEditor={JsonEditor}
       checkCodeUnique={async (code) => {
         await wait(200)
         return ![...store.values()].some((entry) => entry.code === code)
@@ -427,6 +432,7 @@ function DataPage({ settingId }: { settingId: string }) {
       routing={routing}
       tenantCode={TENANT}
       onImport={fakeImport}
+      jsonEditor={JsonEditor}
     />
   )
 }
@@ -478,6 +484,7 @@ function DataEditorPage({ settingId, id }: { settingId: string; id?: string }) {
       <MasterDataEditor
         key={rich ? 'rich' : 'plain'}
         components={rich ? editorRenderers : undefined}
+        jsonEditor={rich ? JsonEditor : undefined}
         mode={id === undefined ? 'create' : 'edit'}
         setting={setting}
         data={data}

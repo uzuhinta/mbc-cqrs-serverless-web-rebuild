@@ -10,6 +10,7 @@ export {
   BulkImportDialog,
   type BulkImportDialogProps,
 } from './bulk/bulk-import-dialog'
+export type { JsonTextEditor, JsonTextEditorProps } from './json/json-text'
 export { MasterLink } from './routing/master-link'
 export type { MasterRouting, MasterTarget } from './routing/routing'
 export {

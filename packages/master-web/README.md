@@ -258,16 +258,16 @@ export function Settings(props: {
 }
 ```
 
-| Screen                  | Takes                                                                                                                                             |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `MasterSettingList`     | `items`, `total`, `state`, `onStateChange`, `loading`, `error` / `onRetry`, `onImport`, `onImported`, `tenantCode`, `onBack`                      |
-| `MasterSettingEditor`   | `mode`, `setting`, `tenantCode`, `checkCodeUnique`, `onSave(body)`, `onDelete`, `canCopy`, `settingOptions`, `formats`, `loading`, `error`        |
-| `MasterDataList`        | `setting`, `items`, `total`, `state`, `onStateChange`, `onImport`, `tenantCode`, …                                                                |
-| `MasterDataEditor`      | `mode`, `setting`, `data`, `tenantCode`, `checkCodeUnique`, `generateCode(field, setting)`, `onSave(body)`, `onDelete`, `onRestore`, `components` |
-| `BulkImportDialog`      | `screen`, `onImport(items, onProgress)`, `inputSampleJson`, `mapRawItem`, `tenantCode`                                                            |
-| `MasterCopyRequestForm` | `setting`, `tenants`, `items`, `total`, `state`, `onStateChange`, `onRequestCopy(request)`                                                        |
-| `MasterCopyTaskList`    | `settingId`, `tasks`, `loading`, `error`, `onRefresh`                                                                                             |
-| `MasterCopyTaskDetail`  | `settingId`, `tasks`, `loading`, `error`, `onRefresh`                                                                                             |
+| Screen                  | Takes                                                                                                                                                           |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MasterSettingList`     | `items`, `total`, `state`, `onStateChange`, `loading`, `error` / `onRetry`, `onImport`, `onImported`, `tenantCode`, `jsonEditor`, `onBack`                      |
+| `MasterSettingEditor`   | `mode`, `setting`, `tenantCode`, `checkCodeUnique`, `onSave(body)`, `onDelete`, `canCopy`, `settingOptions`, `formats`, `jsonEditor`, `loading`, `error`        |
+| `MasterDataList`        | `setting`, `items`, `total`, `state`, `onStateChange`, `onImport`, `tenantCode`, …                                                                              |
+| `MasterDataEditor`      | `mode`, `setting`, `data`, `tenantCode`, `checkCodeUnique`, `generateCode(field, setting)`, `onSave(body)`, `onDelete`, `onRestore`, `components`, `jsonEditor` |
+| `BulkImportDialog`      | `screen`, `onImport(items, onProgress)`, `inputSampleJson`, `mapRawItem`, `tenantCode`, `jsonEditor`                                                            |
+| `MasterCopyRequestForm` | `setting`, `tenants`, `items`, `total`, `state`, `onStateChange`, `onRequestCopy(request)`                                                                      |
+| `MasterCopyTaskList`    | `settingId`, `tasks`, `loading`, `error`, `onRefresh`                                                                                                           |
+| `MasterCopyTaskDetail`  | `settingId`, `tasks`, `loading`, `error`, `onRefresh`                                                                                                           |
 
 Every screen also takes `routing`. Async props reject to show a failure on the screen; an error named `MbcTimeoutError` is shown as "outcome unknown". `/core` builds the request bodies the backend expects (`toSettingPayload`, `toDataPayload`, `buildCopyRequest`), which is what `onSave` and `onRequestCopy` receive.
 
@@ -310,7 +310,10 @@ pnpm add react-quill-new quill-delta @uiw/react-md-editor jsoneditor
 ```tsx
 'use client'
 import '@mbc-cqrs-serverless/master-web/editors.css'
-import { editorRenderers } from '@mbc-cqrs-serverless/master-web/editors'
+import {
+  editorRenderers,
+  JsonEditor,
+} from '@mbc-cqrs-serverless/master-web/editors'
 import { MbcMasterDataEditorPage } from '@mbc-cqrs-serverless/master-web/mbc'
 import { useMasterRouting } from '@/app/master/routing'
 
@@ -321,15 +324,18 @@ export function DataItem(props: { settingId: string; id: string }) {
       settingId={props.settingId}
       id={props.id}
       components={editorRenderers}
+      jsonEditor={JsonEditor}
     />
   )
 }
 ```
 
+`jsonEditor` puts the editor in the JSON dialog (JSONエディタ) as well; the settings list and editor and the data list take it too, for their dialogs. Without it the dialogs are text boxes. Any component that takes `JsonTextEditorProps` (`value`, `onChange`, `labelId`, `describedBy`, `invalid`, `disabled`) works there.
+
 - Each editor shows a plain text box on the server and until its library has loaded (with `import()` after mount), so nothing else waits for them. `RichTextEditor`, `MarkdownEditor` and `JsonEditor` are also exported for your own forms.
 - **Styles:** `editors.css` holds Quill's and jsoneditor's styles, scoped to their own classes. Keep `editors-assets/` beside it if you copy the file. The Markdown editor imports its own CSS from JavaScript; if your bundler drops CSS imported that way, add `import '@uiw/react-md-editor/markdown-editor.css'`.
-- **CSP:** Ace (inside jsoneditor) adds `<style>` elements, so `style-src` needs `'unsafe-inline'`. It also starts its JSON worker from a `blob:` URL that loads a `data:` script, so `worker-src` needs `blob:` and `script-src` needs `data:`. Where that cannot be allowed, leave `json` out of `components`.
-- **Size:** jsoneditor with Ace is about 1 MB minified. Only pages that render a JSON field with `JsonEditor` load it.
+- **CSP:** Ace (inside jsoneditor) adds `<style>` elements, so `style-src` needs `'unsafe-inline'`. It also starts its JSON worker from a `blob:` URL that loads a `data:` script, so `worker-src` needs `blob:` and `script-src` needs `data:`. Where that cannot be allowed, leave `json` out of `components` and `jsonEditor` unset.
+- **Size:** jsoneditor with Ace is about 1 MB minified. It loads only when `JsonEditor` renders: for a JSON field, or when a JSON dialog with it opens.
 - The editors stay light in dark mode, and their own toolbar text is the libraries' English.
 
 ## On a server (`/core`)

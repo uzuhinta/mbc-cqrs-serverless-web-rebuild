@@ -15,6 +15,7 @@ import {
   masterMessages,
   useMessages,
   type FieldRenderers,
+  type JsonTextEditor,
   type MasterRouting,
 } from '@mbc-cqrs-serverless/master-web'
 import {
@@ -94,15 +95,25 @@ const copyTask = {
 }
 
 /** master-web's client entry and the new ui-web parts, rendered on the server and hydrated. */
-/** `components` comes from the Server Component: `/editors`' renderers cross as client references. */
-export function MasterScreens({ components }: { components: FieldRenderers }) {
+/** `components` and `jsonEditor` come from the Server Component: `/editors`' renderers and JsonEditor cross as client references. */
+export function MasterScreens({
+  components,
+  jsonEditor,
+}: {
+  components: FieldRenderers
+  jsonEditor: JsonTextEditor
+}) {
   return (
     <MbcProvider locale="ja">
       <FieldTypes />
       <MasterLink routing={routing} to={{ screen: 'settings' }}>
         master settings
       </MasterLink>
-      <BulkImportDialog screen="settings" onImport={async () => {}} />
+      <BulkImportDialog
+        screen="settings"
+        onImport={async () => {}}
+        jsonEditor={jsonEditor}
+      />
       <MasterSettingList
         items={[
           {
@@ -139,6 +150,7 @@ export function MasterScreens({ components }: { components: FieldRenderers }) {
         setting={setting}
         routing={routing}
         components={components}
+        jsonEditor={jsonEditor}
         onSave={async () => {}}
       />
       <MasterSettingEditor
@@ -147,6 +159,7 @@ export function MasterScreens({ components }: { components: FieldRenderers }) {
         routing={routing}
         onSave={async () => {}}
         onDelete={async () => {}}
+        jsonEditor={jsonEditor}
       />
       <MasterCopyRequestForm
         setting={setting}
@@ -170,7 +183,7 @@ export function MasterScreens({ components }: { components: FieldRenderers }) {
         routing={routing}
       />
       <MbcClientProvider client={client}>
-        <MbcMasterSettingListPage routing={routing} />
+        <MbcMasterSettingListPage routing={routing} jsonEditor={jsonEditor} />
       </MbcClientProvider>
       <MultiSelect
         options={[{ value: 'a', label: 'A' }]}

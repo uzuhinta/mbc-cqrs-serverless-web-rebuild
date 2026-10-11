@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import axe from 'axe-core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { FakeJsonEditor } from '../../test/fake-json-editor'
 import type { BulkJsonItem } from '../core/bulk'
 import {
   BulkImportDialog,
@@ -219,5 +220,15 @@ describe('BulkImportDialog', () => {
       },
     })
     expect(result.violations.map((violation) => violation.id)).toEqual([])
+  })
+
+  it('uses the host’s JSON editor instead of the text box', async () => {
+    const onImport = vi.fn(async () => {})
+    setup({ jsonEditor: FakeJsonEditor, onImport })
+    await open()
+    expect(editor()).toHaveAttribute('data-editor', 'fake')
+    await typeJson([DATA])
+    await userEvent.click(screen.getByRole('button', { name: 'データ反映' }))
+    await waitFor(() => expect(onImport).toHaveBeenCalledTimes(1))
   })
 })

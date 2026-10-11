@@ -9,6 +9,7 @@ import {
   type MasterSettingListState,
 } from '../core/list'
 import type { SequenceFormat, SettingOption } from '../core/setting-form'
+import type { JsonTextEditor } from '../json/json-text'
 import { MasterSettingEditor } from '../settings/master-setting-editor'
 import { MasterSettingList } from '../settings/master-setting-list'
 import {
@@ -38,6 +39,8 @@ export type MbcMasterSettingListPageProps = MbcPageProps & {
   onStateChange?(state: MasterSettingListState): void
   inputSampleJson?: string
   mapRawItem?: BulkMapper
+  /** The import dialog's JSON editor instead of a text box, e.g. `/editors`' JsonEditor. */
+  jsonEditor?: JsonTextEditor
   /** The back button; hidden without it. */
   onBack?(): void
 }
@@ -51,6 +54,7 @@ export function MbcMasterSettingListPage({
   onStateChange,
   inputSampleJson,
   mapRawItem,
+  jsonEditor,
   onBack,
 }: MbcMasterSettingListPageProps) {
   const [current, change] = useListState(
@@ -79,6 +83,7 @@ export function MbcMasterSettingListPage({
       tenantCode={tenantCode}
       inputSampleJson={inputSampleJson}
       mapRawItem={mapRawItem}
+      jsonEditor={jsonEditor}
       onBack={onBack}
     />
   )
@@ -98,6 +103,8 @@ export type MbcMasterSettingEditorPageProps = MbcPageProps & {
   formats?: readonly SequenceFormat[]
   /** The master whose records are the sequences (v0: `sequence_setting`). */
   formatSettingCode?: string
+  /** The JSON dialog's editor instead of a text box, e.g. `/editors`' JsonEditor. */
+  jsonEditor?: JsonTextEditor
 }
 
 /**
@@ -122,6 +129,7 @@ function SettingEditor({
   settingOptions,
   formats,
   formatSettingCode = SEQUENCE_SETTING_CODE,
+  jsonEditor,
 }: MbcMasterSettingEditorPageProps) {
   const api = useMasterApi({ paths })
   const tenantCode = useTenantCode()
@@ -180,6 +188,7 @@ function SettingEditor({
       canCopy={canCopy}
       settingOptions={settingOptions}
       formats={formats ?? loaded}
+      jsonEditor={jsonEditor}
     />
   )
 }

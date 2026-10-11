@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  Textarea,
   useMessages,
 } from '@mbc-cqrs-serverless/ui-web'
 import { Download, Save, Upload } from 'lucide-react'
@@ -18,6 +17,7 @@ import { useId, useRef, useState } from 'react'
 
 import { masterMessages } from '../i18n/master-messages'
 import { downloadJson, readJsonFile } from './json-file'
+import { JsonText, type JsonTextEditor } from './json-text'
 
 export type JsonDialogProps = {
   /** The text the dialog opens with; read each time it opens. */
@@ -27,6 +27,8 @@ export type JsonDialogProps = {
   /** Applies the text. Return why it was refused to keep the dialog open, or nothing to close it. */
   onApply(text: string): string | undefined
   disabled?: boolean
+  /** Edits the text instead of the text box, e.g. `/editors`' JsonEditor. */
+  jsonEditor?: JsonTextEditor
 }
 
 /** v0's JSON editor for one setting or record, as a normal dialog with a text box. */
@@ -35,6 +37,7 @@ export function JsonDialog({
   fileName,
   onApply,
   disabled = false,
+  jsonEditor,
 }: JsonDialogProps) {
   const t = useMessages(masterMessages)
   const errorId = useId()
@@ -72,14 +75,13 @@ export function JsonDialog({
         <DialogHeader>
           <DialogTitle>{t.jsonDialog.title}</DialogTitle>
         </DialogHeader>
-        <Textarea
+        <JsonText
           value={value}
-          onChange={(event) => setValue(event.target.value)}
-          aria-label={t.jsonDialog.json}
-          aria-invalid={error !== null || undefined}
-          aria-describedby={error !== null ? errorId : undefined}
-          spellCheck={false}
-          className="mbc:max-h-[50vh] mbc:min-h-[50vh] mbc:font-mono mbc:text-xs"
+          onChange={setValue}
+          label={t.jsonDialog.json}
+          invalid={error !== null}
+          describedBy={error !== null ? errorId : undefined}
+          editor={jsonEditor}
         />
         {error !== null && (
           <Alert variant="destructive" id={errorId} role="alert">

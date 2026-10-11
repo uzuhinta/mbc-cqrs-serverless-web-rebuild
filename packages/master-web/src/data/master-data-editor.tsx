@@ -31,6 +31,7 @@ import { formatMasterError } from '../i18n/format-error'
 import { masterDataMessages } from '../i18n/master-data-messages'
 import { masterMessages } from '../i18n/master-messages'
 import { JsonDialog } from '../json/json-dialog'
+import type { JsonTextEditor } from '../json/json-text'
 import { ListError } from '../list/list-error'
 import {
   defaultRenderers,
@@ -69,6 +70,8 @@ export type MasterDataEditorProps = {
   onRestore?(): Promise<void>
   /** Renderers that replace the built-ins, by field type. */
   components?: FieldRenderers
+  /** The JSON dialog's editor instead of a text box, e.g. `/editors`' JsonEditor. */
+  jsonEditor?: JsonTextEditor
 }
 
 // Wide inputs take the whole row (v0).
@@ -113,6 +116,7 @@ function EditorBody({
   onDelete,
   onRestore,
   components,
+  jsonEditor,
 }: MasterDataEditorProps & { setting: MasterSetting }) {
   const messages = useMessages(masterDataMessages)
   const t = messages.editor
@@ -329,6 +333,7 @@ function EditorBody({
                       fileName={messages.json.fileName}
                       onApply={applyJson}
                       disabled={saving}
+                      jsonEditor={jsonEditor}
                     />
                   </>
                 )}

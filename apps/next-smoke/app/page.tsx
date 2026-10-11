@@ -6,7 +6,10 @@ import {
   MASTER_FIELD_TYPES,
   parseBulkJson,
 } from '@mbc-cqrs-serverless/master-web/core'
-import { editorRenderers } from '@mbc-cqrs-serverless/master-web/editors'
+import {
+  editorRenderers,
+  JsonEditor,
+} from '@mbc-cqrs-serverless/master-web/editors'
 import { Button, buttonVariants } from '@mbc-cqrs-serverless/ui-web'
 
 import { ClientScreens } from './client-screens'
@@ -15,7 +18,7 @@ import { SAMPLE } from './sample'
 
 /**
  * Server code: both `/core` entries run here; ui-web's Button and master-web's
- * editor renderers cross as client references.
+ * editor renderers and JsonEditor cross as client references.
  */
 export default function Page() {
   const parsed = parseSurvey(SAMPLE)
@@ -34,7 +37,7 @@ export default function Page() {
       <ClientScreens survey={parsed.data} />
       <p>master field types: {MASTER_FIELD_TYPES.length}</p>
       <p>master bulk items checked on the server: {imported.items.length}</p>
-      <MasterScreens components={editorRenderers} />
+      <MasterScreens components={editorRenderers} jsonEditor={JsonEditor} />
     </main>
   )
 }

@@ -5,6 +5,7 @@ import axe from 'axe-core'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
+import { FakeJsonEditor } from '../../test/fake-json-editor'
 import { DATA_ROWS } from '../../test/fixtures/v0-lists'
 import { V0_SETTING } from '../../test/fixtures/v0-master'
 import { initialDataListState, type MasterDataListState } from '../core/list'
@@ -140,6 +141,15 @@ describe('MasterDataList', () => {
     expect(screen.getByRole('link', { name: '戻る' })).toHaveAttribute(
       'href',
       'settings'
+    )
+  })
+
+  it('imports with the host’s JSON editor', async () => {
+    setup({ onImport: async () => {}, jsonEditor: FakeJsonEditor })
+    await userEvent.click(screen.getByRole('button', { name: 'JSONエディタ' }))
+    expect(screen.getByRole('textbox', { name: 'JSON' })).toHaveAttribute(
+      'data-editor',
+      'fake'
     )
   })
 

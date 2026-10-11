@@ -15,6 +15,7 @@ import type {
 } from '../core/list'
 import { settingCodeOf } from '../core/payload'
 import { masterSettingMessages } from '../i18n/master-setting-messages'
+import type { JsonTextEditor } from '../json/json-text'
 import { ListError } from '../list/list-error'
 import { useFilters } from '../list/use-filters'
 import { MasterLink } from '../routing/master-link'
@@ -39,6 +40,8 @@ export type MasterSettingListProps = {
   tenantCode?: string
   inputSampleJson?: string
   mapRawItem?: BulkMapper
+  /** The import dialog's JSON editor instead of a text box, e.g. `/editors`' JsonEditor. */
+  jsonEditor?: JsonTextEditor
   /** The back button (v0 went to the host's top page); hidden without it. */
   onBack?(): void
 }
@@ -60,6 +63,7 @@ export function MasterSettingList({
   tenantCode,
   inputSampleJson,
   mapRawItem,
+  jsonEditor,
   onBack,
 }: MasterSettingListProps) {
   const t = useMessages(masterSettingMessages)
@@ -181,6 +185,7 @@ export function MasterSettingList({
             mapRawItem={mapRawItem}
             onImport={onImport}
             onImported={onImported}
+            jsonEditor={jsonEditor}
           />
         )}
         <Button asChild>

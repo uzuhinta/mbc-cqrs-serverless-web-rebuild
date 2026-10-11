@@ -5,6 +5,7 @@ import axe from 'axe-core'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
+import { FakeJsonEditor } from '../../test/fake-json-editor'
 import { V0_SETTING } from '../../test/fixtures/v0-master'
 import { parseMasterSetting } from '../core/parse'
 import type {
@@ -191,6 +192,17 @@ describe('MasterSettingEditor', () => {
     expect(names).toContain('追記')
     expect(names).toContain('名称!')
     expect(names).not.toContain('価格')
+  })
+
+  it('edits the setting JSON in the host’s JSON editor', async () => {
+    setup({ jsonEditor: FakeJsonEditor })
+    await userEvent.click(button('編集'))
+    await userEvent.click(button('JSONエディタ'))
+    const json = screen.getByRole('textbox', { name: 'JSON' })
+    expect(json).toHaveAttribute('data-editor', 'fake')
+    expect(JSON.parse((json as HTMLTextAreaElement).value)).toMatchObject({
+      code: 'PRODUCT',
+    })
   })
 
   it('applies a setting JSON to the form, keeping the stored code', async () => {

@@ -37,6 +37,7 @@ import {
 import { masterMessages } from '../i18n/master-messages'
 import { masterSettingMessages } from '../i18n/master-setting-messages'
 import { JsonDialog } from '../json/json-dialog'
+import type { JsonTextEditor } from '../json/json-text'
 import { ListError } from '../list/list-error'
 import { MasterLink } from '../routing/master-link'
 import type { MasterRouting } from '../routing/routing'
@@ -70,6 +71,8 @@ export type MasterSettingEditorProps = {
   settingOptions?: readonly SettingOption[]
   /** Sequences an auto-numbered code field can use. */
   formats?: readonly SequenceFormat[]
+  /** The JSON dialog's editor instead of a text box, e.g. `/editors`' JsonEditor. */
+  jsonEditor?: JsonTextEditor
 }
 
 const SECTION =
@@ -119,6 +122,7 @@ function EditorBody({
   canCopy = false,
   settingOptions = NO_OPTIONS,
   formats = NO_FORMATS,
+  jsonEditor,
 }: MasterSettingEditorProps) {
   const messages = useMessages(masterSettingMessages)
   const t = messages.editor
@@ -341,6 +345,7 @@ function EditorBody({
                     fileName={messages.json.fileName}
                     onApply={applyJson}
                     disabled={saving}
+                    jsonEditor={jsonEditor}
                   />
                 </div>
               )}

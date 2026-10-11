@@ -5,6 +5,7 @@ import axe from 'axe-core'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
+import { FakeJsonEditor } from '../../test/fake-json-editor'
 import { SETTING_ROWS } from '../../test/fixtures/v0-lists'
 import {
   initialSettingListState,
@@ -70,6 +71,15 @@ describe('MasterSettingList', () => {
       page: 1,
     })
     expect(onStateChange).toHaveBeenCalledTimes(1)
+  })
+
+  it('imports with the host’s JSON editor', async () => {
+    setup({ onImport: async () => {}, jsonEditor: FakeJsonEditor })
+    await userEvent.click(screen.getByRole('button', { name: 'JSONエディタ' }))
+    expect(screen.getByRole('textbox', { name: 'JSON' })).toHaveAttribute(
+      'data-editor',
+      'fake'
+    )
   })
 
   it('clears the filters', async () => {

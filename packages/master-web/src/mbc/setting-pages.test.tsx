@@ -3,6 +3,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
+import { FakeJsonEditor } from '../../test/fake-json-editor'
 import { createFakeClient } from '../../test/fake-mbc-client'
 import { SETTING_ROWS } from '../../test/fixtures/v0-lists'
 import { V0_SETTING } from '../../test/fixtures/v0-master'
@@ -42,6 +43,27 @@ describe('MbcMasterSettingListPage', () => {
     await userEvent.click(button('検索'))
     await waitFor(() =>
       expect(client.get.mock.calls.at(-1)?.[1].query.code).toBe('PRO')
+    )
+  })
+
+  it('passes the host’s JSON editor to the import dialog', async () => {
+    const client = createFakeClient()
+    serveGets(client, {
+      '/api/master-setting/list': () => ({ items: SETTING_ROWS, total: 2 }),
+    })
+    renderPage(
+      client,
+      <MbcMasterSettingListPage
+        routing={createRouting()}
+        jsonEditor={FakeJsonEditor}
+      />
+    )
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'JSONエディタ' })
+    )
+    expect(screen.getByRole('textbox', { name: 'JSON' })).toHaveAttribute(
+      'data-editor',
+      'fake'
     )
   })
 

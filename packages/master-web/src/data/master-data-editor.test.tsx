@@ -11,6 +11,7 @@ import axe from 'axe-core'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
+import { FakeJsonEditor } from '../../test/fake-json-editor'
 import { V0_DATA, V0_DATA_ODD, V0_SETTING } from '../../test/fixtures/v0-master'
 import { parseMasterData, parseMasterSetting } from '../core/parse'
 import type {
@@ -252,6 +253,17 @@ describe('MasterDataEditor', () => {
     await confirm('復旧', '復旧')
     expect(onRestore).toHaveBeenCalledTimes(1)
     expect(await screen.findByRole('button', { name: '削除' })).toBeVisible()
+  })
+
+  it('edits the record JSON in the host’s JSON editor', async () => {
+    setup({ jsonEditor: FakeJsonEditor })
+    await userEvent.click(button('編集'))
+    await userEvent.click(button('JSONエディタ'))
+    const json = screen.getByRole('textbox', { name: 'JSON' })
+    expect(json).toHaveAttribute('data-editor', 'fake')
+    expect(JSON.parse((json as HTMLTextAreaElement).value)).toMatchObject({
+      code: 'P-001',
+    })
   })
 
   it('applies a record JSON, keeping the stored code', async () => {

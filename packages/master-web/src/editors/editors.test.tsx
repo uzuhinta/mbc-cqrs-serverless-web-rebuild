@@ -16,6 +16,7 @@ import {
   RichTextEditor,
   type EditorProps,
 } from './index'
+import { BulkImportDialog } from '../bulk/bulk-import-dialog'
 
 /** An editor under a real label and description, holding its own value. */
 function Labelled({
@@ -318,6 +319,24 @@ function JsonValue({ value, disabled }: { value: string; disabled: boolean }) {
 }
 
 /** The text in Ace's document (jsdom does not draw Ace's text layer). */
+describe('JsonEditor in the JSON dialogs', () => {
+  it('edits the bulk import JSON, labelled as the dialog’s text box was', async () => {
+    render(
+      <BulkImportDialog
+        screen="settings"
+        onImport={async () => {}}
+        jsonEditor={JsonEditor}
+      />
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'JSONエディタ' }))
+    const input = await loaded('textarea.ace_text-input[aria-labelledby]')
+    expect(input).toHaveAccessibleName('JSON')
+    expect(JSON.parse(aceValue() ?? '[]')[0]).toMatchObject({
+      code: expect.any(String),
+    })
+  })
+})
+
 function aceValue() {
   const element = document.querySelector('.ace_editor') as
     (Element & { env?: { editor?: { getValue(): string } } }) | null

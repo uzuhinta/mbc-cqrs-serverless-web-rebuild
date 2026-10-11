@@ -27,6 +27,7 @@ import {
 import { settingCodeOf } from '../core/payload'
 import type { MasterSetting } from '../core/types'
 import { masterDataMessages } from '../i18n/master-data-messages'
+import type { JsonTextEditor } from '../json/json-text'
 import { ListError } from '../list/list-error'
 import { useFilters } from '../list/use-filters'
 import { MasterLink } from '../routing/master-link'
@@ -53,6 +54,8 @@ export type MasterDataListProps = {
   tenantCode?: string
   inputSampleJson?: string
   mapRawItem?: BulkMapper
+  /** The import dialog's JSON editor instead of a text box, e.g. `/editors`' JsonEditor. */
+  jsonEditor?: JsonTextEditor
 }
 
 type Filters = Pick<MasterDataListState, 'code' | 'keyword' | 'isDeleted'>
@@ -79,6 +82,7 @@ export function MasterDataList({
   tenantCode,
   inputSampleJson,
   mapRawItem,
+  jsonEditor,
 }: MasterDataListProps) {
   const t = useMessages(masterDataMessages)
   const id = useId()
@@ -222,6 +226,7 @@ export function MasterDataList({
                   mapRawItem={mapRawItem}
                   onImport={onImport}
                   onImported={onImported}
+                  jsonEditor={jsonEditor}
                 />
               )}
               <Button asChild>

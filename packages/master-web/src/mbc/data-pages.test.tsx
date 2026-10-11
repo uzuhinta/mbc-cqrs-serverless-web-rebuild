@@ -7,6 +7,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
+import { FakeJsonEditor } from '../../test/fake-json-editor'
 import { createFakeClient } from '../../test/fake-mbc-client'
 import { DATA_ROWS } from '../../test/fixtures/v0-lists'
 import { V0_DATA, V0_SETTING } from '../../test/fixtures/v0-master'
@@ -329,6 +330,26 @@ describe('MbcMasterDataEditorPage', () => {
     finish()
     await new Promise((resolve) => setTimeout(resolve, 20))
     expect(routing.navigate).not.toHaveBeenCalled()
+  })
+
+  it('passes the host’s JSON editor to the JSON dialog', async () => {
+    const client = createFakeClient()
+    serveGets(client, { [settingPath]: V0_SETTING, [dataPath]: V0_DATA })
+    renderPage(
+      client,
+      <MbcMasterDataEditorPage
+        routing={createRouting()}
+        settingId={SETTING_ID}
+        id={DATA_ID}
+        jsonEditor={FakeJsonEditor}
+      />
+    )
+    await userEvent.click(await screen.findByRole('button', { name: '編集' }))
+    await userEvent.click(button('JSONエディタ'))
+    expect(screen.getByRole('textbox', { name: 'JSON' })).toHaveAttribute(
+      'data-editor',
+      'fake'
+    )
   })
 
   it('opens another tenant’s record read-only', async () => {
