@@ -29,10 +29,18 @@ const text = z.preprocess(
   z.string()
 )
 
+/** An optional text v0 may have stored as a number or a boolean. */
+const optionalText = optional(
+  z.preprocess(
+    (value) => (value === undefined ? value : String(value)),
+    z.string()
+  )
+)
+
 const MasterFieldSchema = z.looseObject({
   physicalName: text,
   name: text,
-  description: optional(z.string()),
+  description: optionalText,
   dataType: z.preprocess(
     (value) => (typeof value === 'string' && value !== '' ? value : 'string'),
     z.string()
@@ -41,15 +49,15 @@ const MasterFieldSchema = z.looseObject({
   isShowedOnList: flag,
   defaultValue: z.unknown().optional(),
   length: stringOrNumber,
-  pattern: optional(z.string()),
+  pattern: optionalText,
   min: stringOrNumber,
   max: stringOrNumber,
   maxRow: stringOrNumber,
-  dataFormat: optional(z.string()),
-  formatCode: optional(z.string()),
-  formatName: optional(z.string()),
-  prefix: optional(z.string()),
-  postfix: optional(z.string()),
+  dataFormat: optionalText,
+  formatCode: optionalText,
+  formatName: optionalText,
+  prefix: optionalText,
+  postfix: optionalText,
 })
 
 const entity = {
@@ -72,7 +80,10 @@ const MasterSettingSchema = z.looseObject({
         (value) => (typeof value === 'string' ? value : ''),
         z.string()
       ),
-      fields: z.preprocess((value) => value ?? [], z.array(MasterFieldSchema)),
+      fields: z.preprocess(
+        (value) => (Array.isArray(value) ? value : []),
+        z.array(MasterFieldSchema)
+      ),
     })
   ),
 })

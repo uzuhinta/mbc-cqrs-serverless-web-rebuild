@@ -78,6 +78,55 @@ describe('parseMasterSetting', () => {
       { physicalName: '', name: 'Y', dataType: 'string' },
     ])
   })
+
+  it('still loads a field whose optional texts were stored as other types', () => {
+    const result = parseMasterSetting({
+      id: 'i',
+      pk: 'p',
+      sk: 's',
+      code: 'C',
+      name: 'N',
+      attributes: {
+        fields: [
+          {
+            physicalName: 'x',
+            name: 'X',
+            dataType: 'string',
+            description: true,
+            pattern: 5,
+            dataFormat: 1,
+            formatCode: 2,
+            formatName: 3,
+            prefix: 100,
+            postfix: 200,
+          },
+        ],
+      },
+    })
+    if (!result.success) throw result.error
+    expect(result.data.attributes.fields[0]).toMatchObject({
+      description: 'true',
+      pattern: '5',
+      dataFormat: '1',
+      formatCode: '2',
+      formatName: '3',
+      prefix: '100',
+      postfix: '200',
+    })
+  })
+
+  it('loads a setting whose fields are not a list as one with no fields', () => {
+    const result = parseMasterSetting({
+      id: 'i',
+      pk: 'p',
+      sk: 's',
+      code: 'C',
+      name: 'N',
+      attributes: { fields: { code: {} } },
+    })
+    if (!result.success) throw result.error
+    expect(result.data.attributes.fields).toEqual([])
+  })
 })
 
 describe('parseMasterData', () => {
