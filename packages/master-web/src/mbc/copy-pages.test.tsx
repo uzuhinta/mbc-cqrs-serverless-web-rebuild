@@ -116,7 +116,8 @@ describe('MbcMasterCopyRequestPage', () => {
       />
     )
     const alert = await screen.findByRole('alert')
-    expect(onError).toHaveBeenCalledWith(down)
+    // A load failure reaches onError from an effect, just after the alert.
+    await waitFor(() => expect(onError).toHaveBeenCalledWith(down))
     await userEvent.click(
       within(alert).getByRole('button', { name: '再読み込み' })
     )
@@ -144,7 +145,8 @@ describe('MbcMasterCopyRequestPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       '読み込みに失敗しました。'
     )
-    expect(onError).toHaveBeenCalledWith(noSession)
+    // A load failure reaches onError from an effect, just after the alert.
+    await waitFor(() => expect(onError).toHaveBeenCalledWith(noSession))
   })
 
   it('says when the request failed, stays, and reports it', async () => {

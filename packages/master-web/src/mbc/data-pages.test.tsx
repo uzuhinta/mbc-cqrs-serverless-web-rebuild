@@ -68,7 +68,8 @@ describe('MbcMasterDataListPage', () => {
       />
     )
     const alert = await screen.findByRole('alert')
-    expect(onError).toHaveBeenCalledWith(down)
+    // A load failure reaches onError from an effect, just after the alert.
+    await waitFor(() => expect(onError).toHaveBeenCalledWith(down))
     failing = false
     await userEvent.click(
       within(alert).getByRole('button', { name: '再読み込み' })
