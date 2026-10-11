@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { FakeJsonEditor } from '../../test/fake-json-editor'
 import type { BulkJsonItem } from '../core/bulk'
+import { MasterBulkError } from '../mbc/bulk'
 import {
   BulkImportDialog,
   type BulkImportDialogProps,
@@ -161,6 +162,47 @@ describe('BulkImportDialog', () => {
     expect(alert).toHaveTextContent('1 / 2 件反映済み')
     expect(screen.getByRole('button', { name: 'データ反映' })).toBeEnabled()
     expect(onImported).toHaveBeenCalledTimes(1)
+  })
+
+  it('names the items of the batch that failed', async () => {
+    setup({
+      onImport: async (_items, onProgress) => {
+        onProgress(1, 3)
+        throw new MasterBulkError(new Error('Request failed'), {
+          done: 1,
+          from: 2,
+          to: 2,
+        })
+      },
+    })
+    await open()
+    await typeJson([DATA, { ...DATA, code: 'D2' }, { ...DATA, code: 'D3' }])
+    await userEvent.click(screen.getByRole('button', { name: 'データ反映' }))
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('2〜2件目の反映に失敗しました。')
+    expect(alert).toHaveTextContent('1 / 3 件反映済み')
+  })
+
+  it('says the outcome is unknown when an import times out', async () => {
+    const timeout = Object.assign(new Error('Timed out after 30000ms'), {
+      name: 'MbcTimeoutError',
+    })
+    setup({
+      onImport: async (_items, onProgress) => {
+        onProgress(1, 2)
+        throw new MasterBulkError(timeout, { done: 1, from: 2, to: 2 })
+      },
+    })
+    await open()
+    await typeJson([DATA, { ...DATA, code: 'D2' }])
+    await userEvent.click(screen.getByRole('button', { name: 'データ反映' }))
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent(
+      '時間内に結果を確認できませんでした。反映されたかどうか、読み込み直して確認してください。'
+    )
+    expect(alert).toHaveTextContent('1 / 2 件反映済み')
+    expect(alert).not.toHaveTextContent('マスターデータの反映に失敗しました。')
+    expect(alert).not.toHaveTextContent('Timed out')
   })
 
   it('stays on screen with a long JSON: the editor and the dialog scroll', async () => {

@@ -26,6 +26,10 @@ export type MasterMessages = {
     /** Shown in the failure alert when some items already saved. */
     partial: (params: { done: number; total: number }) => string
     failed: string
+    /** The batch that failed, by item position (1-based). */
+    failedRange: (params: { from: number; to: number }) => string
+    /** The result did not arrive in time (client-web's `MbcTimeoutError`). */
+    timeout: string
   }
   /** The editors' JSON dialog (one setting or record). */
   jsonDialog: {
@@ -122,6 +126,9 @@ const ja: MasterMessages = {
     progress: ({ done, total }) => `反映中 (${done}/${total})`,
     partial: ({ done, total }) => `${done} / ${total} 件反映済み`,
     failed: 'マスターデータの反映に失敗しました。',
+    failedRange: ({ from, to }) => `${from}〜${to}件目の反映に失敗しました。`,
+    timeout:
+      '時間内に結果を確認できませんでした。反映されたかどうか、読み込み直して確認してください。',
   },
   jsonDialog: {
     open: 'JSONエディタ',
@@ -214,6 +221,9 @@ const en: MasterMessages = {
     progress: ({ done, total }) => `Importing (${done}/${total})`,
     partial: ({ done, total }) => `${done} / ${total} imported`,
     failed: 'The import failed.',
+    failedRange: ({ from, to }) => `Items ${from} to ${to} failed to import.`,
+    timeout:
+      'The result did not arrive in time. Reload to check which items were imported.',
   },
   jsonDialog: {
     open: 'JSON editor',

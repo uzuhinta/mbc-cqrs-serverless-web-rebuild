@@ -42,17 +42,45 @@ export type BulkImportDialogProps = {
   mapRawItem?: BulkMapper
   /**
    * Sends the items; call `onProgress(done, total)` as they finish. Resolve
-   * when everything is done (or nothing changed); reject on failure.
+   * when everything is done (or nothing changed); reject on failure. A
+   * rejection with numeric `from` / `to` (`/mbc`'s `MasterBulkError`) names
+   * the failed items; an `MbcTimeoutError` (or one as its `cause`) is shown
+   * as an unknown outcome.
    */
   onImport(
     items: BulkJsonItem[],
     onProgress: (done: number, total: number) => void
   ): Promise<void>
-  /** After a successful import, e.g. to reload the list. */
+  /** After an import (also after a partial one), e.g. to reload the list. */
   onImported?(): void
   disabled?: boolean
   /** Edits the JSON instead of the text box, e.g. `/editors`' JsonEditor. */
   jsonEditor?: JsonTextEditor
+}
+
+type Failure = {
+  timeout: boolean
+  range?: { from: number; to: number }
+  message?: string
+}
+
+const isTimeout = (error: unknown) =>
+  error instanceof Error &&
+  (error.name === 'MbcTimeoutError' ||
+    (error.cause instanceof Error && error.cause.name === 'MbcTimeoutError'))
+
+/** What the alert says: an unknown outcome has no message of its own. */
+function failureOf(error: unknown): Failure {
+  if (isTimeout(error)) return { timeout: true }
+  const { from, to } = (error ?? {}) as { from?: unknown; to?: unknown }
+  return {
+    timeout: false,
+    range:
+      typeof from === 'number' && typeof to === 'number'
+        ? { from, to }
+        : undefined,
+    message: error instanceof Error ? error.message : undefined,
+  }
 }
 
 const FILE_NAMES: Record<BulkScreen, string> = {
@@ -80,7 +108,7 @@ export function BulkImportDialog({
     () => inputSampleJson ?? bulkSampleJson(screen, settingCode)
   )
   const [errors, setErrors] = useState<BulkError[]>([])
-  const [failure, setFailure] = useState<string | null>(null)
+  const [failure, setFailure] = useState<Failure | null>(null)
   const [progress, setProgress] = useState<{
     done: number
     total: number
@@ -121,7 +149,7 @@ export function BulkImportDialog({
       onImported?.()
     } catch (error) {
       setProgress(null)
-      setFailure(error instanceof Error ? error.message : '')
+      setFailure(failureOf(error))
       // Batches already accepted by the host must still reach the list.
       if (last.done > 0) {
         setPartial(last)
@@ -168,15 +196,17 @@ export function BulkImportDialog({
         )}
         {failure !== null && (
           <Alert variant="destructive" role="alert">
-            <AlertTitle>{t.bulkDialog.failed}</AlertTitle>
+            <AlertTitle>
+              {failure.timeout ? t.bulkDialog.timeout : t.bulkDialog.failed}
+            </AlertTitle>
             <AlertDescription>
-              {failure}
-              {partial && (
-                <>
-                  {failure ? ' ' : null}
-                  {t.bulkDialog.partial(partial)}
-                </>
-              )}
+              {[
+                failure.range && t.bulkDialog.failedRange(failure.range),
+                failure.message,
+                partial && t.bulkDialog.partial(partial),
+              ]
+                .filter(Boolean)
+                .join(' ')}
             </AlertDescription>
           </Alert>
         )}
