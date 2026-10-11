@@ -14,6 +14,7 @@ import {
   MbcProvider,
   masterMessages,
   useMessages,
+  type FieldRenderers,
   type MasterRouting,
 } from '@mbc-cqrs-serverless/master-web'
 import {
@@ -21,7 +22,6 @@ import {
   initialSettingListState,
   parseMasterSetting,
 } from '@mbc-cqrs-serverless/master-web/core'
-import { editorRenderers } from '@mbc-cqrs-serverless/master-web/editors'
 import {
   createMbcClient,
   MbcClientProvider,
@@ -94,7 +94,8 @@ const copyTask = {
 }
 
 /** master-web's client entry and the new ui-web parts, rendered on the server and hydrated. */
-export function MasterScreens() {
+/** `components` comes from the Server Component: `/editors`' renderers cross as client references. */
+export function MasterScreens({ components }: { components: FieldRenderers }) {
   return (
     <MbcProvider locale="ja">
       <FieldTypes />
@@ -137,7 +138,7 @@ export function MasterScreens() {
         mode="create"
         setting={setting}
         routing={routing}
-        components={editorRenderers}
+        components={components}
         onSave={async () => {}}
       />
       <MasterSettingEditor
