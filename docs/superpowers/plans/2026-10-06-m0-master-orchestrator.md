@@ -207,7 +207,22 @@ git status --porcelain                                        # must be empty af
     - **README:** a copy request "opens the copy results as 0.0.x did" (0.0.x went back); the timeout rule is stated for all saves, not only creates; `BulkImportDialog` takes no `routing`; the tenant-word example covers 2 of 11 strings.
     - **Migration guide:** no word on `JsonEditor`'s new props, `RichTextEditor`'s dropped `placeholder`, every 0.0.x page's URL reads, `<Suspense>` for `useSearchParams` on static routes, 0.0.x's environment variables, or ESM-only; "ids are URL-encoded" is listed as a change though 0.0.x already encoded them.
     - **Elsewhere:** survey-web's README says "three packages"; two stacked JSDoc blocks in the smoke app; no permanent typecheck of the docs' examples.
-  - Still to do: the final whole-repo review.
+  - Final whole-repo review (2026-10-11): three fresh reviewers (data and backend; screens and editors; release and integration). Fixed, each with a test that failed first:
+    - the master-web and survey-web READMEs sent Tailwind v3 hosts to `styles.layer.css` (Critical; a docs test now refuses it);
+    - `editors.css` shipped no licences: the build writes `editors-assets/THIRD_PARTY_NOTICES.txt`;
+    - the backend lowercases the tenant (core 1.1.0): tenants match in any case, a create resolves with the backend's id (`runOrThrow` passes it on) and the pages open it, and `command()` also listens under the lowercased tenant;
+    - a setting flag stored as `"true"` saved as `false`; oddly typed field texts made a setting unloadable;
+    - a cleared value was left out of an update (the backend merges updates), and a second save in one visit worked from the record as first opened;
+    - focus fell to the page after the field dialog closed or a row was removed;
+    - the bulk dialog said "failed" with English text on a timeout, and did not name the failed batch;
+    - the spec named two of v0's app-specific URL entries.
+
+    Gate on React 19 and 18: 941/941, smoke passes.
+
+  - Deferred minors from the final review:
+    - **Data:** a timeout before the subscription is ready reads as "outcome unknown"; a connection dropped after sending reads as a definite failure (a retry can number a second record); the sequence-format query is not keyed by `paths`.
+    - **Screens:** the empty row shows under a load failure; the editors' own toolbar controls (Quill's pickers and link input, the Markdown toolbar icons) have no accessible names; "※" before field descriptions is hard-coded; default field names and the bulk sample are Japanese in every locale; without realtime the bulk dialog closes without a word (M7c ruling); Edit swaps the focused button for a disabled Save.
+    - **Release:** MIGRATION's "keep 0.0.x's URLs" router writes the setting id where 0.0.x wrote the code; `SEQUENCE_SETTING_CODE` is exported from a client module; the smoke app renders one connected page, and its React 18 leg covers the Pages Router only; internal dependencies use caret ranges while each stylesheet matches exact siblings; keyframe names are not prefixed; client-web's README omits `expectedFinishes`, `onProgress`, `requestIdOf` and `useQuery`; survey-web ships an unused rolldown runtime and `.d.ts` files point at maps that are not shipped; TypeScript 6 needs ambient CSS types for the README's CSS imports; unprefixed classes, two unused libraries and dynamic imports in `/core` have no automated guard.
   - Spec: §3 (subpaths not kept), §5, §6, §7, §1 success criteria.
   - From M7c's review: the README says that `client.tenantCode()` runs during render (on the server too), that the pages assume realtime (without it a new item may open before the backend has synced it), and that the pages key themselves by their ids.
   - From M6's review: the README's editors section names the peers to install, `editors.css` (its sprite in `editors-assets/`), `@uiw/react-md-editor/markdown-editor.css` for bundlers that drop CSS imported from JavaScript, the CSP the editors need (Ace injects `<style>` elements; jsoneditor starts its worker from a `data:` URL) and their size (jsoneditor with Ace is about 1 MB minified, loaded after mount); `next-smoke` imports `editors.css` and passes `editorRenderers` from a Server Component.
