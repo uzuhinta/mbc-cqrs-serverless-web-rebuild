@@ -15,7 +15,7 @@ React 18 and 19 are supported, and `next` is no longer a peer dependency. axios,
 import '@mbc-cqrs-serverless/master-web/styles.css'
 ```
 
-The stylesheet changes nothing outside the package's own elements: every class has the `mbc:` prefix, there is no reset of your page, and dialogs keep the theme because their elements carry `data-mbc`. Use `styles.layer.css` if your app orders CSS layers. The `./styles` JS subpath is gone.
+The stylesheet changes nothing outside the package's own elements: every class has the `mbc:` prefix, there is no reset of your page, and dialogs keep the theme because their elements carry `data-mbc`. Keep `styles.css` with Tailwind v3, as 0.0.x hosts have it. Use `styles.layer.css` only with Tailwind v4 or your own CSS layers, imported before Tailwind. The `./styles` JS subpath is gone.
 
 ## 2. `AppProviders` → a client
 

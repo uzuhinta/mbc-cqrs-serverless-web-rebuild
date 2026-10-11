@@ -62,3 +62,21 @@ describe('documentation imports', () => {
     }, 30_000) // cold imports of the built packages (Radix, lucide) take seconds
   }
 })
+
+describe('documentation stylesheets', () => {
+  // Tailwind v3's preflight is unlayered, and unlayered CSS beats every
+  // layer: with styles.layer.css a v3 host's reset wins over the library.
+  it('never sends Tailwind v3 hosts to the layered stylesheet', () => {
+    const offending = DOCS.flatMap((doc) =>
+      readFileSync(join(root, doc), 'utf8')
+        .split(/(?<=[.!?])\s+|\n/)
+        .filter(
+          (sentence) =>
+            sentence.includes('Tailwind v3') &&
+            sentence.includes('styles.layer.css')
+        )
+        .map((sentence) => `${doc}: ${sentence}`)
+    )
+    expect(offending).toEqual([])
+  })
+})
