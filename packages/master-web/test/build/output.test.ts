@@ -63,6 +63,25 @@ describe('master-web output', () => {
     ])
   })
 
+  it('ships the licences of the third-party styles and icons beside them', () => {
+    const notices = readText(dist, 'editors-assets/THIRD_PARTY_NOTICES.txt')
+    // jsoneditor (Apache-2.0): its licence and its NOTICE.
+    expect(notices).toMatch(/jsoneditor [\d.]+/)
+    expect(notices).toContain('Apache License')
+    expect(notices).toContain('Copyright (C) 2011-')
+    // Quill's snow theme (BSD-3-Clause), from react-quill-new (MIT).
+    expect(notices).toMatch(/quill [\d.]+/)
+    expect(notices).toContain(
+      'Redistribution and use in source and binary forms'
+    )
+    expect(notices).toMatch(/react-quill-new [\d.]+/)
+    // Selectr's styles, inside jsoneditor's (MIT).
+    expect(notices).toContain('Selectr')
+    expect(readText(dist, 'editors.css')).toContain(
+      './editors-assets/THIRD_PARTY_NOTICES.txt'
+    )
+  })
+
   it('loads the optional editors only with import() from editors/', () => {
     const library =
       /["'](?:react-quill-new|@uiw\/react-md-editor|jsoneditor)(?:\/[^"']*)?["']/
