@@ -29,6 +29,25 @@ export {
   type WebSocketLike,
 } from './realtime/client'
 export {
+  createEventsClient,
+  eventsEndpoint,
+  type EventsAuth,
+  type EventsClient,
+  type EventsHandlers,
+  type EventsOptions,
+} from './realtime/events'
+export {
+  eventsMessages,
+  graphqlMessages,
+  type MessageHandlers,
+  type MessageStream,
+} from './realtime/stream'
+export {
+  eventsChannel,
+  matchesFilter,
+  sanitizeSegment,
+} from './realtime/channel'
+export {
   realtimeEndpoint,
   type GraphQLOperation,
   type RealtimeAuth,
@@ -39,10 +58,17 @@ export {
   type CommandRequest,
   type CommandResult,
 } from './command'
-export { createMbcClient, type MbcClient, type MbcClientConfig } from './client'
+export {
+  createMbcClient,
+  type EventsRealtimeConfig,
+  type GraphQLRealtimeConfig,
+  type MbcClient,
+  type MbcClientConfig,
+} from './client'
 export {
   ON_MESSAGE,
   parseMessage,
+  readMessage,
   type MbcMessage,
   type MessageFilter,
 } from './messages'
