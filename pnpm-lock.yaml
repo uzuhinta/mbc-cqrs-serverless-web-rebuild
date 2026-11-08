@@ -224,10 +224,10 @@ importers:
         specifier: ^3.2.2
         version: 3.2.2(react@19.3.0)
       '@mbc-cqrs-serverless/client-web':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../client-web
       '@mbc-cqrs-serverless/ui-web':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../ui-web
       lucide-react:
         specifier: ^1.52.0
@@ -285,10 +285,10 @@ importers:
         specifier: ^3.2.2
         version: 3.2.2(react@19.3.0)
       '@mbc-cqrs-serverless/client-web':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../client-web
       '@mbc-cqrs-serverless/ui-web':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../ui-web
       '@radix-ui/react-radio-group':
         specifier: ^1.4.7

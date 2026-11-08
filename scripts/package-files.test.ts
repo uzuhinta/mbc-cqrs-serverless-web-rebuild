@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
@@ -33,5 +34,22 @@ describe('published files', () => {
       expect(packed(pkg)).toContain('MIGRATION.md')
     },
     30_000
+  )
+
+  // Each stylesheet is compiled from the sibling sources it was built with:
+  // `workspace:*` publishes the exact version, so npm cannot mix releases.
+  it.each(['survey-web', 'master-web'])(
+    '%s depends on its sibling packages at their exact version',
+    (pkg) => {
+      const { dependencies } = JSON.parse(
+        readFileSync(`${root}packages/${pkg}/package.json`, 'utf8')
+      ) as { dependencies: Record<string, string> }
+      const siblings = Object.entries(dependencies).filter(([name]) =>
+        name.startsWith('@mbc-cqrs-serverless/')
+      )
+      expect(siblings.length).toBeGreaterThan(0)
+      for (const [name, range] of siblings)
+        expect(`${name}@${range}`).toBe(`${name}@workspace:*`)
+    }
   )
 })
