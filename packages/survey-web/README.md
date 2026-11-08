@@ -278,3 +278,14 @@ export function Providers({ children }: { children: ReactNode }) {
 ## Next.js
 
 Components are client components: render them from files marked `'use client'` (or pass them server data as props). `/core` is safe in Server Components and route handlers.
+
+## Claude Code
+
+The package ships a skill that teaches Claude Code how to set up and use these packages, written for the version you installed. Link it into your app once:
+
+```bash
+mkdir -p .claude/skills
+ln -s ../../node_modules/@mbc-cqrs-serverless/survey-web/dist/skills/mbc-cqrs-serverless-web .claude/skills/mbc-cqrs-serverless-web
+```
+
+The link follows upgrades; a copy (`cp -R` instead of `ln -s`) has to be refreshed after each one. Every package ships the same skill, so link it from any one you installed.

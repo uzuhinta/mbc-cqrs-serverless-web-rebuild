@@ -1,0 +1,6 @@
+schema_version: '1.1'
+name: themes-and-renames-for-the-app
+expected_outcome: |
+  theme.css sets --mbc-* variables on :root (brand, primary, radius) and dark values under
+  .dark; providers.tsx wraps MbcProvider with locale "en" and a stable messages object
+  overriding real masterCopy (and related) keys to say workspaces; one stylesheet import.

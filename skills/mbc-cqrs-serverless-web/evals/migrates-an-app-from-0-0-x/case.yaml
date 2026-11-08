@@ -1,0 +1,10 @@
+schema_version: '1.1'
+name: migrates-an-app-from-0-0-x
+expected_outcome: |
+  The layout uses createMbcClient + MbcClientProvider (no axios, no AppProviders, no
+  ssr:false) with getAuthToken from the app's auth; routing is a MasterRouting that writes
+  the existing URLs; the page renders MbcMasterDataEditorPage with decoded settingId and id
+  (pk#sk); globals.css imports styles.css and drops the workarounds; notes cover editors,
+  the other pages and the behaviour changes.
+context:
+  scaffold_script: place-files.sh

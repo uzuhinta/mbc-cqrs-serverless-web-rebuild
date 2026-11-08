@@ -43,7 +43,7 @@
     "MIGRATION.md"
   ],
   "scripts": {
-    "build": "tsdown && node ../../scripts/prune-dist.ts && node ../../scripts/build-css.ts",
+    "build": "tsdown && node ../../scripts/prune-dist.ts && node ../../scripts/copy-skill.ts && node ../../scripts/build-css.ts",
     "prepack": "pnpm run build",
     "typecheck": "tsc -p tsconfig.json",
     "check:package": "publint --strict && attw --pack . --profile esm-only --exclude-entrypoints ./styles.css ./styles.layer.css ./package.json"

@@ -121,4 +121,27 @@ describe('published files', () => {
     },
     30_000
   )
+
+  // App developers link it into their app's .claude/skills, at the version
+  // they installed; the evals stay in the repo.
+  it.each(['ui-web', 'client-web', 'survey-web', 'master-web'])(
+    '%s ships the usage skill for Claude Code, without its evals',
+    (pkg) => {
+      const files = packed(pkg)
+      const skill = 'dist/skills/mbc-cqrs-serverless-web'
+      expect(files).toEqual(
+        expect.arrayContaining([
+          `${skill}/SKILL.md`,
+          `${skill}/references/setup.md`,
+          `${skill}/references/screens.md`,
+          `${skill}/references/migrate.md`,
+          `${skill}/references/troubleshooting.md`,
+        ])
+      )
+      expect(files.filter((file) => file.startsWith(`${skill}/evals`))).toEqual(
+        []
+      )
+    },
+    30_000
+  )
 })

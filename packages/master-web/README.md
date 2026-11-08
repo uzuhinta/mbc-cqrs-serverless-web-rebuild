@@ -134,15 +134,15 @@ export default function DataItemPage() {
 }
 ```
 
-| Page                          | Route (above)                        | Props besides `routing`, `onError`, `paths`                                                                      |
-| ----------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| `MbcMasterSettingListPage`    | `/master`                            | `state` / `onStateChange` (kept inside without them), `inputSampleJson`, `mapRawItem`, `onBack`                  |
-| `MbcMasterSettingEditorPage`  | `/master/new`, `/master/[settingId]` | `id` (none creates), `onSaved(id)`, `onDeleted()`, `canCopy`, `settingOptions`, `formats` or `formatSettingCode` |
-| `MbcMasterDataListPage`       | `/master/[settingId]/data`           | `settingId`, `state` / `onStateChange`, `inputSampleJson`, `mapRawItem`                                          |
-| `MbcMasterDataEditorPage`     | `…/data/new`, `…/data/[id]`          | `settingId`, `id` (none creates), `onSaved(id)`, `onDeleted()`, `components`                                     |
-| `MbcMasterCopyRequestPage`    | `/master/[settingId]/copy/new`       | `settingId`, `loadTenants(): Promise<{ code; name }[]>`, `onRequested()`, `state` / `onStateChange`              |
-| `MbcMasterCopyTaskListPage`   | `/master/[settingId]/copy`           | `settingId`, `pollMs`                                                                                            |
-| `MbcMasterCopyTaskDetailPage` | `/master/[settingId]/copy/[taskId]`  | `settingId`, `taskId`, `pollMs`                                                                                  |
+| Page                          | Route (above)                        | Props besides `routing`, `onError`, `paths`                                                                                    |
+| ----------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `MbcMasterSettingListPage`    | `/master`                            | `state` / `onStateChange` (kept inside without them), `inputSampleJson`, `mapRawItem`, `jsonEditor`, `onBack`                  |
+| `MbcMasterSettingEditorPage`  | `/master/new`, `/master/[settingId]` | `id` (none creates), `onSaved(id)`, `onDeleted()`, `canCopy`, `settingOptions`, `formats` or `formatSettingCode`, `jsonEditor` |
+| `MbcMasterDataListPage`       | `/master/[settingId]/data`           | `settingId`, `state` / `onStateChange`, `inputSampleJson`, `mapRawItem`, `jsonEditor`                                          |
+| `MbcMasterDataEditorPage`     | `…/data/new`, `…/data/[id]`          | `settingId`, `id` (none creates), `onSaved(id)`, `onDeleted()`, `components`, `jsonEditor`                                     |
+| `MbcMasterCopyRequestPage`    | `/master/[settingId]/copy/new`       | `settingId`, `loadTenants(): Promise<{ code; name }[]>`, `onRequested()`, `state` / `onStateChange`                            |
+| `MbcMasterCopyTaskListPage`   | `/master/[settingId]/copy`           | `settingId`, `pollMs`                                                                                                          |
+| `MbcMasterCopyTaskDetailPage` | `/master/[settingId]/copy/[taskId]`  | `settingId`, `taskId`, `pollMs`                                                                                                |
 
 Next allows one slug name per path level, so the settings editor's folder is `[settingId]` as well: its page passes `params.settingId` as `id`. The data editor in step 3 has no editors' libraries; to add them, see "Rich editors" below.
 
@@ -156,7 +156,7 @@ Next allows one slug name per path level, so the settings editor's folder is `[s
 
 The current tenant is `client.tenantCode()`. A setting or record belongs to the tenant in its `tenantCode`; another tenant's items, `common` included, open read-only (no Save, Delete, Restore, field reordering or JSON import), and their links still work. `canCopy` on the settings editor shows the copy links; whether a user may copy is your app's decision (0.0.x showed them to one system tenant). Reaching the copy pages is your routing.
 
-`tenantCode` runs during render, on the server too, so it must not need the browser. Compare and pass the tenant exactly as the backend stores it.
+`tenantCode` runs during render, on the server too, so it must not need the browser (read the tenant on the server, for example from a cookie, and pass it down). Tenants are compared ignoring case, as the backend lowercases them (core 1.1.0).
 
 ### Realtime
 
@@ -406,3 +406,14 @@ export function Providers({ children }: { children: ReactNode }) {
 ## Next.js
 
 The screens and pages are client components: render them from files marked `'use client'`. `/core` is safe in Server Components and route handlers. The rich editors load after mount, and copy task times show in the browser's time zone after hydration, so server and browser render the same HTML.
+
+## Claude Code
+
+The package ships a skill that teaches Claude Code how to set up and use these packages, written for the version you installed. Link it into your app once:
+
+```bash
+mkdir -p .claude/skills
+ln -s ../../node_modules/@mbc-cqrs-serverless/master-web/dist/skills/mbc-cqrs-serverless-web .claude/skills/mbc-cqrs-serverless-web
+```
+
+The link follows upgrades; a copy (`cp -R` instead of `ln -s`) has to be refreshed after each one. Every package ships the same skill, so link it from any one you installed.

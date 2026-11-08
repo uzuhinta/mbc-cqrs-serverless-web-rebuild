@@ -1,0 +1,7 @@
+schema_version: '1.1'
+name: sets-up-master-pages-in-next
+expected_outcome: |
+  The files import styles.css (Tailwind v3), create the client once in a 'use client'
+  providers module with realtime and getAuthToken, get the tenant on the server (cookie)
+  rather than reading it in the browser during render, build a MasterRouting with encoded
+  ids, and add page files that decode route params and mark 'use client'.

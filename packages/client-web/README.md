@@ -147,3 +147,14 @@ export function Item({ id }: { id: string }) {
   return <p>{item.loading ? '…' : item.data?.name}</p>
 }
 ```
+
+## Claude Code
+
+The package ships a skill that teaches Claude Code how to set up and use these packages, written for the version you installed. Link it into your app once:
+
+```bash
+mkdir -p .claude/skills
+ln -s ../../node_modules/@mbc-cqrs-serverless/client-web/dist/skills/mbc-cqrs-serverless-web .claude/skills/mbc-cqrs-serverless-web
+```
+
+The link follows upgrades; a copy (`cp -R` instead of `ln -s`) has to be refreshed after each one. Every package ships the same skill, so link it from any one you installed.

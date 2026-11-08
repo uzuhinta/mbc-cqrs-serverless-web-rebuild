@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 0.0.x: the master package's styles needed the host's CSS variables and a reset fix */
+@import '@mbc-cqrs-serverless/master-web/dist/styles.css';
+:root {
+  --background: 0 0% 100%;
+  --primary: 222 47% 11%;
+}
+.ql-editor div {
+  margin: 0;
+}

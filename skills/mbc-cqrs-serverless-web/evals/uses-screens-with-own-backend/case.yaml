@@ -1,0 +1,7 @@
+schema_version: '1.1'
+name: uses-screens-with-own-backend
+expected_outcome: |
+  The files use master-web's prop-driven screens (MasterSettingList, MasterSettingEditor)
+  from the root entry with the app's own fetch calls, not the /mbc connected pages or a
+  createMbcClient; list state is held by the page; routing is a MasterRouting from Next's
+  router; saving maps the editor's body to the app's PUT.

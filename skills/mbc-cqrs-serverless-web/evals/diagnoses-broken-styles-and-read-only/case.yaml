@@ -1,0 +1,7 @@
+schema_version: '1.1'
+name: diagnoses-broken-styles-and-read-only
+expected_outcome: |
+  answer.md says Tailwind v3 needs styles.css (the layered file loses to v3's unlayered
+  reset), and that tenantCode reads localStorage during render, which on the server gives
+  '' — so the tenant's items open read-only and server and client HTML differ; the fix is
+  to supply the tenant in a way that works on the server.
