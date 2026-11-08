@@ -125,6 +125,9 @@ describe('BulkImportDialog', () => {
 
   it('says the items were accepted when their outcome is not known yet', async () => {
     setup({ onImport: async () => 'accepted' })
+    // The live region is there before its text: screen readers announce a
+    // change to it, not one inserted already filled.
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
     await open()
     await typeJson([DATA])
     await userEvent.click(screen.getByRole('button', { name: 'データ反映' }))
@@ -136,7 +139,7 @@ describe('BulkImportDialog', () => {
     await open()
     await userEvent.keyboard('{Escape}')
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-    expect(screen.queryByRole('status')).toBeNull()
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
   })
 
   it('stays open and says why when the import fails', async () => {

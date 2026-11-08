@@ -173,14 +173,13 @@ export function BulkImportDialog({
 
   return (
     <>
-      {result && (
-        <p
-          role="status"
-          className="mbc:text-muted-foreground mbc:self-center mbc:text-sm"
-        >
-          {result}
-        </p>
-      )}
+      {/* Always there, so a screen reader announces the text when it arrives. */}
+      <p
+        role="status"
+        className="mbc:text-muted-foreground mbc:m-0 mbc:self-center mbc:text-sm mbc:empty:sr-only"
+      >
+        {result}
+      </p>
       <Dialog open={open} onOpenChange={changeOpen}>
         <DialogTrigger asChild>
           <Button type="button" variant="outline" disabled={disabled}>
