@@ -109,7 +109,7 @@ const ja: MasterCopyMessages = {
     failed: '汎用マスタコピーの登録に失敗しました。',
     failedHint: '入力内容を確認した上で再度やり直してください。',
     timeout:
-      '時間内に結果が届きませんでした。コピー結果一覧で登録されたかを確認してください。',
+      '結果を確認できませんでした。コピー結果一覧で登録されたかを確認してください。',
     requested: '汎用マスタコピーを登録しました。',
     viewResults: 'コピー結果を確認',
     loadFailed: '読み込みに失敗しました。',
@@ -187,7 +187,7 @@ const en: MasterCopyMessages = {
     failed: 'Could not request the copy.',
     failedHint: 'Check your input and try again.',
     timeout:
-      'The result did not arrive in time. Check the copy results before requesting again.',
+      'The result could not be confirmed. Check the copy results before requesting again.',
     requested: 'The copy was requested.',
     viewResults: 'Copy results',
     loadFailed: 'Could not load the data.',

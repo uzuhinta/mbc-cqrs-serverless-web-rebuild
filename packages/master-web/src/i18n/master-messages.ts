@@ -28,7 +28,7 @@ export type MasterMessages = {
     failed: string
     /** The batch that failed, by item position (1-based). */
     failedRange: (params: { from: number; to: number }) => string
-    /** The result did not arrive in time (client-web's `MbcTimeoutError`). */
+    /** The result could not be confirmed (a timeout or a dropped connection). */
     timeout: string
   }
   /** The editors' JSON dialog (one setting or record). */
@@ -128,7 +128,7 @@ const ja: MasterMessages = {
     failed: 'マスターデータの反映に失敗しました。',
     failedRange: ({ from, to }) => `${from}〜${to}件目の反映に失敗しました。`,
     timeout:
-      '時間内に結果を確認できませんでした。反映されたかどうか、読み込み直して確認してください。',
+      '結果を確認できませんでした。反映されたかどうか、読み込み直して確認してください。',
   },
   jsonDialog: {
     open: 'JSONエディタ',
@@ -223,7 +223,7 @@ const en: MasterMessages = {
     failed: 'The import failed.',
     failedRange: ({ from, to }) => `Items ${from} to ${to} failed to import.`,
     timeout:
-      'The result did not arrive in time. Reload to check which items were imported.',
+      'The result could not be confirmed. Reload to check which items were imported.',
   },
   jsonDialog: {
     open: 'JSON editor',

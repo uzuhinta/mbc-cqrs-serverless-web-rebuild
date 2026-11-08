@@ -27,6 +27,7 @@ import {
 } from '../core/values'
 import { ConfirmButton } from '../form/confirm-button'
 import { FailureAlert, failureOf, type Failure } from '../form/failure'
+import { isUnknownOutcome } from '../form/outcome'
 import { RequiredMark } from '../form/required-mark'
 import { formatMasterError } from '../i18n/format-error'
 import { masterDataMessages } from '../i18n/master-data-messages'
@@ -229,12 +230,7 @@ function EditorBody({
       setFailure(failureOf(reason, failedTitle, t))
       // A create that timed out may already exist. Saving again would
       // number another record; the message tells the host to reload.
-      if (
-        mode === 'create' &&
-        reason instanceof Error &&
-        reason.name === 'MbcTimeoutError'
-      )
-        setCreated(true)
+      if (mode === 'create' && isUnknownOutcome(reason)) setCreated(true)
     } finally {
       busy.current = false
       setSaving(false)

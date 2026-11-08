@@ -153,7 +153,7 @@ const ja: MasterSettingMessages = {
     deleteFailed: 'データ削除に失敗しました。',
     failedHint: '入力内容を確認した上で再度やり直してください。',
     timeout:
-      '時間内に結果を確認できませんでした。反映されたかどうか、読み込み直して確認してください。',
+      '結果を確認できませんでした。反映されたかどうか、読み込み直して確認してください。',
     deleteTitle: '削除してもよろしいですか？',
     deleteConfirm: '削除',
   },
@@ -259,7 +259,7 @@ const en: MasterSettingMessages = {
     deleteFailed: 'Could not delete the setting.',
     failedHint: 'Check your input and try again.',
     timeout:
-      'The result did not arrive in time. Reload to check whether the change was made.',
+      'The result could not be confirmed. Reload to check whether the change was made.',
     deleteTitle: 'Delete this setting?',
     deleteConfirm: 'Delete',
   },

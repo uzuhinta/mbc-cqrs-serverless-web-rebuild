@@ -215,7 +215,7 @@ describe('MbcMasterDataEditorPage', () => {
     await userEvent.type(input('価格'), '500')
     await userEvent.click(button('登録'))
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      '時間内に結果を確認できませんでした。'
+      '結果を確認できませんでした。'
     )
     expect(button('登録')).toBeDisabled()
     expect(client.post).toHaveBeenCalledTimes(1)

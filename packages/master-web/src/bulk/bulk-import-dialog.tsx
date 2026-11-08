@@ -24,6 +24,7 @@ import {
   type BulkMapper,
   type BulkScreen,
 } from '../core/bulk'
+import { isUnknownOutcome } from '../form/outcome'
 import { formatBulkError } from '../i18n/format-error'
 import { masterMessages } from '../i18n/master-messages'
 import { downloadJson, readJsonFile } from '../json/json-file'
@@ -44,7 +45,7 @@ export type BulkImportDialogProps = {
    * Sends the items; call `onProgress(done, total)` as they finish. Resolve
    * when everything is done (or nothing changed); reject on failure. A
    * rejection with numeric `from` / `to` (`/mbc`'s `MasterBulkError`) names
-   * the failed items; an `MbcTimeoutError` (or one as its `cause`) is shown
+   * the failed items; a timeout or dropped connection (also as its `cause`) is shown
    * as an unknown outcome.
    */
   onImport(
@@ -64,14 +65,9 @@ type Failure = {
   message?: string
 }
 
-const isTimeout = (error: unknown) =>
-  error instanceof Error &&
-  (error.name === 'MbcTimeoutError' ||
-    (error.cause instanceof Error && error.cause.name === 'MbcTimeoutError'))
-
 /** What the alert says: an unknown outcome has no message of its own. */
 function failureOf(error: unknown): Failure {
-  if (isTimeout(error)) return { timeout: true }
+  if (isUnknownOutcome(error)) return { timeout: true }
   const { from, to } = (error ?? {}) as { from?: unknown; to?: unknown }
   return {
     timeout: false,

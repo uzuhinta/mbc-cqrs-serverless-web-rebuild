@@ -321,10 +321,34 @@ describe('MasterDataEditor', () => {
     await userEvent.type(input('価格'), '500')
     await userEvent.click(button('登録'))
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      '時間内に結果を確認できませんでした。'
+      '結果を確認できませんでした。'
     )
     expect(button('登録')).toBeDisabled()
     expect(generateCode).toHaveBeenCalledTimes(1)
+  })
+
+  it('treats a create whose connection dropped as an unknown outcome', async () => {
+    // client-web's network failure: the request may have reached the backend.
+    const dropped = Object.assign(new Error('Network request failed'), {
+      name: 'MbcApiError',
+      status: 0,
+    })
+    const onSave = vi.fn<MasterDataEditorProps['onSave']>(async () => {
+      throw dropped
+    })
+    setup({
+      mode: 'create',
+      data: undefined,
+      generateCode: async () => 'P-100',
+      onSave,
+    })
+    await userEvent.type(input('名称'), 'なし')
+    await userEvent.type(input('価格'), '500')
+    await userEvent.click(button('登録'))
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      '結果を確認できませんでした。'
+    )
+    expect(button('登録')).toBeDisabled()
   })
 
   it('applies the JSON a new auto-numbered record opens with', async () => {
@@ -354,7 +378,7 @@ describe('MasterDataEditor', () => {
     )
     await userEvent.click(button('登録'))
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      '時間内に結果を確認できませんでした。'
+      '結果を確認できませんでした。'
     )
   })
 

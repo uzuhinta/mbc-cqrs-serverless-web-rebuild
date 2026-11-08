@@ -261,7 +261,7 @@ describe('MasterCopyRequestForm', () => {
     await submit()
     const alert = screen.getByRole('alert')
     expect(alert).toHaveTextContent(
-      '時間内に結果が届きませんでした。コピー結果一覧で登録されたかを確認してください。'
+      '結果を確認できませんでした。コピー結果一覧で登録されたかを確認してください。'
     )
     expect(alert).not.toHaveTextContent('登録に失敗しました')
   })

@@ -198,7 +198,7 @@ describe('BulkImportDialog', () => {
     await userEvent.click(screen.getByRole('button', { name: 'データ反映' }))
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent(
-      '時間内に結果を確認できませんでした。反映されたかどうか、読み込み直して確認してください。'
+      '結果を確認できませんでした。反映されたかどうか、読み込み直して確認してください。'
     )
     expect(alert).toHaveTextContent('1 / 2 件反映済み')
     expect(alert).not.toHaveTextContent('マスターデータの反映に失敗しました。')

@@ -305,7 +305,7 @@ describe('MasterSettingEditor', () => {
     )
     await userEvent.click(button('保存'))
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      '時間内に結果を確認できませんでした。'
+      '結果を確認できませんでした。'
     )
     expect(button('保存')).toBeEnabled()
   })
