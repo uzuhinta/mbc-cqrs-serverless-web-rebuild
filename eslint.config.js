@@ -86,6 +86,8 @@ export default defineConfig([
               'react-draggable',
               'react-resizable',
               'patch-package',
+              'next-usequerystate',
+              'usehooks-ts',
             ].map((name) => ({ name, message: HOST_LIBRARY })),
             ...EDITOR_LIBRARIES.map((name) => ({
               name,

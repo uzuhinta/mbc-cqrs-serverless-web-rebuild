@@ -69,6 +69,8 @@ describe('library rules in packages/*/src', () => {
       "import { observer } from 'mobx-react-lite'\nexport const o = observer\n",
       "import Draggable from 'react-draggable'\nexport const d = Draggable\n",
       "import { Resizable } from 'react-resizable'\nexport const r = Resizable\n",
+      "import { useQueryState } from 'next-usequerystate'\nexport const q = useQueryState\n",
+      "import { useDebounceValue } from 'usehooks-ts'\nexport const u = useDebounceValue\n",
     ]) {
       expect(await ruleIds(code), code).toContain('no-restricted-imports')
     }

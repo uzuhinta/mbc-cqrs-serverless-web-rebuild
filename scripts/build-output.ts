@@ -47,7 +47,8 @@ export function externalsOf(dist: string, entry: string): Set<string> {
     seen.add(file)
     const source = readText(dist, file)
     for (const [, specifier] of source.matchAll(
-      /(?:from|import)\s*["']([^"']+)["']/g
+      // Static imports and re-exports, and dynamic import('…').
+      /(?:from|import)\s*\(?\s*["']([^"']+)["']/g
     )) {
       if (!specifier) continue
       if (specifier.startsWith('.'))

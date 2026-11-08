@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   distDir,
+  externalsOf,
   hasUseClientDirective,
   listFiles,
   readText,
@@ -54,5 +55,26 @@ describe('listFiles / readText', () => {
 
     expect(listFiles(dist, '.js')).toEqual(['components/button.js', 'index.js'])
     expect(readText(dist, 'components/button.js')).toBe('"use client";')
+  })
+})
+
+describe('externalsOf', () => {
+  it('follows static and dynamic imports, and collects the packages', () => {
+    const dist = makePackage()
+    mkdirSync(join(dist, 'core'))
+    writeFileSync(
+      join(dist, 'core/index.js'),
+      "import { z } from 'zod'\nexport * from './a.js'\n"
+    )
+    writeFileSync(
+      join(dist, 'core/a.js'),
+      "export const load = () => import('jsoneditor')\nimport('./b.js')\n"
+    )
+    writeFileSync(join(dist, 'core/b.js'), "import 'react'\n")
+    expect([...externalsOf(dist, 'core/index.js')].sort()).toEqual([
+      'jsoneditor',
+      'react',
+      'zod',
+    ])
   })
 })
