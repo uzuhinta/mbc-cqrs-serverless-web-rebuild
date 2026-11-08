@@ -138,6 +138,7 @@ import type {
   MasterRouting,
   MasterTarget,
 } from '@mbc-cqrs-serverless/master-web'
+import { settingCodeOfId } from '@mbc-cqrs-serverless/master-web/mbc'
 
 const base = '/admin/master' // where your master pages live
 const enc = encodeURIComponent
@@ -148,8 +149,9 @@ function keys(id: string) {
   return `${enc(id.slice(0, at))}/${enc(id.slice(at + 1))}`
 }
 
+/** 0.0.x's query: the setting's code and its id. */
 const setting = (settingId: string) =>
-  `typeCode=${enc(settingId.slice(settingId.indexOf('MASTER_SETTING#')))}&typeCodeId=${enc(settingId)}`
+  `typeCode=${enc(settingCodeOfId(settingId))}&typeCodeId=${enc(settingId)}`
 
 export function hrefOf(to: MasterTarget): string {
   switch (to.screen) {
@@ -160,11 +162,11 @@ export function hrefOf(to: MasterTarget): string {
     case 'setting':
       return `${base}/master-setting/${keys(to.id)}`
     case 'data':
-      return `${base}/master-data?${setting(to.settingId)}`
+      return `${base}/master-data?isTypeCodeFixed=1&${setting(to.settingId)}`
     case 'newData':
       return `${base}/master-data/new?${setting(to.settingId)}`
     case 'dataItem':
-      return `${base}/master-data/${keys(to.id)}?${setting(to.settingId)}`
+      return `${base}/master-data/${keys(to.id)}?typeCodeId=${enc(to.settingId)}`
     case 'copyRequest':
       return `${base}/master-setting/${keys(to.settingId)}/copy/new`
     case 'copyTasks':
