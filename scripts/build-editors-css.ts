@@ -186,7 +186,7 @@ function main(): void {
   writeFileSync(`dist/${ASSETS}/${NOTICES}`, thirdPartyNotices(resolveFrom))
   writeFileSync(
     'dist/editors.css',
-    `/* Rich editors' styles for @mbc-cqrs-serverless/master-web/editors: ${EDITOR_STYLESHEETS.map((sheet) => sheet.file).join(', ')}, scoped to their own classes. Licences: ./${ASSETS}/${NOTICES} */\n${prefixKeyframes(parts.join('\n'))}`
+    `/* Rich editors' styles for @mbc-cqrs-serverless/master-web/editors: ${EDITOR_STYLESHEETS.map((sheet) => sheet.file).join(', ')}, scoped to their own classes. Licences: ./${ASSETS}/${NOTICES} */\n${prefixKeyframes(parts.join('\n'), 'mbc-', { undefinedUses: true })}`
   )
 }
 

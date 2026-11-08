@@ -71,6 +71,9 @@ describe('master-web output', () => {
       expect(names.length).toBeGreaterThan(0)
       expect(names.filter((name) => !name?.startsWith('mbc-'))).toEqual([])
     }
+    // jsoneditor also names a keyframe it never ships; a host's must not apply.
+    expect(readText(dist, 'editors.css')).toContain('mbc-move-up')
+    expect(readText(dist, 'editors.css')).not.toMatch(/[\s,:]move-up\b/)
   })
 
   it('ships the licences of the third-party styles and icons beside them', () => {

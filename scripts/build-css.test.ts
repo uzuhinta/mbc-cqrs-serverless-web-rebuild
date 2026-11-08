@@ -61,4 +61,16 @@ describe('prefixKeyframes', () => {
       '.a{animation:mbc-fade-in .3s, move-up .3s}@keyframes mbc-fade-in{}'
     )
   })
+
+  it('can prefix names a sheet uses without defining, keeping keywords', () => {
+    const css =
+      '@keyframes fade-in{}' +
+      '.a{animation:fade-in .3s linear 1, move-up .3s ease-in-out infinite both}' +
+      '.b{animation-name:move-up}.c{animation:var(--x) linear}'
+    expect(prefixKeyframes(css, 'mbc-', { undefinedUses: true })).toBe(
+      '@keyframes mbc-fade-in{}' +
+        '.a{animation:mbc-fade-in .3s linear 1, mbc-move-up .3s ease-in-out infinite both}' +
+        '.b{animation-name:mbc-move-up}.c{animation:var(--x) linear}'
+    )
+  })
 })

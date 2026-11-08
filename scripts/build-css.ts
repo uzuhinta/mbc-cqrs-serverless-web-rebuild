@@ -32,13 +32,50 @@ export function unwrapLayers(
   return root.toString()
 }
 
+// Words an `animation` value may hold that are not keyframe names.
+const ANIMATION_KEYWORDS = new Set([
+  'none',
+  'linear',
+  'ease',
+  'ease-in',
+  'ease-out',
+  'ease-in-out',
+  'step-start',
+  'step-end',
+  'infinite',
+  'normal',
+  'reverse',
+  'alternate',
+  'alternate-reverse',
+  'forwards',
+  'backwards',
+  'both',
+  'running',
+  'paused',
+  'initial',
+  'inherit',
+  'unset',
+  'revert',
+  'revert-layer',
+  'auto',
+  'replace',
+  'add',
+  'accumulate',
+])
+
 /**
  * Renames every keyframe the stylesheet defines to `<prefix><name>` (unless
  * it has the prefix already) and its uses in animation declarations and
  * custom properties, so a host's own keyframes of the same name cannot
- * replace the library's.
+ * replace the library's. With `undefinedUses`, names an `animation` uses
+ * without the sheet defining them are prefixed too (a library may refer to
+ * keyframes it never ships, which a host's own would then supply).
  */
-export function prefixKeyframes(css: string, prefix = 'mbc-'): string {
+export function prefixKeyframes(
+  css: string,
+  prefix = 'mbc-',
+  options: { undefinedUses?: boolean } = {}
+): string {
   const root = postcss.parse(css)
   const names = new Set<string>()
   root.walkAtRules(/keyframes$/, (atRule) => {
@@ -47,7 +84,24 @@ export function prefixKeyframes(css: string, prefix = 'mbc-'): string {
     names.add(name)
     atRule.params = `${prefix}${name}`
   })
-  if (names.size === 0) return css
+  if (options.undefinedUses)
+    root.walkDecls(/^animation(-name)?$/, (decl) => {
+      decl.value = decl.value
+        .split(',')
+        .map((segment) =>
+          segment.replace(
+            /(^|\s)([a-zA-Z_][\w-]*)(?=\s|$)/g,
+            (match, space: string, word: string) =>
+              names.has(word) ||
+              word.startsWith(prefix) ||
+              ANIMATION_KEYWORDS.has(word)
+                ? match
+                : `${space}${prefix}${word}`
+          )
+        )
+        .join(',')
+    })
+  if (names.size === 0) return root.toString()
   const escape = (name: string) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const pattern = new RegExp(
     `(?<![\\w-])(${[...names].map(escape).join('|')})(?![\\w-])`,
