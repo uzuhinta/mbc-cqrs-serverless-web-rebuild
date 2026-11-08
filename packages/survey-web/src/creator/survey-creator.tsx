@@ -523,8 +523,8 @@ export const SurveyCreator: ForwardRefExoticComponent<
             >
               {/* Pinned so a long survey never needs a scroll back to the top;
                   apps with a fixed header set --mbc-creator-sticky-top. */}
-              <div className="mbc:sticky mbc:top-[var(--mbc-creator-sticky-top,0px)] mbc:z-10 mbc:bg-background">
-                <TabsList className="mbc:grid mbc:w-full mbc:grid-cols-3">
+              <div className="mbc:sticky mbc:top-[var(--mbc-creator-sticky-top,0px)] mbc:z-30 mbc:bg-background">
+                <TabsList className="mbc:grid mbc:h-auto mbc:w-full mbc:grid-cols-3">
                   <TabsTrigger value="creator">
                     {t.shell.creatorTab}
                   </TabsTrigger>
@@ -540,7 +540,7 @@ export const SurveyCreator: ForwardRefExoticComponent<
                   className="mbc:relative mbc:mx-auto mbc:flex mbc:w-full mbc:max-w-4xl mbc:gap-x-12"
                 >
                   <div className="mbc:w-full">
-                    <div className="mbc:flex mbc:flex-col mbc:gap-4 mbc:[&_[data-creator-card]]:scroll-mt-[calc(var(--mbc-creator-sticky-top,0px)+4rem)]">
+                    <div className="mbc:flex mbc:flex-col mbc:gap-4 mbc:[&_[data-creator-card]]:scroll-mt-[calc(var(--mbc-creator-sticky-top,0px)+5.5rem)]">
                       <TitleCard />
                       <ItemList />
                     </div>

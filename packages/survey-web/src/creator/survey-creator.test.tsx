@@ -286,10 +286,14 @@ describe('SurveyCreator', () => {
       expect.arrayContaining([
         'sticky',
         'top-[var(--mbc-creator-sticky-top,0px)]',
-        'z-10',
+        // Above section badges (z-10) and the lg floating bar (z-20).
+        'z-30',
         'bg-background',
       ])
     )
+    // The list grows to its triggers, so the background covers the whole bar.
+    expect(classesOf(screen.getByRole('tablist'))).toContain('h-auto')
+    expect(classesOf(screen.getByRole('tablist'))).not.toContain('h-9')
   })
 
   it('keeps scrolled-to cards clear of the pinned tabs', () => {
@@ -309,7 +313,7 @@ describe('SurveyCreator', () => {
     expect(cards).toHaveLength(3)
     const list = cards[0]!.closest('[class*="data-creator-card"]')
     expect(classesOf(list)).toContain(
-      '[&_[data-creator-card]]:scroll-mt-[calc(var(--mbc-creator-sticky-top,0px)+4rem)]'
+      '[&_[data-creator-card]]:scroll-mt-[calc(var(--mbc-creator-sticky-top,0px)+5.5rem)]'
     )
   })
 
