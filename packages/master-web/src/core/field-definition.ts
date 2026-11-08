@@ -6,6 +6,9 @@ import {
 import { numberOption } from './field-types'
 import type { MasterField } from './types'
 
+/** Display names of the three fixed fields, e.g. from the screen's messages. */
+export type FixedFieldNames = { code: string; name: string; seq: string }
+
 /** v0's three fixed fields of a new setting; they cannot be removed. */
 export const defaultSettingFields: readonly MasterField[] = Object.freeze([
   {

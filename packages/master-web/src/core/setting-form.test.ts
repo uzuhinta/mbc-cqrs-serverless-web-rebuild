@@ -48,6 +48,15 @@ describe('settingToForm', () => {
     expect(form.fields[0]).not.toBe(defaultSettingFields[0])
   })
 
+  it('names the fixed fields it adds in the screen’s language when given names', () => {
+    const names = { code: 'Code', name: 'Name', seq: 'Order' }
+    expect(
+      settingToForm(undefined, [], names).fields.map((f) => f.name)
+    ).toEqual(['Code', 'Name', 'Order'])
+    // A stored setting's own names stay.
+    expect(settingToForm(stored(), [], names).fields[1]?.name).toBe('名称')
+  })
+
   it('reads a stored setting, its option flags and its fields', () => {
     const setting = stored()
     setting.attributes.flagA = true

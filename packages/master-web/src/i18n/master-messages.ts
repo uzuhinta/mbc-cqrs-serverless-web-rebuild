@@ -32,6 +32,14 @@ export type MasterMessages = {
     timeout: string
   }
   /** The editors' JSON dialog (one setting or record). */
+  /** Names a new setting's fixed fields get, and the bulk sample's names. */
+  defaults: {
+    code: string
+    name: string
+    seq: string
+    sampleSetting: string
+    sampleData: string
+  }
   jsonDialog: {
     open: string
     title: string
@@ -130,6 +138,13 @@ const ja: MasterMessages = {
     timeout:
       '結果を確認できませんでした。反映されたかどうか、読み込み直して確認してください。',
   },
+  defaults: {
+    code: 'コード',
+    name: '名称',
+    seq: '並び順',
+    sampleSetting: 'マスター設定サンプル',
+    sampleData: 'マスターデータサンプル',
+  },
   jsonDialog: {
     open: 'JSONエディタ',
     title: 'JSONエディタ',
@@ -224,6 +239,13 @@ const en: MasterMessages = {
     failedRange: ({ from, to }) => `Items ${from} to ${to} failed to import.`,
     timeout:
       'The result could not be confirmed. Reload to check which items were imported.',
+  },
+  defaults: {
+    code: 'Code',
+    name: 'Name',
+    seq: 'Order',
+    sampleSetting: 'Sample setting',
+    sampleData: 'Sample data',
   },
   jsonDialog: {
     open: 'JSON editor',

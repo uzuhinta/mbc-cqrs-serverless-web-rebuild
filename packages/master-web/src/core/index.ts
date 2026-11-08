@@ -1,5 +1,6 @@
 export {
   bulkSampleJson,
+  type BulkSampleTexts,
   mapResultToBulkItem,
   parseBulkJson,
   type BulkError,
@@ -30,6 +31,7 @@ export type { MasterError } from './errors'
 export {
   allowedFieldTypes,
   defaultSettingFields,
+  type FixedFieldNames,
   FIXED_FIELD_NAMES,
   normalizeFieldDefinition,
   validateFieldDefinition,

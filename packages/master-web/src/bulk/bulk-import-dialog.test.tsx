@@ -246,6 +246,21 @@ describe('BulkImportDialog', () => {
     expect(await created[0]?.text()).toBe(JSON.stringify([DATA]))
   })
 
+  it('starts from a sample in the screen’s language', async () => {
+    render(
+      <MbcProvider locale="en">
+        <BulkImportDialog screen="settings" onImport={async () => {}} />
+      </MbcProvider>
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'JSON editor' }))
+    const sample = String(
+      (screen.getByRole('textbox', { name: 'JSON' }) as HTMLTextAreaElement)
+        .value
+    )
+    expect(sample).toContain('"Code"')
+    expect(sample).not.toMatch(/[\u3040-\u30ff\u4e00-\u9fff]/)
+  })
+
   it('has no axe violations while open', async () => {
     render(
       <MbcProvider locale="en">

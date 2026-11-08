@@ -101,7 +101,13 @@ export function BulkImportDialog({
   const fileRef = useRef<HTMLInputElement>(null)
   const [open, setOpen] = useState(false)
   const [text, setText] = useState(
-    () => inputSampleJson ?? bulkSampleJson(screen, settingCode)
+    () =>
+      inputSampleJson ??
+      bulkSampleJson(screen, settingCode, {
+        fields: t.defaults,
+        settingName: t.defaults.sampleSetting,
+        dataName: t.defaults.sampleData,
+      })
   )
   const [errors, setErrors] = useState<BulkError[]>([])
   const [failure, setFailure] = useState<Failure | null>(null)

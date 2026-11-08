@@ -210,6 +210,18 @@ describe('mapResultToBulkItem', () => {
 })
 
 describe('bulkSampleJson', () => {
+  it('writes its sample names in the screen’s language when given texts', () => {
+    const texts = {
+      fields: { code: 'Code', name: 'Name', seq: 'Order' },
+      settingName: 'Sample setting',
+      dataName: 'Sample data',
+    }
+    const sample = bulkSampleJson('settings', 'PRODUCT', texts)
+    for (const text of ['Code', 'Order', 'Sample setting', 'Sample data'])
+      expect(sample).toContain(`"${text}"`)
+    expect(sample).not.toMatch(/[\u3040-\u30ff\u4e00-\u9fff]/)
+  })
+
   it('gives a sample that its own screen accepts', () => {
     for (const screen of ['settings', 'data'] as const) {
       const result = parseBulkJson(bulkSampleJson(screen, 'PRODUCT'), {

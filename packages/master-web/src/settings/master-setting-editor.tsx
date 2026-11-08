@@ -138,7 +138,7 @@ function EditorBody({
     isSameTenant(setting?.tenantCode, tenantCode)
 
   const [baseline, setBaseline] = useState<Snapshot>(() => {
-    const form = settingToForm(setting, optionKeys)
+    const form = settingToForm(setting, optionKeys, m.defaults)
     const rows = form.fields.map((field, index) => ({
       key: `f${index}`,
       field,
@@ -263,7 +263,7 @@ function EditorBody({
         )
       return messages.json[error.key]
     }
-    const form = settingToForm(parsed.setting, optionKeys)
+    const form = settingToForm(parsed.setting, optionKeys, m.defaults)
     // The code of a stored setting cannot change.
     setValues({
       ...form.values,

@@ -392,6 +392,21 @@ describe('MasterSettingEditor', () => {
     expect(onRetry).toHaveBeenCalledTimes(1)
   })
 
+  it('names a new setting’s fixed fields in the screen’s language', () => {
+    render(
+      <MbcProvider locale="en">
+        <MasterSettingEditor
+          mode="create"
+          routing={routing}
+          tenantCode="tenant-a"
+          onSave={async () => {}}
+        />
+      </MbcProvider>
+    )
+    for (const name of ['Code', 'Name', 'Order'])
+      expect(screen.getByRole('cell', { name })).toBeVisible()
+  })
+
   it('has no axe violations and renders on the server', async () => {
     const element = (
       <MbcProvider locale="en">

@@ -1,3 +1,4 @@
+import type { FixedFieldNames } from './field-definition'
 import { isSameTenant } from './tenant'
 
 /** One item of `POST /api/master-bulk`; `settingCode` makes it a data record. */
@@ -194,15 +195,32 @@ export function parseBulkJson(
   return { items, errors }
 }
 
-/** The starting JSON in the import dialog (v0's samples, indented for a plain text box). */
+/** The names in the import dialog's sample, e.g. from the screen's messages. */
+export type BulkSampleTexts = {
+  fields: FixedFieldNames
+  settingName: string
+  dataName: string
+}
+
+const SAMPLE_TEXTS: BulkSampleTexts = {
+  fields: { code: 'コード', name: '名称', seq: '並び順' },
+  settingName: 'マスター設定サンプル',
+  dataName: 'マスターデータサンプル',
+}
+
+/**
+ * The starting JSON in the import dialog (v0's samples, indented for a plain
+ * text box), its names from `texts` when given (v0's Japanese otherwise).
+ */
 export function bulkSampleJson(
   screen: BulkScreen,
-  settingCode = 'SETTING_CODE'
+  settingCode = 'SETTING_CODE',
+  texts: BulkSampleTexts = SAMPLE_TEXTS
 ): string {
   const data = {
     settingCode,
     code: 'MASTER_DATA_CODE',
-    name: 'マスターデータサンプル',
+    name: texts.dataName,
     seq: 0,
     attributes:
       screen === 'data' ? { seq: 0, code: '', name: '' } : { description: '' },
@@ -226,20 +244,20 @@ export function bulkSampleJson(
     [
       {
         code: 'MASTER_SETTING_CODE',
-        name: 'マスター設定サンプル',
+        name: texts.settingName,
         attributes: {
           description: '',
           fields: [
-            field('code', 'コード', 'string', {
+            field('code', texts.fields.code, 'string', {
               defaultValue: '',
               isRequired: true,
               length: '255',
             }),
-            field('name', '名称', 'string', {
+            field('name', texts.fields.name, 'string', {
               isRequired: true,
               length: '255',
             }),
-            field('seq', '並び順', 'number', {
+            field('seq', texts.fields.seq, 'number', {
               defaultValue: '',
               isRequired: false,
             }),

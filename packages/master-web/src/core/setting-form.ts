@@ -1,6 +1,7 @@
 import type { MasterError } from './errors'
 import {
   defaultSettingFields,
+  type FixedFieldNames,
   normalizeFieldDefinition,
 } from './field-definition'
 import type {
@@ -85,11 +86,13 @@ const isOn = (value: unknown) => value === true || value === 'true'
 
 /**
  * The editor's starting point. A stored setting without a `code` field gets
- * the fixed fields it lacks in front (v0 added them on load).
+ * the fixed fields it lacks in front (v0 added them on load), named by
+ * `names` when given (v0's Japanese names otherwise).
  */
 export function settingToForm(
   setting: Pick<MasterSetting, 'code' | 'name' | 'attributes'> | undefined,
-  optionKeys: readonly string[]
+  optionKeys: readonly string[],
+  fixedNames?: FixedFieldNames
 ): { values: SettingFormValues; fields: MasterField[] } {
   const attributes = setting?.attributes
   const options = Object.fromEntries(
@@ -106,7 +109,16 @@ export function settingToForm(
   const names = new Set(stored.map((field) => field.physicalName))
   const missing = names.has('code')
     ? []
-    : defaultSettingFields.filter((field) => !names.has(field.physicalName))
+    : defaultSettingFields
+        .filter((field) => !names.has(field.physicalName))
+        .map((field) =>
+          fixedNames
+            ? {
+                ...field,
+                name: fixedNames[field.physicalName as keyof FixedFieldNames],
+              }
+            : field
+        )
   const fields = [...missing, ...stored].map(fieldToForm)
   return { values, fields }
 }
