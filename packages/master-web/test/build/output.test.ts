@@ -63,6 +63,16 @@ describe('master-web output', () => {
     ])
   })
 
+  it('prefixes every keyframe name, so a host’s own keyframes cannot clash', () => {
+    for (const file of ['styles.css', 'styles.layer.css', 'editors.css']) {
+      const names = [
+        ...readText(dist, file).matchAll(/@keyframes\s+([\w-]+)/g),
+      ].map(([, name]) => name)
+      expect(names.length).toBeGreaterThan(0)
+      expect(names.filter((name) => !name?.startsWith('mbc-'))).toEqual([])
+    }
+  })
+
   it('ships the licences of the third-party styles and icons beside them', () => {
     const notices = readText(dist, 'editors-assets/THIRD_PARTY_NOTICES.txt')
     // jsoneditor (Apache-2.0): its licence and its NOTICE.

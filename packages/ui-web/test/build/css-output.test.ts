@@ -98,7 +98,9 @@ describe('styles.css (default)', () => {
     expect(unlayeredCss).toContain(
       '.mbc\\:data-\\[state\\=open\\]\\:animate-in'
     )
-    expect(unlayeredCss).toMatch(/@keyframes\s+enter/)
+    // Prefixed, so a host keyframe named `enter` cannot replace it.
+    expect(unlayeredCss).toMatch(/@keyframes\s+mbc-enter/)
+    expect(unlayeredCss).toMatch(/animation:mbc-enter/)
   })
 
   it('ships the accordion open/close animations', () => {

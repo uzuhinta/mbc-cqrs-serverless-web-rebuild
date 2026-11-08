@@ -11,6 +11,8 @@ import { fileURLToPath } from 'node:url'
 
 import postcss, { type AtRule } from 'postcss'
 
+import { prefixKeyframes } from './build-css.ts'
+
 /** A library stylesheet and the class fragment every kept selector must contain. */
 export type EditorStylesheet = { file: string; marker: string }
 
@@ -184,7 +186,7 @@ function main(): void {
   writeFileSync(`dist/${ASSETS}/${NOTICES}`, thirdPartyNotices(resolveFrom))
   writeFileSync(
     'dist/editors.css',
-    `/* Rich editors' styles for @mbc-cqrs-serverless/master-web/editors: ${EDITOR_STYLESHEETS.map((sheet) => sheet.file).join(', ')}, scoped to their own classes. Licences: ./${ASSETS}/${NOTICES} */\n${parts.join('\n')}`
+    `/* Rich editors' styles for @mbc-cqrs-serverless/master-web/editors: ${EDITOR_STYLESHEETS.map((sheet) => sheet.file).join(', ')}, scoped to their own classes. Licences: ./${ASSETS}/${NOTICES} */\n${prefixKeyframes(parts.join('\n'))}`
   )
 }
 

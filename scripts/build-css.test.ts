@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { unwrapLayers } from './build-css.ts'
+import { prefixKeyframes, unwrapLayers } from './build-css.ts'
 import { layerNames, parseCss, unprefixedClasses } from './css-output.ts'
 
 const LAYERED =
@@ -39,5 +39,26 @@ describe('unwrapLayers', () => {
       '.mbc\\:p-1',
     ])
     expect(unprefixedClasses(out)).toEqual([])
+  })
+})
+
+describe('prefixKeyframes', () => {
+  it('prefixes the keyframes the file defines, and their uses', () => {
+    const css =
+      '@keyframes enter{0%{opacity:0}}@keyframes mbc-spin{to{rotate:1turn}}' +
+      '.a{animation:enter .2s ease}.b{animation-name:enter,mbc-spin}' +
+      '.c{--tw-animate:enter 1s}.d{animation:center 1s}'
+    expect(prefixKeyframes(css)).toBe(
+      '@keyframes mbc-enter{0%{opacity:0}}@keyframes mbc-spin{to{rotate:1turn}}' +
+        '.a{animation:mbc-enter .2s ease}.b{animation-name:mbc-enter,mbc-spin}' +
+        '.c{--tw-animate:mbc-enter 1s}.d{animation:center 1s}'
+    )
+  })
+
+  it('leaves names it does not define alone', () => {
+    const css = '.a{animation:fade-in .3s, move-up .3s}@keyframes fade-in{}'
+    expect(prefixKeyframes(css)).toBe(
+      '.a{animation:mbc-fade-in .3s, move-up .3s}@keyframes mbc-fade-in{}'
+    )
   })
 })

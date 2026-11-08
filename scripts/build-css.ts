@@ -32,6 +32,34 @@ export function unwrapLayers(
   return root.toString()
 }
 
+/**
+ * Renames every keyframe the stylesheet defines to `<prefix><name>` (unless
+ * it has the prefix already) and its uses in animation declarations and
+ * custom properties, so a host's own keyframes of the same name cannot
+ * replace the library's.
+ */
+export function prefixKeyframes(css: string, prefix = 'mbc-'): string {
+  const root = postcss.parse(css)
+  const names = new Set<string>()
+  root.walkAtRules(/keyframes$/, (atRule) => {
+    const name = atRule.params.trim()
+    if (name.startsWith(prefix)) return
+    names.add(name)
+    atRule.params = `${prefix}${name}`
+  })
+  if (names.size === 0) return css
+  const escape = (name: string) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const pattern = new RegExp(
+    `(?<![\\w-])(${[...names].map(escape).join('|')})(?![\\w-])`,
+    'g'
+  )
+  root.walkDecls((decl) => {
+    if (!/animation/.test(decl.prop) && !decl.prop.startsWith('--')) return
+    decl.value = decl.value.replace(pattern, `${prefix}$1`)
+  })
+  return root.toString()
+}
+
 function main(): void {
   const input = 'src/styles/index.css'
   const layeredOutput = 'dist/styles.layer.css'
@@ -45,6 +73,10 @@ function main(): void {
     'tailwindcss',
     ['--input', input, '--output', layeredOutput, '--minify'],
     { stdio: 'inherit' }
+  )
+  writeFileSync(
+    layeredOutput,
+    prefixKeyframes(readFileSync(layeredOutput, 'utf8'))
   )
   writeFileSync(
     unlayeredOutput,
