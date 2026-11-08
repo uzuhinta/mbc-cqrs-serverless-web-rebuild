@@ -2,6 +2,7 @@ import {
   MbcAbortError,
   MbcApiError,
   MbcCommandError,
+  MbcRealtimeError,
   MbcTimeoutError,
 } from './errors'
 import type { Http, QueryParams } from './http'
@@ -96,10 +97,20 @@ export function createCommand(
         }
 
         let timer: ReturnType<typeof setTimeout> | undefined
+        // Before the request goes out a timeout has a known outcome: nothing
+        // was sent because the subscription never started.
+        let sending = false
         const arm = () => {
           clearTimeout(timer)
           timer = setTimeout(
-            () => reject(new MbcTimeoutError(timeoutMs)),
+            () =>
+              reject(
+                sending
+                  ? new MbcTimeoutError(timeoutMs)
+                  : new MbcRealtimeError(
+                      `The real-time subscription did not start within ${timeoutMs}ms; nothing was sent`
+                    )
+              ),
             timeoutMs
           )
         }
@@ -175,6 +186,8 @@ export function createCommand(
             )
           }
 
+          if (settled) return
+          sending = true
           options.onPhase?.('sending')
           const data = await http.request<T>(request.method, request.path, {
             body: request.body,

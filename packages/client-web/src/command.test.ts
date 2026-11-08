@@ -6,6 +6,7 @@ import {
   MbcAbortError,
   MbcApiError,
   MbcCommandError,
+  MbcRealtimeError,
   MbcTimeoutError,
 } from './errors'
 import { createHttp } from './http'
@@ -265,6 +266,24 @@ describe('command', () => {
       FakeWebSocket.latest().ackAll()
       await vi.advanceTimersByTimeAsync(5_000)
       await rejection
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('fails as a realtime error, sending nothing, when the subscription never starts', async () => {
+    vi.useFakeTimers()
+    try {
+      const { command, responses } = setup()
+      const pending = command(
+        { method: 'POST', path: '/x' },
+        { timeoutMs: 5_000 }
+      )
+      // Nothing was sent, so the outcome is known: not an MbcTimeoutError.
+      const rejection = expect(pending).rejects.toBeInstanceOf(MbcRealtimeError)
+      await vi.advanceTimersByTimeAsync(5_000)
+      await rejection
+      expect(responses).toHaveLength(0)
     } finally {
       vi.useRealTimers()
     }
