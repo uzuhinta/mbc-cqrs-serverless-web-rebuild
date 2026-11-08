@@ -11,6 +11,8 @@ import {
 } from './errors'
 import { createHttp } from './http'
 import { createRealtimeClient } from './realtime/client'
+import { createEventsClient } from './realtime/events'
+import { eventsMessages } from './realtime/stream'
 
 type Deferred = {
   resolve: (body: unknown) => void
@@ -540,5 +542,146 @@ describe('command', () => {
     responses[0]?.resolve({ requestId: 'req-1' })
     await expect(pending).resolves.toMatchObject({ requestId: 'req-1' })
     expect(onProgress).not.toHaveBeenCalled()
+  })
+})
+
+describe('command over AppSync Events', () => {
+  function setupEvents(tenantCode = 'tenant-a') {
+    const { http, responses } = setup(tenantCode)
+    const events = createEventsClient({
+      url: 'https://abc.appsync-api.ap-northeast-1.amazonaws.com/event',
+      auth: { type: 'API_KEY', apiKey: 'k' },
+      WebSocket: FakeWebSocket,
+      random: () => 0,
+    })
+    return { responses, command: createCommand(http, eventsMessages(events)) }
+  }
+
+  async function eventsConnected() {
+    await flush()
+    const socket = FakeWebSocket.latest()
+    socket.acceptEvents()
+    socket.ackSubscribes()
+    await flush()
+    return socket
+  }
+
+  function publish(
+    socket: FakeWebSocket,
+    requestId: string,
+    value: string,
+    {
+      index = 0,
+      tenantCode = 'tenant-a',
+      sk = undefined as string | undefined,
+    } = {}
+  ) {
+    socket.receive({
+      type: 'data',
+      id: socket.subscribes()[index]?.id,
+      event: JSON.stringify({
+        id: requestId,
+        tenantCode,
+        action: 'command-status',
+        content: JSON.stringify({ status: value }),
+        ...(sk && { pk: `MASTER#${tenantCode}`, sk }),
+      }),
+    })
+  }
+
+  it('subscribes the command-status channel before sending, then resolves on finish', async () => {
+    const { command, responses } = setupEvents()
+    const pending = command<{ requestId: string }>({
+      method: 'POST',
+      path: '/a',
+    })
+    const socket = await eventsConnected()
+    expect(socket.subscribes().map((s) => s.channel)).toEqual([
+      '/default/tenant-a/command-status/*',
+    ])
+    expect(responses).toHaveLength(1)
+    responses[0]?.resolve({ requestId: 'req-1' })
+    await flush()
+    publish(socket, 'req-1', 'finish:FINISHED')
+    await expect(pending).resolves.toEqual({
+      data: { requestId: 'req-1' },
+      requestId: 'req-1',
+    })
+  })
+
+  it('rejects with MbcCommandError on a FAILED status', async () => {
+    const { command, responses } = setupEvents()
+    const pending = command({ method: 'POST', path: '/a' })
+    const socket = await eventsConnected()
+    responses[0]?.resolve({ requestId: 'req-1' })
+    await flush()
+    publish(socket, 'req-1', 'finish:FAILED')
+    await expect(pending).rejects.toBeInstanceOf(MbcCommandError)
+  })
+
+  it('fails as a realtime error, sending nothing, on subscribe_error', async () => {
+    const { command, responses } = setupEvents()
+    const pending = command({ method: 'POST', path: '/a' })
+    await flush()
+    const socket = FakeWebSocket.latest()
+    socket.acceptEvents()
+    socket.receive({
+      type: 'subscribe_error',
+      id: socket.subscribes()[0]?.id,
+      errors: [],
+    })
+    await expect(pending).rejects.toBeInstanceOf(MbcRealtimeError)
+    expect(responses).toHaveLength(0)
+  })
+
+  it('times out after sending as MbcTimeoutError', async () => {
+    const { command, responses } = setupEvents()
+    const pending = command({ method: 'POST', path: '/a' }, { timeoutMs: 50 })
+    await eventsConnected()
+    responses[0]?.resolve({ requestId: 'req-1' })
+    await expect(pending).rejects.toBeInstanceOf(MbcTimeoutError)
+  })
+
+  it('counts each changed item once for a bulk command', async () => {
+    const { command, responses } = setupEvents()
+    const progress: number[] = []
+    const pending = command(
+      { method: 'POST', path: '/bulk' },
+      { expectedFinishes: 2, onProgress: (done) => progress.push(done) }
+    )
+    const socket = await eventsConnected()
+    responses[0]?.resolve({ requestId: 'req-1' })
+    await flush()
+    publish(socket, 'req-1', 'finish:FINISHED', { sk: 'A' })
+    publish(socket, 'req-1', 'finish:FINISHED', { sk: 'A' })
+    publish(socket, 'req-1', 'finish:FINISHED', { sk: 'B' })
+    await expect(pending).resolves.toMatchObject({ requestId: 'req-1' })
+    expect(progress).toEqual([1, 2])
+  })
+
+  it('events: resolves under the lowercased tenant, heard once', async () => {
+    const { command, responses } = setupEvents('My_Tenant')
+    const progress: number[] = []
+    const pending = command(
+      { method: 'POST', path: '/a' },
+      { onProgress: (done) => progress.push(done) }
+    )
+    const socket = await eventsConnected()
+    expect(socket.subscribes().map((s) => s.channel)).toEqual([
+      '/default/My-Tenant/command-status/*',
+      '/default/my-tenant/command-status/*',
+    ])
+    responses[0]?.resolve({ requestId: 'req-1' })
+    await flush()
+    publish(socket, 'req-1', 'finish:FINISHED', {
+      index: 0,
+      tenantCode: 'my_tenant',
+    })
+    publish(socket, 'req-1', 'finish:FINISHED', {
+      index: 1,
+      tenantCode: 'my_tenant',
+    })
+    await expect(pending).resolves.toMatchObject({ requestId: 'req-1' })
+    expect(progress).toEqual([1])
   })
 })

@@ -6,8 +6,13 @@ import {
   MbcTimeoutError,
 } from './errors'
 import type { Http, QueryParams } from './http'
-import { ON_MESSAGE, parseMessage, type MbcMessage } from './messages'
+import type { MbcMessage } from './messages'
 import type { RealtimeClient } from './realtime/client'
+import {
+  graphqlMessages,
+  isMessageStream,
+  type MessageStream,
+} from './realtime/stream'
 
 export type CommandRequest = {
   method: 'POST' | 'PUT' | 'PATCH' | 'DELETE'
@@ -73,8 +78,11 @@ function expectedFor<T>(
 
 export function createCommand(
   http: Http,
-  realtime: RealtimeClient | undefined
+  realtime: RealtimeClient | MessageStream | undefined
 ) {
+  const messages =
+    realtime &&
+    (isMessageStream(realtime) ? realtime : graphqlMessages(realtime))
   return async function command<T = unknown>(
     request: CommandRequest,
     options: CommandOptions<T> = {}
@@ -156,22 +164,17 @@ export function createCommand(
               reject(new MbcCommandError(requestId, status))
           }
 
-          if (realtime) {
+          if (messages) {
             // The backend sends a message under the tenant in its keys, which
             // it lowercases (core 1.1.0); earlier backends kept the case. Each
             // message goes out under one of them, so it is heard once.
             const tenantCode = http.resolveTenantCode()
             const tenants = [...new Set([tenantCode, tenantCode.toLowerCase()])]
             const subscriptions = tenants.map((tenant) =>
-              realtime.subscribe(
+              messages.subscribe(
+                { tenantCode: tenant, action: 'command-status' },
                 {
-                  query: ON_MESSAGE,
-                  variables: { tenantCode: tenant, action: 'command-status' },
-                },
-                {
-                  next: (payload) => {
-                    const message = parseMessage(payload)
-                    if (!message) return
+                  next: (message) => {
                     if (sent.expected === undefined) buffered.push(message)
                     else check(message)
                   },
@@ -207,7 +210,7 @@ export function createCommand(
               'The command response has no requestId'
             )
           }
-          if (!realtime) {
+          if (!messages) {
             resolve({ data, requestId })
             return
           }
