@@ -36,7 +36,7 @@
     "MIGRATION.md"
   ],
   "scripts": {
-    "build": "tsdown && node ../../scripts/build-css.ts && node ../../scripts/build-editors-css.ts",
+    "build": "tsdown && node ../../scripts/prune-dist.ts && node ../../scripts/build-css.ts && node ../../scripts/build-editors-css.ts",
     "prepack": "pnpm run build",
     "typecheck": "tsc -p tsconfig.json",
     "check:package": "publint --strict && attw --pack . --profile esm-only --exclude-entrypoints ./styles.css ./styles.layer.css ./editors.css ./package.json"
