@@ -98,14 +98,24 @@ describe('published files', () => {
       const missing = files.flatMap((file) => {
         if (!/\.(js|d\.ts|css)$/.test(file)) return []
         const source = readFileSync(`${root}packages/${pkg}/${file}`, 'utf8')
-        return [
-          ...source.matchAll(
-            /["'(](\.{1,2}\/[^"')\s]+?\.(?:js|css|svg|json))["')]/g
-          ),
-        ]
-          .map(([, spec]) => posix.join(posix.dirname(file), spec ?? ''))
-          .filter((target) => !shipped.has(target))
-          .map((target) => `${file} → ${target}`)
+        return (
+          [
+            ...source.matchAll(
+              /["'(](\.{1,2}\/[^"')\s]+?\.(?:js|css|svg|json))["')]/g
+            ),
+          ]
+            .map(([, spec]) => posix.join(posix.dirname(file), spec ?? ''))
+            // In a declaration, `./x.js` means `./x.d.ts` (TypeScript's rule).
+            .filter(
+              (target) =>
+                !shipped.has(target) &&
+                !(
+                  file.endsWith('.d.ts') &&
+                  shipped.has(target.replace(/\.js$/, '.d.ts'))
+                )
+            )
+            .map((target) => `${file} → ${target}`)
+        )
       })
       expect(missing).toEqual([])
     },
