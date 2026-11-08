@@ -33,11 +33,15 @@ function parseContent(content: unknown): unknown {
   }
 }
 
-/** Reads an `onMessage` subscription payload. */
-export function parseMessage(data: unknown): MbcMessage | undefined {
-  const message = (data as { onMessage?: unknown } | null)?.onMessage
-  if (typeof message !== 'object' || message === null) return undefined
-  const record = message as Record<string, unknown>
+/** Reads one notification record: an object with a string `id`. */
+export function readMessage(value: unknown): MbcMessage | undefined {
+  if (typeof value !== 'object' || value === null) return undefined
+  const record = value as Record<string, unknown>
   if (typeof record.id !== 'string') return undefined
   return { ...(record as MbcMessage), content: parseContent(record.content) }
+}
+
+/** Reads an `onMessage` subscription payload. */
+export function parseMessage(data: unknown): MbcMessage | undefined {
+  return readMessage((data as { onMessage?: unknown } | null)?.onMessage)
 }
