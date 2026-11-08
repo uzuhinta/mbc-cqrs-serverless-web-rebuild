@@ -36,7 +36,7 @@ client-web must let an app listen through either one. **Both are first-class and
   3. truncate to 50 characters;
   4. strip leading/trailing `-`;
   5. empty → `none`.
-  Order matters: truncate **before** trimming. (The PR's example client trims first and has no final `none` fallback — it is wrong for ids longer than 50 characters whose 50th character is non-alphanumeric. client-web follows the server.)
+     Order matters: truncate **before** trimming. (The PR's example client trims first and has no final `none` fallback — it is wrong for ids longer than 50 characters whose 50th character is non-alphanumeric. client-web follows the server.)
 - `namespace` comes from the backend's `APPSYNC_EVENTS_NAMESPACE`, default `default`.
 - The published event is `JSON.stringify(notification)`, where the notification has the same fields as the GraphQL `onMessage` payload (`id`, `table`, `pk`, `sk`, `tenantCode`, `action`, `content`). `content` may be an object or a JSON string; `parseMessage`'s content handling applies to both.
 - Tenant case: the backend uses the tenant from the item keys, which core ≥ 1.1.0 lowercases. Channels are **case-sensitive**, so the existing "listen under the configured tenant and its lowercase form" rule in `command()` still applies.

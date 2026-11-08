@@ -71,6 +71,7 @@ export function Providers({
 - **Only connected pages (`/mbc`) need the client.** Prop-driven screens need just `MbcProvider`.
 - **`tenantCode` is read during render, on the server too.** Never read `window`, `document.cookie` or `localStorage` there: the server would see no tenant, render the tenant's own items read-only, and the browser's HTML would differ (a hydration warning). A `typeof window` guard or `ssr: false` only hides that; pass the server-read value instead. After the tenant changes (e.g. a new cookie), call `router.refresh()` so the server layout reads it again.
 - **`realtime`:** with it, a save waits for the backend's "finished" message, so a page that opens a new item finds it stored. Without it, writes end as soon as the backend accepts them; a new item may not be readable yet.
+- **Events instead of GraphQL:** when the backend publishes with `NOTIFICATION_TRANSPORTS=appsync-event`, use `realtime: { transport: 'events', url: '<Events HTTP endpoint>/event', auth: { type: 'API_KEY', apiKey }, namespace }`. API key only; `namespace` = the backend's `APPSYNC_EVENTS_NAMESPACE` (default `default`). Nothing else changes.
 - **A module-scope client** is fine only for a single-page app (Vite) or when the tenant never changes per request.
 - `MbcProvider`: `locale` `'ja'` (default) or `'en'`; `messages` for text overrides (keep the object stable); `dir`; `portalContainer`.
 

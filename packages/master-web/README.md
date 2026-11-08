@@ -53,6 +53,7 @@ const client = createMbcClient({
   realtime: {
     url: 'https://example.appsync-api.ap-northeast-1.amazonaws.com/graphql',
     auth: { type: 'API_KEY', apiKey: 'da2-…' },
+    // For AppSync Events: transport: 'events' and the Events endpoint; see client-web's README.
   },
 })
 

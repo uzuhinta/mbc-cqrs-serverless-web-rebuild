@@ -40,11 +40,13 @@
 ### Task 1: Channel naming and message reading
 
 **Files:**
+
 - Create: `packages/client-web/src/realtime/channel.ts`
 - Modify: `packages/client-web/src/messages.ts` (extract `readMessage`)
 - Test: `packages/client-web/src/realtime/channel.test.ts`, `packages/client-web/src/messages.test.ts` (create if absent)
 
 **Interfaces:**
+
 - Produces:
   - `sanitizeSegment(value: string | undefined): string`
   - `eventsChannel(namespace: string, filter: MessageFilter): string`
@@ -54,6 +56,7 @@
 - [ ] **Step 1: Write failing tests**
 
 `channel.test.ts`:
+
 - `sanitizeSegment` table (`it.each`): `undefined`→`none`; `''`→`none`; `'default'`→`default`; `'MBC'`→`MBC` (case kept); `'my_tenant'`→`my-tenant`; `'MASTER#mbc#PRODUCT'`→`MASTER-mbc-PRODUCT`; `'#a@'`→`a`; `'---'`→`none`; `'a'.repeat(49) + '#b'`→`'a'.repeat(49)` (truncate to 50 = 49 a's + `-`, then trim); `'#' + 'a'.repeat(60)`→`'a'.repeat(49)` (replace → `-aaa…`, truncate 50, trim leading dash); `'x'.repeat(60)`→`'x'.repeat(50)`.
 - `eventsChannel('default', { tenantCode: 'MBC' })` → `/default/MBC/*`; with `action: 'command-status'` → `/default/MBC/command-status/*`; with action and `id: 'MASTER#MBC#X@1'` → `/default/MBC/command-status/MASTER-MBC-X-1`; with `id` but no action → `/default/MBC/*`; namespace sanitized: `eventsChannel('my_ns', …)` starts `/my-ns/`.
 - `matchesFilter`: true for same tenant; false for `tenantCode: 'mbc'` vs filter `'MBC'`; false when filter `id: 'a_b'` and message `id: 'a-b'`; false when filter action `'x'` and message action `'y'`; true when filter has no action.
@@ -78,11 +81,13 @@ Expected: FAIL — modules/exports not found.
 Refactor only: GraphQL behaviour and its tests stay identical.
 
 **Files:**
+
 - Create: `packages/client-web/src/realtime/connection.ts`
 - Modify: `packages/client-web/src/realtime/client.ts` (becomes the GraphQL adapter + `createRealtimeClient` on the core)
 - Test: existing `packages/client-web/src/realtime/client.test.ts` (unchanged), `command.test.ts` (unchanged)
 
 **Interfaces:**
+
 - Produces (internal, not exported from `index.ts`):
   ```ts
   type ProtocolEvent =
@@ -90,9 +95,9 @@ Refactor only: GraphQL behaviour and its tests stay identical.
     | { kind: 'keepAlive' }
     | { kind: 'started'; id: string }
     | { kind: 'data'; id: string; data: unknown }
-    | { kind: 'failed'; id: string; error: MbcRealtimeError }   // one subscription
-    | { kind: 'ended'; id: string }                              // server completed it
-    | { kind: 'rejected'; error: MbcRealtimeError }              // connection refused: fail all, no reconnect
+    | { kind: 'failed'; id: string; error: MbcRealtimeError } // one subscription
+    | { kind: 'ended'; id: string } // server completed it
+    | { kind: 'rejected'; error: MbcRealtimeError } // connection refused: fail all, no reconnect
 
   type Protocol<Op> = {
     /** URL + subprotocols for a new socket; may throw (auth). */
@@ -104,11 +109,17 @@ Refactor only: GraphQL behaviour and its tests stay identical.
     unsubscribe(id: string): unknown
   }
 
-  function createConnection<Op>(protocol: Protocol<Op>, options: {
-    WebSocket?: WebSocketConstructor
-    reconnect?: { initialDelayMs?: number; maxDelayMs?: number }
-    random?: () => number
-  }): { subscribe(operation: Op, handlers: SubscriptionHandlers): Subscription; close(): void }
+  function createConnection<Op>(
+    protocol: Protocol<Op>,
+    options: {
+      WebSocket?: WebSocketConstructor
+      reconnect?: { initialDelayMs?: number; maxDelayMs?: number }
+      random?: () => number
+    }
+  ): {
+    subscribe(operation: Op, handlers: SubscriptionHandlers): Subscription
+    close(): void
+  }
   ```
   Ids stay `String(n)` (valid for both protocols). The core owns: entries, `ready`/settle (with the `ready.catch` guard), lazy connect, `init` on open, keep-alive timer (default 300 000 ms, close code 4000), backoff `min(max, initial·2^attempt)·(0.5 + random/2)`, re-subscribe after each ack, idle shutdown, the "socket changed / no longer subscribed" guard around async subscribe messages, and turning a thrown `connect`/`subscribe` into `MbcRealtimeError('Could not get a real-time auth token', { cause })` unless already an `MbcRealtimeError`.
 - `createRealtimeClient(options: RealtimeOptions): RealtimeClient` — unchanged signature; GraphQL adapter maps `connection_ack`(payload.connectionTimeoutMs)→ack, `ka`→keepAlive, `start_ack`→started, `data`→data(payload.data), `error` with id→failed('Subscription failed', { errors }), `error` without id→nothing, `complete`→ended, `connection_error`→rejected('Real-time connection was rejected', { errors }); subprotocols `['graphql-ws']`; `connectUrl` as today; per-start fresh token for `USER_POOL`.
@@ -123,23 +134,31 @@ Refactor only: GraphQL behaviour and its tests stay identical.
 ### Task 3: AppSync Events client
 
 **Files:**
+
 - Create: `packages/client-web/src/realtime/events.ts`, `packages/client-web/src/realtime/events.test.ts`
 - Modify: `packages/client-web/test/fake-websocket.ts` (Events helpers)
 
 **Interfaces:**
+
 - Consumes: `createConnection`, `Protocol` (Task 2).
 - Produces:
   ```ts
   type EventsAuth = { type: 'API_KEY'; apiKey: string }
   type EventsOptions = {
-    url: string            // Events HTTP endpoint, e.g. https://abc.appsync-api.ap-northeast-1.amazonaws.com/event
+    url: string // Events HTTP endpoint, e.g. https://abc.appsync-api.ap-northeast-1.amazonaws.com/event
     auth: EventsAuth
     WebSocket?: WebSocketConstructor
     reconnect?: { initialDelayMs?: number; maxDelayMs?: number }
     random?: () => number
   }
-  type EventsHandlers = { next: (event: unknown) => void; error?: (error: MbcRealtimeError) => void }
-  type EventsClient = { subscribe(channel: string, handlers: EventsHandlers): Subscription; close(): void }
+  type EventsHandlers = {
+    next: (event: unknown) => void
+    error?: (error: MbcRealtimeError) => void
+  }
+  type EventsClient = {
+    subscribe(channel: string, handlers: EventsHandlers): Subscription
+    close(): void
+  }
   function createEventsClient(options: EventsOptions): EventsClient
   function eventsEndpoint(httpUrl: string): { url: string; host: string }
   ```
@@ -174,21 +193,29 @@ Refactor only: GraphQL behaviour and its tests stay identical.
 ### Task 4: Transport-agnostic message stream; `createCommand` on it
 
 **Files:**
+
 - Create: `packages/client-web/src/realtime/stream.ts`, `packages/client-web/src/realtime/stream.test.ts`
 - Modify: `packages/client-web/src/command.ts`, `packages/client-web/src/command.test.ts`
 
 **Interfaces:**
+
 - Consumes: `RealtimeClient` (Task 2), `EventsClient` (Task 3), `eventsChannel`, `matchesFilter`, `readMessage`, `parseMessage`, `ON_MESSAGE`.
 - Produces:
   ```ts
-  type MessageHandlers = { next: (message: MbcMessage) => void; error?: (error: MbcRealtimeError) => void }
+  type MessageHandlers = {
+    next: (message: MbcMessage) => void
+    error?: (error: MbcRealtimeError) => void
+  }
   type MessageStream = {
     readonly transport: 'graphql' | 'events'
     subscribe(filter: MessageFilter, handlers: MessageHandlers): Subscription
     close(): void
   }
-  function graphqlMessages(realtime: RealtimeClient): MessageStream     // ON_MESSAGE + parseMessage, as client.ts does today
-  function eventsMessages(events: EventsClient, namespace?: string): MessageStream  // default 'default'; eventsChannel + readMessage + matchesFilter
+  function graphqlMessages(realtime: RealtimeClient): MessageStream // ON_MESSAGE + parseMessage, as client.ts does today
+  function eventsMessages(
+    events: EventsClient,
+    namespace?: string
+  ): MessageStream // default 'default'; eventsChannel + readMessage + matchesFilter
   ```
 - `createCommand(http: Http, realtime: RealtimeClient | MessageStream | undefined)` — a value with a `transport` property is a stream; a `RealtimeClient` is wrapped with `graphqlMessages`. The command subscribes `{ tenantCode: tenant, action: 'command-status' }` per tenant spelling via the stream; all other logic unchanged.
 
@@ -207,15 +234,30 @@ Refactor only: GraphQL behaviour and its tests stay identical.
 ### Task 5: `createMbcClient` config and exports
 
 **Files:**
+
 - Modify: `packages/client-web/src/client.ts`, `packages/client-web/src/index.ts`, `packages/client-web/src/client.test.ts`
 
 **Interfaces:**
+
 - Consumes: Tasks 1–4.
 - Produces:
   ```ts
-  type GraphQLRealtimeConfig = { transport?: 'graphql'; url: string; auth: RealtimeAuth; WebSocket?: WebSocketConstructor }
-  type EventsRealtimeConfig = { transport: 'events'; url: string; auth: EventsAuth; namespace?: string; WebSocket?: WebSocketConstructor }
-  type MbcClientConfig = HttpConfig & { realtime?: GraphQLRealtimeConfig | EventsRealtimeConfig }
+  type GraphQLRealtimeConfig = {
+    transport?: 'graphql'
+    url: string
+    auth: RealtimeAuth
+    WebSocket?: WebSocketConstructor
+  }
+  type EventsRealtimeConfig = {
+    transport: 'events'
+    url: string
+    auth: EventsAuth
+    namespace?: string
+    WebSocket?: WebSocketConstructor
+  }
+  type MbcClientConfig = HttpConfig & {
+    realtime?: GraphQLRealtimeConfig | EventsRealtimeConfig
+  }
   ```
   `createMbcClient` builds one `MessageStream` (or none) and uses it for `command` and `messages.subscribe(filter, onMessage, onError)`; `close()` closes it. `MbcClient` type unchanged.
 - `index.ts` adds: `createEventsClient`, `eventsEndpoint`, types `EventsClient`, `EventsOptions`, `EventsAuth`, `EventsHandlers`; `graphqlMessages`, `eventsMessages`, types `MessageStream`, `MessageHandlers`; `sanitizeSegment`, `eventsChannel`, `matchesFilter`; `readMessage`; types `GraphQLRealtimeConfig`, `EventsRealtimeConfig`.
@@ -236,6 +278,7 @@ Refactor only: GraphQL behaviour and its tests stay identical.
 ### Task 6: Docs, usage skill, smoke, changeset, gate
 
 **Files:**
+
 - Modify: `packages/client-web/README.md`, `packages/master-web/README.md`, `packages/survey-web/README.md` (only where it shows `realtime`, if it does), `skills/mbc-cqrs-serverless-web/references/setup.md`, `skills/mbc-cqrs-serverless-web/references/troubleshooting.md`, `apps/next-smoke/app/client-screens.tsx`, `.changeset/first-release.md`
 
 - [ ] **Step 1: client-web README** — after "Create a client", a `## Real-time: GraphQL or AppSync Events` section: both configs (GraphQL as today; Events `{ transport: 'events', url: 'https://abc.appsync-api.ap-northeast-1.amazonaws.com/event', auth: { type: 'API_KEY', apiKey: '…' }, namespace: 'default' }`); `transport` omitted = GraphQL; pick the one the backend's `NOTIFICATION_TRANSPORTS` publishes to (`appsync-graphql` / `appsync-event`); `namespace` must equal the backend's `APPSYNC_EVENTS_NAMESPACE`; Events supports API key auth only; channel naming `/{namespace}/{tenant}/{action}/{id}` with non-alphanumerics → `-` (`sanitizeSegment`, `eventsChannel` exported for apps that subscribe with `createEventsClient` directly); the tenant-spelling sentence in "Commands" applies to both transports. Update the Options line to mention `realtime.transport`.

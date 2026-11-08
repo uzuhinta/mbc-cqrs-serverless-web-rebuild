@@ -25,7 +25,32 @@ export const client = createMbcClient({
 })
 ```
 
-Options: `apiUrl`, `tenantCode` (string or function), `getAuthToken`, `headers`, `fetch`, `timeoutMs` (HTTP, default 30 000), `realtime` (omit it and `command()` resolves right after the HTTP response).
+Options: `apiUrl`, `tenantCode` (string or function), `getAuthToken`, `headers`, `fetch`, `timeoutMs` (HTTP, default 30 000), `realtime` (omit it and `command()` resolves right after the HTTP response; `realtime.transport` picks GraphQL or AppSync Events).
+
+## Real-time: GraphQL or AppSync Events
+
+The backend publishes its notifications through AppSync GraphQL subscriptions, AppSync Events, or both, as its `NOTIFICATION_TRANSPORTS` says (`appsync-graphql`, the default, or `appsync-event`). Pick the one it publishes to; both are supported for the long term, and nothing else in your app changes.
+
+```ts
+// AppSync GraphQL (the default: transport may be left out)
+realtime: {
+  url: 'https://abc.appsync-api.ap-northeast-1.amazonaws.com/graphql',
+  auth: { type: 'USER_POOL' }, // or { type: 'API_KEY', apiKey: '…' }
+}
+
+// AppSync Events
+realtime: {
+  transport: 'events',
+  url: 'https://abc.appsync-api.ap-northeast-1.amazonaws.com/event', // the Events HTTP endpoint
+  auth: { type: 'API_KEY', apiKey: '…' },
+  namespace: 'default', // the backend's APPSYNC_EVENTS_NAMESPACE
+}
+```
+
+- Events supports API key auth only.
+- `namespace` must equal the backend's `APPSYNC_EVENTS_NAMESPACE` (default `default`); otherwise every command waits until it times out.
+- The backend publishes to `/{namespace}/{tenantCode}/{action}/{id}`, every character other than `a-z A-Z 0-9` turned into `-`. `client.messages.subscribe(filter, …)` and `command()` subscribe to the matching channel and deliver only messages that match the filter exactly, as GraphQL does.
+- To subscribe yourself, `createEventsClient({ url, auth })` takes a channel name; `eventsChannel(namespace, filter)` and `sanitizeSegment(value)` build it the backend's way, and `eventsMessages(eventsClient, namespace)` turns it into the same message stream the client uses.
 
 ## HTTP
 
@@ -68,7 +93,7 @@ const { data, requestId } = await client.command<{ requestId: string }>(
 )
 ```
 
-`command()` subscribes to command-status messages before sending, so a fast `finish:FINISHED` is never missed. A response without `requestId` rejects with `MbcApiError` (status 2xx); the mbc backend returns that when an update changed nothing. Without `realtime`, a command resolves as soon as the backend accepts it. It listens under the configured tenant and, when different, its lowercase form, which backends from core 1.1.0 send under. If the subscription does not start within `timeoutMs`, it rejects with `MbcRealtimeError` and sends nothing; a timeout after sending is `MbcTimeoutError` (the outcome is unknown).
+`command()` subscribes to command-status messages before sending, so a fast `finish:FINISHED` is never missed. A response without `requestId` rejects with `MbcApiError` (status 2xx); the mbc backend returns that when an update changed nothing. Without `realtime`, a command resolves as soon as the backend accepts it. It listens under the configured tenant and, when different, its lowercase form, which backends from core 1.1.0 send under (on either transport). If the subscription does not start within `timeoutMs`, it rejects with `MbcRealtimeError` and sends nothing; a timeout after sending is `MbcTimeoutError` (the outcome is unknown).
 
 A request that changes several items (a bulk import) finishes once per changed item:
 

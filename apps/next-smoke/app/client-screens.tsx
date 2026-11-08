@@ -22,6 +22,22 @@ const client = createMbcClient({
     }),
 })
 
+// Never connects: subscriptions open only when a command waits.
+const eventsClient = createMbcClient({
+  apiUrl: 'https://example.invalid',
+  tenantCode: 'smoke',
+  fetch: async () =>
+    new Response(JSON.stringify({ items: [], total: 0 }), {
+      headers: { 'content-type': 'application/json' },
+    }),
+  realtime: {
+    transport: 'events',
+    url: 'https://example.invalid/event',
+    auth: { type: 'API_KEY', apiKey: 'smoke' },
+    namespace: 'default',
+  },
+})
+
 /** Every UI entry point, rendered from a client component. */
 export function ClientScreens({ survey }: { survey: Survey }) {
   return (
@@ -40,6 +56,9 @@ export function ClientScreens({ survey }: { survey: Survey }) {
           onSelect={() => {}}
         />
         <MbcSurveyTemplateListPage onSelect={() => {}} />
+        <MbcClientProvider client={eventsClient}>
+          <MbcSurveyTemplateListPage onSelect={() => {}} />
+        </MbcClientProvider>
         <LegacySurveyForm schema={survey} onSubmit={() => {}} />
         <LegacySurveyCreator defaultValue={survey} />
       </MbcClientProvider>
