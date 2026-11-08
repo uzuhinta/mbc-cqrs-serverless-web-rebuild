@@ -67,7 +67,25 @@ const { data, requestId } = await client.command<{ requestId: string }>(
 )
 ```
 
-`command()` subscribes to command-status messages before sending, so a fast `finish:FINISHED` is never missed. A response without `requestId` rejects with `MbcApiError` (status 2xx); the mbc backend returns that when an update changed nothing.
+`command()` subscribes to command-status messages before sending, so a fast `finish:FINISHED` is never missed. A response without `requestId` rejects with `MbcApiError` (status 2xx); the mbc backend returns that when an update changed nothing. Without `realtime`, a command resolves as soon as the backend accepts it. It listens under the configured tenant and, when different, its lowercase form, which backends from core 1.1.0 send under. If the subscription does not start within `timeoutMs`, it rejects with `MbcRealtimeError` and sends nothing; a timeout after sending is `MbcTimeoutError` (the outcome is unknown).
+
+A request that changes several items (a bulk import) finishes once per changed item:
+
+```ts
+await client.command<{ requestId?: string }[]>(
+  { method: 'POST', path: '/api/master-bulk', body: { items } },
+  {
+    // Changed items share one request id; unchanged ones carry none.
+    requestIdOf: (data) => data.find((item) => item.requestId)?.requestId,
+    expectedFinishes: (data) => data.filter((item) => item.requestId).length,
+    onProgress: (done, expected) => console.info(`${done}/${expected}`),
+  }
+)
+```
+
+- `requestIdOf(data)` — reads the request id from the response (default `data.requestId`).
+- `expectedFinishes` — how many `finish:FINISHED` messages complete the command: a number, or a function of the response; `0` resolves on the response. Each item (`pk` + `sk`) counts once.
+- `onProgress(done, expected, message)` — called once per finished item; an error it throws rejects the command.
 
 ## Real-time messages
 
@@ -111,3 +129,20 @@ export function SaveButton({ body }: { body: unknown }) {
 ```
 
 Wrap the tree in `<MbcClientProvider client={client}>`; `useMbcClient()` returns the client. `useCommand` aborts on unmount and reports `idle | sending | waiting | done | error`.
+
+`useQuery(key, load)` fetches with `load(signal)` whenever `key` changes, aborting the previous request and dropping an answer for an old key; pass `null` as `load` to stay idle. It returns `{ data, loading, error, refetch }`:
+
+```tsx
+import { useMbcClient, useQuery } from '@mbc-cqrs-serverless/client-web/react'
+
+export function Item({ id }: { id: string }) {
+  const client = useMbcClient()
+  const item = useQuery(id, (signal) =>
+    client.get<{ name: string }>(`/api/item/${encodeURIComponent(id)}`, {
+      signal,
+    })
+  )
+  if (item.error) return <button onClick={item.refetch}>Retry</button>
+  return <p>{item.loading ? '…' : item.data?.name}</p>
+}
+```

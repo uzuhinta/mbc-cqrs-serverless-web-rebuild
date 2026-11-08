@@ -18,6 +18,8 @@ pnpm add @mbc-cqrs-serverless/ui-web@<survey-web's version>
 import '@mbc-cqrs-serverless/survey-web/styles.css'
 ```
 
+Next and Vite declare CSS imports for TypeScript; elsewhere (plain `tsc`, some test setups), TypeScript 6 needs a declaration such as `declare module '*.css'` in a `.d.ts` file.
+
 With Tailwind v3, keep `styles.css` (on 3.0–3.3, load it after your own CSS). With Tailwind v4 or your own CSS layers, import `@mbc-cqrs-serverless/survey-web/styles.layer.css` instead, before Tailwind (it contains ui-web's styles too). See ui-web's README for layer order and theming. The stylesheet is the same file as master-web's (each covers both packages), so an app using both can import either one, or both.
 
 ## Entry points

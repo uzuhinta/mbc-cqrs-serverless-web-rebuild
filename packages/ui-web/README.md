@@ -16,6 +16,8 @@ Import one stylesheet once (if you use `survey-web` or `master-web`, import its 
 import '@mbc-cqrs-serverless/ui-web/styles.css'
 ```
 
+Next and Vite declare CSS imports for TypeScript; elsewhere (plain `tsc`, some test setups), TypeScript 6 needs a declaration such as `declare module '*.css'` in a `.d.ts` file.
+
 - `styles.css` (default): library utilities are unlayered and its base reset and tokens sit in your `@layer base`, so it works with Tailwind v3 (3.4 or later), Tailwind v4 or no Tailwind. Override library styles with your own CSS loaded after it.
 - `styles.layer.css` (Tailwind v4 hosts that want their own utilities to win): the same rules in `@layer mbc`. Import it **before** Tailwind, because a layer's position is fixed where its name first appears:
 
