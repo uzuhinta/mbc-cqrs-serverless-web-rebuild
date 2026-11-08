@@ -516,6 +516,23 @@ describe('MasterDataEditor', () => {
     await waitFor(() => expect(input('名称')).toHaveFocus())
   })
 
+  it('moves focus to a switch when it is the first editable field', async () => {
+    const withSwitchFirst = setting()
+    const fields = withSwitchFirst.attributes.fields
+    const active = fields.find((field) => field.physicalName === 'active')!
+    withSwitchFirst.attributes.fields = [
+      fields[0]!,
+      active,
+      ...fields.slice(1).filter((field) => field !== active),
+    ]
+    setup({ setting: withSwitchFirst })
+    await userEvent.click(button('編集'))
+    // The switch itself, not Radix's hidden native input inside the form.
+    await waitFor(() =>
+      expect(screen.getByRole('switch', { name: '有効' })).toHaveFocus()
+    )
+  })
+
   it('marks a field’s description with ※ in Japanese only (v0 had no mark)', () => {
     render(
       <MbcProvider locale="en">
