@@ -1,6 +1,12 @@
 import type { WebSocketLike } from '../src/realtime/client'
 
-type Sent = { type: string; id?: string; payload?: { data?: string } }
+type Sent = {
+  type: string
+  id?: string
+  payload?: { data?: string }
+  channel?: string
+  authorization?: Record<string, string>
+}
 
 /** Browser-like WebSocket double; tests drive the "server" side. */
 export class FakeWebSocket implements WebSocketLike {
@@ -65,6 +71,21 @@ export class FakeWebSocket implements WebSocketLike {
   ackAll(): void {
     for (const start of this.starts())
       this.receive({ type: 'start_ack', id: start.id })
+  }
+
+  /** Opens and acknowledges an AppSync Events connection. */
+  acceptEvents(connectionTimeoutMs = 300_000): void {
+    this.open()
+    this.receive({ type: 'connection_ack', connectionTimeoutMs })
+  }
+
+  subscribes(): Sent[] {
+    return this.sent.filter((message) => message.type === 'subscribe')
+  }
+
+  ackSubscribes(): void {
+    for (const subscribe of this.subscribes())
+      this.receive({ type: 'subscribe_success', id: subscribe.id })
   }
 
   drop(): void {
