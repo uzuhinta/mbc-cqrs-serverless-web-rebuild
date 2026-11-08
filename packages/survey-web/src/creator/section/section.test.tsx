@@ -184,6 +184,13 @@ describe('SectionReorderDialog', () => {
     return <SectionReorderDialog open={open} onOpenChange={setOpen} />
   }
 
+  it('spaces its title and list apart (ui-web’s Dialog is not a grid)', () => {
+    renderCreator(<Harness />)
+    expect(
+      screen.getByRole('dialog', { name: 'セクションを移動' })
+    ).toHaveClass('mbc:grid', 'mbc:gap-4')
+  })
+
   it('reorders sections from the keyboard and saves', async () => {
     const { store } = renderCreator(<Harness />)
     const dialog = screen.getByRole('dialog', { name: 'セクションを移動' })

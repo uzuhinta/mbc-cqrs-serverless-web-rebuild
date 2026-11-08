@@ -182,6 +182,8 @@ export function SectionReorderDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        // A grid spaces the parts (ui-web's Dialog, like 0.0.x survey's, is not one).
+        className="mbc:grid"
         onCloseAutoFocus={(event) => {
           if (!returnFocusTo) return
           event.preventDefault()
