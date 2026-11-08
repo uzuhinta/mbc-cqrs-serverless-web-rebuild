@@ -157,6 +157,11 @@ describe('MasterSettingList', () => {
     expect(onRetry).toHaveBeenCalledTimes(1)
   })
 
+  it('shows no “no data” row under a load failure', () => {
+    setup({ error: new Error('down'), items: [], total: 0 })
+    expect(screen.queryByText('データがありません')).toBeNull()
+  })
+
   it('keeps v0’s layout', () => {
     setup()
     const form = screen.getByRole('search')

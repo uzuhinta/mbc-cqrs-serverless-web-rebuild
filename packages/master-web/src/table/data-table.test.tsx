@@ -108,6 +108,11 @@ describe('DataTable', () => {
     expect(onPageChange).toHaveBeenCalledWith(3)
   })
 
+  it('does not claim there is no data when loading failed', () => {
+    render(table({ rows: [], total: 0, failed: true }))
+    expect(screen.queryByText('データがありません')).toBeNull()
+  })
+
   it('says when there is no data, and shows a loading row instead while loading', () => {
     const { rerender } = render(table({ rows: [], total: 0 }))
     expect(screen.getByText('データがありません')).toBeInTheDocument()

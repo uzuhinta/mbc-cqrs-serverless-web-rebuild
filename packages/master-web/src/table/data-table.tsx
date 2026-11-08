@@ -56,6 +56,8 @@ export type DataTableProps<T> = {
   /** Accessible name of a row's checkbox; by default a generic "select this row". */
   rowLabel?(row: T): string
   loading?: boolean
+  /** The rows failed to load (the screen shows why): no "no data" row. */
+  failed?: boolean
 }
 
 /** master v0's page sizes. */
@@ -95,6 +97,7 @@ export function DataTable<T>({
   onSelectionChange,
   rowLabel,
   loading = false,
+  failed = false,
 }: DataTableProps<T>) {
   const t = useMessages(masterMessages)
   const selectable = onSelectionChange !== undefined
@@ -251,7 +254,7 @@ export function DataTable<T>({
                   </div>
                 </TableCell>
               </TableRow>
-            ) : (
+            ) : failed ? null : (
               <TableRow className="mbc:border-border mbc:border-b">
                 <TableCell colSpan={columnCount} className="mbc:h-48">
                   <div className="mbc:text-muted-foreground mbc:flex mbc:flex-col mbc:items-center mbc:justify-center mbc:gap-4">

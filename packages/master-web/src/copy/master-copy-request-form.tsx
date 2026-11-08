@@ -292,6 +292,7 @@ export function MasterCopyRequestForm({
               page={state.page}
               pageSize={state.pageSize}
               loading={loading}
+              failed={error !== undefined && error !== null}
               sort={state.sort}
               onPageChange={(page) => onStateChange({ ...state, page })}
               onPageSizeChange={(pageSize) =>

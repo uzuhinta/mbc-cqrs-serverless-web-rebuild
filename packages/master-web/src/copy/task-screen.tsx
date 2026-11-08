@@ -140,6 +140,7 @@ export function CopyTaskScreen({
         page={page}
         pageSize={paging.pageSize}
         loading={loading}
+        failed={error !== undefined && error !== null}
         onPageChange={(next) => setPaging({ ...paging, page: next })}
         onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })}
       />
