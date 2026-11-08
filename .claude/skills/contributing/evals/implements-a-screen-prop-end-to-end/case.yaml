@@ -1,0 +1,7 @@
+schema_version: '1.1'
+name: implements-a-screen-prop-end-to-end
+expected_outcome: |
+  The change adds emptyMessage to MasterSettingList (passed to the shared table), keeps the
+  default text in the typed messages, has a test that was seen failing first, passes the
+  master-web suite, documents the prop in the README, handles the changeset, and is committed
+  as feat(master-web) with a body; the gate is run (React 18 too) and React is left on 19.

@@ -1,0 +1,9 @@
+schema_version: '1.1'
+name: reviews-a-diff-with-rule-breaks
+expected_outcome: |
+  review.md finds the rule breaks in the patch: an unprefixed class, hard-coded Japanese
+  text, window during render (hydration), console.log, `as any`, a hard-coded host route and
+  host-specific tenant check, a constant exported from a 'use client' module, a missing test,
+  and gives a not-ready verdict with fixes.
+context:
+  scaffold_script: place-files.sh

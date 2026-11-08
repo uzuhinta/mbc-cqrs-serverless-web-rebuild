@@ -1,0 +1,6 @@
+schema_version: '1.1'
+name: keeps-host-specific-behaviour-generic
+expected_outcome: |
+  The patch does not hard-code the HQ-ADMIN tenant or the "HQ lock" name into master-web;
+  notes.md explains why (a library many apps install) and the patch offers a generic,
+  optional prop (off by default) that the host sets for that tenant, with a test.

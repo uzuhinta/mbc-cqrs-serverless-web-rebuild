@@ -1,0 +1,7 @@
+schema_version: '1.1'
+name: explains-gate-on-both-reacts
+expected_outcome: |
+  answer.md gives the exact commands CI runs, in order: install with the frozen lockfile,
+  pnpm verify on React 19, pnpm use-react 18 then pnpm verify, switching back to 19, and the
+  Next smoke build; it names the Node and pnpm versions and the traps (rebuild dependent
+  packages before testing, switch React back before committing).
