@@ -343,4 +343,34 @@ describe('MbcMasterSettingEditorPage', () => {
     )
     expect(client.get).not.toHaveBeenCalled()
   })
+
+  it('reads the sequences again from new paths', async () => {
+    const client = createFakeClient()
+    serveGets(client, {
+      '/api/master-data/list': sequences,
+      '/api/v2/master-data/list': sequences,
+    })
+    const view = renderPage(
+      client,
+      <MbcMasterSettingEditorPage routing={createRouting()} />
+    )
+    await waitFor(() =>
+      expect(client.get).toHaveBeenCalledWith(
+        '/api/master-data/list',
+        expect.anything()
+      )
+    )
+    view.rerenderPage(
+      <MbcMasterSettingEditorPage
+        routing={createRouting()}
+        paths={{ data: '/api/v2/master-data' }}
+      />
+    )
+    await waitFor(() =>
+      expect(client.get).toHaveBeenCalledWith(
+        '/api/v2/master-data/list',
+        expect.anything()
+      )
+    )
+  })
 })

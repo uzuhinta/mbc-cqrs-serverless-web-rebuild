@@ -139,7 +139,7 @@ function SettingEditor({
   })
   // v0's sequences: the records of the sequence master, their key as the code.
   const sequences = useQuery(
-    `${tenantCode}\u0000${formatSettingCode}`,
+    `${tenantCode}\u0000${JSON.stringify(paths ?? {})}\u0000${formatSettingCode}`,
     formats
       ? null
       : (signal) => api.data.list(formatSettingCode, FORMATS_STATE, { signal })
