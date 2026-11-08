@@ -12,6 +12,7 @@ import type { SequenceFormat, SettingOption } from '../core/setting-form'
 import type { JsonTextEditor } from '../json/json-text'
 import { MasterSettingEditor } from '../settings/master-setting-editor'
 import { MasterSettingList } from '../settings/master-setting-list'
+import { SEQUENCE_SETTING_CODE } from './api'
 import {
   useMasterApi,
   useMasterMutations,
@@ -27,9 +28,6 @@ import {
   useTenantCode,
   type MbcPageProps,
 } from './page-parts'
-
-/** The master v0 setting whose records are the sequences a code can use. */
-export const SEQUENCE_SETTING_CODE = 'sequence_setting'
 
 /** v0 read the first 100 sequences. */
 const FORMATS_STATE = { ...initialDataListState(), pageSize: 100 }

@@ -6,7 +6,7 @@ import { V0_DATA, V0_SETTING } from '../../test/fixtures/v0-master'
 import { initialDataListState, initialSettingListState } from '../core/list'
 import { parseMasterSetting } from '../core/parse'
 import type { MasterField, MasterSetting } from '../core/types'
-import { createMasterApi, settingCodeOfId } from './api'
+import { createMasterApi, SEQUENCE_SETTING_CODE, settingCodeOfId } from './api'
 import { MasterBulkError } from './bulk'
 
 const SETTING_ID = 'MASTER#tenant-a#MASTER_SETTING#PRODUCT'
@@ -106,6 +106,10 @@ describe('createMasterApi: reads', () => {
       '/api/master-setting/check-exist/A%2FB',
       '/api/master-data/check-exist/PRODUCT/P%201',
     ])
+  })
+
+  it('names the sequence master in a module servers can read (no client boundary)', () => {
+    expect(SEQUENCE_SETTING_CODE).toBe('sequence_setting')
   })
 
   it('reads a setting’s code from its id', () => {

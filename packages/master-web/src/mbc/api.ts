@@ -200,6 +200,9 @@ function isUnchanged(error: unknown): boolean {
   )
 }
 
+/** The master v0 setting whose records are the sequences a code can use. */
+export const SEQUENCE_SETTING_CODE = 'sequence_setting'
+
 /**
  * The id of an item a create wrote, from the backend's answer: its `pk` and
  * `sk` without the version (`@1`), joined by `#` as the backend joins them.
