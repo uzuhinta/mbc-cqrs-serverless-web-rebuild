@@ -6,10 +6,16 @@ import {
   MASTER_FIELD_TYPES,
   parseBulkJson,
 } from '@mbc-cqrs-serverless/master-web/core'
+import { masterMessages } from '@mbc-cqrs-serverless/master-web'
 import {
   editorRenderers,
   JsonEditor,
 } from '@mbc-cqrs-serverless/master-web/editors'
+import {
+  createMasterApi,
+  SEQUENCE_SETTING_CODE,
+  settingCodeOfId,
+} from '@mbc-cqrs-serverless/master-web/mbc'
 import { Button, buttonVariants } from '@mbc-cqrs-serverless/ui-web'
 
 import { ClientScreens } from './client-screens'
@@ -37,6 +43,10 @@ export default function Page() {
       <ClientScreens survey={parsed.data} />
       <p>master field types: {MASTER_FIELD_TYPES.length}</p>
       <p>master bulk items checked on the server: {imported.items.length}</p>
+      {/* The root and /mbc read on the server: values, not client references. */}
+      <p data-smoke="master-server">
+        {`master on the server: ${masterMessages.locales.en.jsonDialog.title}, ${SEQUENCE_SETTING_CODE}, ${settingCodeOfId('MASTER#t#MASTER_SETTING#PRODUCT')}, ${typeof createMasterApi}`}
+      </p>
       <MasterScreens components={editorRenderers} jsonEditor={JsonEditor} />
     </main>
   )

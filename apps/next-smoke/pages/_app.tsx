@@ -1,4 +1,5 @@
 import '@mbc-cqrs-serverless/survey-web/styles.css'
+import '@mbc-cqrs-serverless/master-web/editors.css'
 
 import type { AppProps } from 'next/app'
 

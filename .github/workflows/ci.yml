@@ -49,3 +49,7 @@ jobs:
       # The Pages Router renders with the app's React, so it shows the matrix version.
       - name: assert the Pages Router rendered React ${{ matrix.react }}
         run: grep -q "react ${{ matrix.react }}\." apps/next-smoke/.next/server/pages/legacy.html
+      - name: assert master-web rendered on that React, and its server values
+        run: |
+          grep -q "JSONエディタ" apps/next-smoke/.next/server/pages/legacy.html
+          grep -q "master on the server: JSON editor, sequence_setting, PRODUCT, function" apps/next-smoke/.next/server/app/index.html

@@ -26,6 +26,12 @@ import {
 import {
   createMbcClient,
   MbcClientProvider,
+  MbcMasterCopyRequestPage,
+  MbcMasterCopyTaskDetailPage,
+  MbcMasterCopyTaskListPage,
+  MbcMasterDataEditorPage,
+  MbcMasterDataListPage,
+  MbcMasterSettingEditorPage,
   MbcMasterSettingListPage,
 } from '@mbc-cqrs-serverless/master-web/mbc'
 import { MultiSelect } from '@mbc-cqrs-serverless/ui-web'
@@ -183,7 +189,31 @@ export function MasterScreens({
         routing={routing}
       />
       <MbcClientProvider client={client}>
+        {/* Every connected page renders on the server (they load after mount). */}
         <MbcMasterSettingListPage routing={routing} jsonEditor={jsonEditor} />
+        <MbcMasterSettingEditorPage
+          routing={routing}
+          id={setting.id}
+          jsonEditor={jsonEditor}
+        />
+        <MbcMasterDataListPage routing={routing} settingId={setting.id} />
+        <MbcMasterDataEditorPage
+          routing={routing}
+          settingId={setting.id}
+          components={components}
+          jsonEditor={jsonEditor}
+        />
+        <MbcMasterCopyRequestPage
+          routing={routing}
+          settingId={setting.id}
+          loadTenants={async () => []}
+        />
+        <MbcMasterCopyTaskListPage routing={routing} settingId={setting.id} />
+        <MbcMasterCopyTaskDetailPage
+          routing={routing}
+          settingId={setting.id}
+          taskId={copyTask.id}
+        />
       </MbcClientProvider>
       <MultiSelect
         options={[{ value: 'a', label: 'A' }]}
