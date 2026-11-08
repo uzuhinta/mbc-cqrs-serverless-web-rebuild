@@ -44,6 +44,17 @@ export type MasterMessages = {
     sampleSetting: string
     sampleData: string
   }
+  /** Names for the rich editors' own controls (`/editors`). */
+  editors: {
+    heading: string
+    font: string
+    size: string
+    color: string
+    background: string
+    align: string
+    linkUrl: string
+    openLink: string
+  }
   jsonDialog: {
     open: string
     title: string
@@ -152,6 +163,16 @@ const ja: MasterMessages = {
     sampleSetting: 'マスター設定サンプル',
     sampleData: 'マスターデータサンプル',
   },
+  editors: {
+    heading: '見出し',
+    font: 'フォント',
+    size: '文字サイズ',
+    color: '文字色',
+    background: '背景色',
+    align: '配置',
+    linkUrl: 'リンクURL',
+    openLink: 'リンクを開く',
+  },
   jsonDialog: {
     open: 'JSONエディタ',
     title: 'JSONエディタ',
@@ -256,6 +277,16 @@ const en: MasterMessages = {
     seq: 'Order',
     sampleSetting: 'Sample setting',
     sampleData: 'Sample data',
+  },
+  editors: {
+    heading: 'Heading',
+    font: 'Font',
+    size: 'Size',
+    color: 'Text color',
+    background: 'Background color',
+    align: 'Alignment',
+    linkUrl: 'Link URL',
+    openLink: 'Open link',
   },
   jsonDialog: {
     open: 'JSON editor',

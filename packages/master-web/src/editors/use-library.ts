@@ -24,7 +24,7 @@ export function useLibrary<T>(load: () => Promise<T>): T | undefined {
 }
 
 /**
- * Keeps attributes on the element `selector` finds inside `container`. A
+ * Keeps attributes on every element `selector` finds inside `container`. A
  * library may replace that element at any time (Quill rebuilds its editing
  * area, Ace its input on a mode change), so they are applied again whenever
  * the container's content changes. `undefined` removes an attribute.
@@ -42,13 +42,12 @@ export function useAttributes(
     if (!root) return
     const wanted = JSON.parse(key) as [string, string | null][]
     const apply = () => {
-      const element = root.querySelector(selector)
-      if (!element) return
-      for (const [name, value] of wanted) {
-        if (element.getAttribute(name) === value) continue
-        if (value === null) element.removeAttribute(name)
-        else element.setAttribute(name, value)
-      }
+      for (const element of root.querySelectorAll(selector))
+        for (const [name, value] of wanted) {
+          if (element.getAttribute(name) === value) continue
+          if (value === null) element.removeAttribute(name)
+          else element.setAttribute(name, value)
+        }
     }
     apply()
     const observer = new MutationObserver(apply)

@@ -1,8 +1,9 @@
 'use client'
 
-import { cn } from '@mbc-cqrs-serverless/ui-web'
+import { cn, useMessages } from '@mbc-cqrs-serverless/ui-web'
 import { useEffect, useRef, useState } from 'react'
 
+import { masterMessages } from '../i18n/master-messages'
 import { EditorFallback } from './editor-fallback'
 import type { EditorProps } from './types'
 import { useAttributes, useLibrary } from './use-library'
@@ -118,6 +119,22 @@ export function RichTextEditor(props: EditorProps) {
     'aria-labelledby': labelId,
     'aria-describedby': describedBy,
     'aria-invalid': invalid ? 'true' : undefined,
+  })
+
+  // Quill's pickers and link box have no names of their own.
+  const t = useMessages(masterMessages).editors
+  const picker = (name: string) => `.ql-picker.ql-${name} .ql-picker-label`
+  useAttributes(wrapper, picker('header'), { 'aria-label': t.heading })
+  useAttributes(wrapper, picker('font'), { 'aria-label': t.font })
+  useAttributes(wrapper, picker('size'), { 'aria-label': t.size })
+  useAttributes(wrapper, picker('color'), { 'aria-label': t.color })
+  useAttributes(wrapper, picker('background'), { 'aria-label': t.background })
+  useAttributes(wrapper, picker('align'), { 'aria-label': t.align })
+  useAttributes(wrapper, '.ql-tooltip input[type="text"]', {
+    'aria-label': t.linkUrl,
+  })
+  useAttributes(wrapper, '.ql-tooltip a.ql-preview', {
+    'aria-label': t.openLink,
   })
 
   if (!library) return <EditorFallback {...props} />

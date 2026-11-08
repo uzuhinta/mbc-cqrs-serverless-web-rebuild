@@ -1,10 +1,11 @@
 'use client'
 
+import { useRef } from 'react'
 import rehypeSanitize from 'rehype-sanitize'
 
 import { EditorFallback } from './editor-fallback'
 import type { EditorProps } from './types'
-import { useLibrary } from './use-library'
+import { useAttributes, useLibrary } from './use-library'
 
 const loadMarkdown = () => import('@uiw/react-md-editor')
 
@@ -20,10 +21,21 @@ export function MarkdownEditor(props: EditorProps) {
   const { value, onChange, onBlur, disabled = false } = props
   const { id, describedBy, invalid } = props
   const library = useLibrary(loadMarkdown)
+  const wrapper = useRef<HTMLDivElement>(null)
+  // The toolbar's buttons are named; their icons are images without names.
+  useAttributes(wrapper, '.w-md-editor-toolbar svg', {
+    'aria-hidden': 'true',
+  })
+  // The preview's heading anchors are empty links next to the heading.
+  useAttributes(
+    wrapper,
+    '.wmde-markdown :is(h1, h2, h3, h4, h5, h6) > a[href^="#"]',
+    { 'aria-hidden': 'true' }
+  )
   if (!library) return <EditorFallback {...props} />
   const Markdown = library.default
   return (
-    <div data-mbc-editor="markdown" data-color-mode="light">
+    <div ref={wrapper} data-mbc-editor="markdown" data-color-mode="light">
       <Markdown
         value={value}
         onChange={(next) => onChange(next ?? '')}

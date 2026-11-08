@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import axe from 'axe-core'
 import { StrictMode, useId, useState, type ComponentType } from 'react'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
@@ -360,6 +361,35 @@ describe('JsonEditor with text that is not JSON', () => {
     await userEvent.keyboard('X')
     await new Promise((resolve) => setTimeout(resolve, 400))
     expect(onChange).not.toHaveBeenCalled()
+  })
+})
+
+describe('the libraries’ own controls', () => {
+  // Names only: jsdom has no layout for the contrast rules.
+  const NAME_RULES = [
+    'button-name',
+    'link-name',
+    'label',
+    'svg-img-alt',
+    'aria-command-name',
+    'role-img-alt',
+  ]
+  const violations = async () =>
+    (await axe.run(document.body, { runOnly: NAME_RULES })).violations.map(
+      (v) => `${v.id}: ${v.nodes.map((n) => n.html).join(' | ')}`
+    )
+
+  it('name every control of the rich-text toolbar and its link box', async () => {
+    render(<Labelled Editor={RichTextEditor} initial="<p>a</p>" />)
+    await loaded('.ql-toolbar')
+    await waitFor(async () => expect(await violations()).toEqual([]))
+    expect(screen.getByRole('button', { name: '見出し' })).toBeInTheDocument()
+  })
+
+  it('name every control of the Markdown editor and its preview', async () => {
+    render(<Labelled Editor={MarkdownEditor} initial="# りんご" />)
+    await loaded('.w-md-editor')
+    await waitFor(async () => expect(await violations()).toEqual([]))
   })
 })
 
