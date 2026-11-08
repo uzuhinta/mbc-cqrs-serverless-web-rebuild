@@ -71,4 +71,31 @@ describe('pruneDist', () => {
       'sourceMappingURL=a.js.map'
     )
   })
+
+  it('follows every export condition, nested ones too', () => {
+    const dir = fixture({
+      'package.json': JSON.stringify({
+        exports: {
+          '.': { types: './dist/index.d.ts', import: './dist/index.js' },
+          './web': {
+            browser: { default: './dist/web.js' },
+            node: './dist/node.js',
+          },
+        },
+      }),
+      'dist/index.js': '',
+      'dist/web.js': '',
+      'dist/node.js': '',
+    })
+    expect(pruneDist(dir)).toEqual([])
+  })
+
+  it('refuses an export whose module is missing instead of pruning everything', () => {
+    const dir = fixture({
+      'package.json': JSON.stringify({ exports: { '.': './dist/gone.js' } }),
+      'dist/other.js': '',
+    })
+    expect(() => pruneDist(dir)).toThrow(/dist\/gone\.js/)
+    expect(existsSync(join(dir, 'dist/other.js'))).toBe(true)
+  })
 })

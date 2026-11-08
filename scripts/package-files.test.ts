@@ -87,4 +87,28 @@ describe('published files', () => {
     },
     30_000
   )
+
+  // Independent of the prune step's own walk: any relative path a published
+  // file names (import, export, import(), CSS url()) must be shipped.
+  it.each(['ui-web', 'client-web', 'survey-web', 'master-web'])(
+    '%s ships every file its published files point at',
+    (pkg) => {
+      const files = packed(pkg)
+      const shipped = new Set(files)
+      const missing = files.flatMap((file) => {
+        if (!/\.(js|d\.ts|css)$/.test(file)) return []
+        const source = readFileSync(`${root}packages/${pkg}/${file}`, 'utf8')
+        return [
+          ...source.matchAll(
+            /["'(](\.{1,2}\/[^"')\s]+?\.(?:js|css|svg|json))["')]/g
+          ),
+        ]
+          .map(([, spec]) => posix.join(posix.dirname(file), spec ?? ''))
+          .filter((target) => !shipped.has(target))
+          .map((target) => `${file} → ${target}`)
+      })
+      expect(missing).toEqual([])
+    },
+    30_000
+  )
 })

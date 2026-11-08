@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url'
 export function reachableModules(packageDir: string): Set<string> {
   const { exports } = JSON.parse(
     readFileSync(join(packageDir, 'package.json'), 'utf8')
-  ) as { exports: Record<string, string | { default?: string }> }
+  ) as { exports: unknown }
   const reached = new Set<string>()
   const visit = (file: string) => {
     if (reached.has(file)) return
@@ -24,10 +24,15 @@ export function reachableModules(packageDir: string): Set<string> {
     ))
       if (spec) visit(normalize(join(dirname(file), spec)))
   }
-  for (const target of Object.values(exports)) {
-    const file = typeof target === 'string' ? target : target.default
-    if (file?.endsWith('.js')) visit(normalize(file))
-  }
+  // Every target under every condition (`import`, `browser`, nested ones).
+  const targets = (value: unknown): string[] =>
+    typeof value === 'string'
+      ? [value]
+      : value && typeof value === 'object'
+        ? Object.values(value).flatMap(targets)
+        : []
+  for (const file of targets(exports))
+    if (file.endsWith('.js')) visit(normalize(file))
   return reached
 }
 
