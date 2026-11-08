@@ -451,7 +451,7 @@ function EditorBody({
                         id={`${id}-description`}
                         className="mbc:text-muted-foreground mbc:mt-1.5 mbc:text-xs"
                       >
-                        ※{description}
+                        {t.description({ text: description })}
                       </p>
                     )}
                     {problem && (

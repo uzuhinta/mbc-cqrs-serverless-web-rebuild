@@ -25,6 +25,8 @@ export type MasterDataMessages = {
   }
   /** The data editor. */
   editor: {
+    /** A field's description under its input. */
+    description: (params: { text: string }) => string
     /** Accessible name of the button bar. */
     actions: string
     edit: string
@@ -99,6 +101,7 @@ const ja: MasterDataMessages = {
     retry: '再読み込み',
   },
   editor: {
+    description: ({ text }) => `※${text}`,
     actions: '操作',
     edit: '編集',
     save: '登録',
@@ -163,6 +166,7 @@ const en: MasterDataMessages = {
     retry: 'Reload',
   },
   editor: {
+    description: ({ text }) => text,
     actions: 'Actions',
     edit: 'Edit',
     save: 'Save',

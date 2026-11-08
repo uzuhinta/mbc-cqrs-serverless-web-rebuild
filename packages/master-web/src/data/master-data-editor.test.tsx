@@ -483,6 +483,24 @@ describe('MasterDataEditor', () => {
     expect(onRetry).toHaveBeenCalledTimes(1)
   })
 
+  it('marks a field’s description with ※ in Japanese only (v0 had no mark)', () => {
+    render(
+      <MbcProvider locale="en">
+        <MasterDataEditor
+          mode="edit"
+          setting={setting()}
+          data={record()}
+          routing={routing}
+          tenantCode="tenant-a"
+          onSave={async () => {}}
+        />
+      </MbcProvider>
+    )
+    expect(
+      screen.getByRole('textbox', { name: '価格' })
+    ).toHaveAccessibleDescription('税込')
+  })
+
   it('has no axe violations and renders on the server', async () => {
     const element = (
       <MbcProvider locale="en">
