@@ -13,6 +13,7 @@ describe('/mbc re-exports what its examples need from client-web', () => {
     for (const name of [
       'MbcError',
       'MbcApiError',
+      'MbcAuthError',
       'MbcAbortError',
       'MbcCommandError',
       'MbcRealtimeError',

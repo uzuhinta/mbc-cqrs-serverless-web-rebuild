@@ -55,6 +55,7 @@ export {
   createMbcClient,
   MbcAbortError,
   MbcApiError,
+  MbcAuthError,
   MbcCommandError,
   MbcError,
   MbcRealtimeError,

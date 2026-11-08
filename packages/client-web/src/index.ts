@@ -1,6 +1,7 @@
 export {
   MbcAbortError,
   MbcApiError,
+  MbcAuthError,
   MbcCommandError,
   MbcError,
   MbcRealtimeError,

@@ -1,4 +1,9 @@
-import { MbcAbortError, MbcApiError, MbcTimeoutError } from './errors'
+import {
+  MbcAbortError,
+  MbcApiError,
+  MbcAuthError,
+  MbcTimeoutError,
+} from './errors'
 
 export type MaybePromise<T> = T | Promise<T>
 export type QueryValue = string | number | boolean
@@ -108,9 +113,7 @@ export function createHttp(config: HttpConfig): Http {
     try {
       token = await config.getAuthToken?.()
     } catch (cause) {
-      throw new MbcApiError(0, undefined, 'Could not get an auth token', {
-        cause,
-      })
+      throw new MbcAuthError({ cause })
     }
     if (token) headers.set('authorization', `Bearer ${token}`)
     else headers.delete('authorization')

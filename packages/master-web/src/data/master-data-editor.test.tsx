@@ -1,3 +1,4 @@
+import { createMbcClient } from '@mbc-cqrs-serverless/client-web'
 import { MbcProvider } from '@mbc-cqrs-serverless/ui-web'
 import {
   fireEvent,
@@ -349,6 +350,31 @@ describe('MasterDataEditor', () => {
       '結果を確認できませんでした。'
     )
     expect(button('登録')).toBeDisabled()
+  })
+
+  it('lets a create be saved again when the auth token could not be had', async () => {
+    // client-web's own token failure: nothing was sent.
+    const client = createMbcClient({
+      apiUrl: 'https://api.invalid',
+      tenantCode: 't',
+      getAuthToken: () => Promise.reject(new Error('session expired')),
+    })
+    const onSave = vi.fn<MasterDataEditorProps['onSave']>(async (body) => {
+      await client.post('/api/master-data/create', body)
+    })
+    setup({
+      mode: 'create',
+      data: undefined,
+      generateCode: async () => 'P-100',
+      onSave,
+    })
+    await userEvent.type(input('名称'), 'なし')
+    await userEvent.type(input('価格'), '500')
+    await userEvent.click(button('登録'))
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'データ登録に失敗しました。'
+    )
+    expect(button('登録')).toBeEnabled()
   })
 
   it('applies the JSON a new auto-numbered record opens with', async () => {

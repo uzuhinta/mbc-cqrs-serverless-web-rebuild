@@ -112,6 +112,7 @@ describe('master-web entries', () => {
         'MasterBulkError',
         'MbcAbortError',
         'MbcApiError',
+        'MbcAuthError',
         'MbcClientProvider',
         'MbcCommandError',
         'MbcError',

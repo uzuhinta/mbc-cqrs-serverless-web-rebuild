@@ -27,6 +27,18 @@ export class MbcApiError extends MbcError {
   }
 }
 
+/**
+ * `getAuthToken` failed, so nothing was sent. An `MbcApiError` with status 0
+ * like a network failure, but the request never left: retrying is safe.
+ */
+export class MbcAuthError extends MbcApiError {
+  override name = 'MbcAuthError'
+
+  constructor(options?: { cause?: unknown }) {
+    super(0, undefined, 'Could not get an auth token', options)
+  }
+}
+
 export class MbcTimeoutError extends MbcError {
   override name = 'MbcTimeoutError'
 

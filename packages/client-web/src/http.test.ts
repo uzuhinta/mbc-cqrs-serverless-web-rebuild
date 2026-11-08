@@ -188,8 +188,10 @@ describe('createHttp', () => {
       fetch: fakeFetch(() => json({})).fetch,
     })
     const error = await token.request('GET', '/x').catch((e: unknown) => e)
+    // Nothing was sent: its own name, still an MbcApiError with status 0.
+    expect(error).toBeInstanceOf(MbcApiError)
     expect(error).toMatchObject({
-      name: 'MbcApiError',
+      name: 'MbcAuthError',
       status: 0,
       cause: tokenCause,
     })

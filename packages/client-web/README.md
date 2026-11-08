@@ -50,7 +50,8 @@ import {
 } from '@mbc-cqrs-serverless/client-web'
 ```
 
-- `MbcApiError` — `status` and `body`; `status` is `0` when no response arrived (network failure, or `getAuthToken` threw).
+- `MbcApiError` — `status` and `body`; `status` is `0` when no response arrived (a network failure: the request may have reached the backend).
+- `MbcAuthError` — an `MbcApiError` with status `0` when `getAuthToken` threw: nothing was sent.
 - `MbcTimeoutError`, `MbcAbortError`, `MbcRealtimeError`.
 - `MbcCommandError` — the backend reported `<step>:FAILED` for a command (`requestId`, `status`).
 
