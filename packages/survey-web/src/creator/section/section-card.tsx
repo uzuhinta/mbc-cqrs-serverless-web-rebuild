@@ -237,6 +237,7 @@ function SectionCardImpl({ id }: { id: string }) {
   return (
     <div
       ref={ui.cardRef(id)}
+      data-creator-card=""
       className="mbc:relative mbc:pt-5"
       onClick={onClick}
     >

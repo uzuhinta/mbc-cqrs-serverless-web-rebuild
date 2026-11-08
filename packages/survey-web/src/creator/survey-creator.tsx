@@ -151,6 +151,7 @@ function TitleCard() {
   return (
     <div
       ref={ui.cardRef(TITLE_ID)}
+      data-creator-card=""
       onClick={onClick}
       className={cn(
         'mbc:cursor-pointer mbc:rounded-lg mbc:border-l-8 mbc:p-6',
@@ -508,20 +509,38 @@ export const SurveyCreator: ForwardRefExoticComponent<
               className="mbc:w-full"
               onValueChange={(tab) => {
                 if (tab === 'preview') setPreview(store.getState().survey)
+                // The cards mount again: bring back the one being edited.
+                if (tab === 'creator') {
+                  const { selectedId } = store.getState()
+                  setTimeout(() => {
+                    if (selectedId === null) return
+                    ui.getCard(selectedId)?.scrollIntoView?.({
+                      block: 'center',
+                    })
+                  }, 0)
+                }
               }}
             >
-              <TabsList className="mbc:grid mbc:w-full mbc:grid-cols-3">
-                <TabsTrigger value="creator">{t.shell.creatorTab}</TabsTrigger>
-                <TabsTrigger value="preview">{t.shell.previewTab}</TabsTrigger>
-                <TabsTrigger value="json">{t.shell.jsonTab}</TabsTrigger>
-              </TabsList>
+              {/* Pinned so a long survey never needs a scroll back to the top;
+                  apps with a fixed header set --mbc-creator-sticky-top. */}
+              <div className="mbc:sticky mbc:top-[var(--mbc-creator-sticky-top,0px)] mbc:z-10 mbc:bg-background">
+                <TabsList className="mbc:grid mbc:w-full mbc:grid-cols-3">
+                  <TabsTrigger value="creator">
+                    {t.shell.creatorTab}
+                  </TabsTrigger>
+                  <TabsTrigger value="preview">
+                    {t.shell.previewTab}
+                  </TabsTrigger>
+                  <TabsTrigger value="json">{t.shell.jsonTab}</TabsTrigger>
+                </TabsList>
+              </div>
               <TabsContent value="creator" className="mbc:pt-6">
                 <div
                   ref={containerRef}
                   className="mbc:relative mbc:mx-auto mbc:flex mbc:w-full mbc:max-w-4xl mbc:gap-x-12"
                 >
                   <div className="mbc:w-full">
-                    <div className="mbc:flex mbc:flex-col mbc:gap-4">
+                    <div className="mbc:flex mbc:flex-col mbc:gap-4 mbc:[&_[data-creator-card]]:scroll-mt-[calc(var(--mbc-creator-sticky-top,0px)+4rem)]">
                       <TitleCard />
                       <ItemList />
                     </div>

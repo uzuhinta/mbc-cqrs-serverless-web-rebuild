@@ -394,6 +394,7 @@ function QuestionCardImpl({
   return (
     <div
       ref={ui.cardRef(id)}
+      data-creator-card=""
       onClick={onClick}
       className={cn(
         'mbc:rounded-lg mbc:border mbc:transition-all',

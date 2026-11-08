@@ -35,4 +35,5 @@ A screen's async callbacks show a failure on the screen when they reject; an err
 
 - CSS variables (`--mbc-primary`, `--mbc-brand`, `--mbc-radius`, `-foreground` pairs…) on `:root`; dark values under `.dark` or `[data-mbc-theme="dark"]`.
 - `className` on components accepts `mbc:` classes the library already ships; for anything else use the app's own classes on a wrapper.
+- `SurveyCreator` pins its tabs while a long survey scrolls; with a fixed app header set `--mbc-creator-sticky-top` (e.g. `64px`) so the tabs stop below it.
 - Dialogs and menus portal to `body` (or `portalContainer`); their elements carry `data-mbc`, so the theme applies there too.

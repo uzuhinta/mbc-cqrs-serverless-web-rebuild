@@ -106,6 +106,16 @@ export function Editor({ stored }: { stored?: SurveyInput }) {
 
 `ref`: `submit()` validates (errors appear on the cards and focus moves to the first) and resolves `false` when invalid; `reset(next?)` loads another survey; `getValue()` returns the current one. Locked questions and sections (`locked: true`) cannot be changed, deleted or moved into; the creator keeps v0's lock rules.
 
+The 作成 / プレビュー / JSON tabs stay pinned to the top of the window while a long survey scrolls, and coming back from the preview or JSON scrolls to the card being edited. If your app has a fixed header, set its height so the tabs stop below it:
+
+```css
+:root {
+  --mbc-creator-sticky-top: 64px;
+}
+```
+
+The tabs are pinned to the nearest scrolling ancestor: inside a page section with its own `overflow: auto`, they stay at the top of that section.
+
 ## Template screens (`/templates`)
 
 Prop-driven; bring your own data and navigation:

@@ -279,6 +279,73 @@ describe('SurveyCreator', () => {
     ).toBeInTheDocument()
   })
 
+  it('keeps the tabs in view while the questions scroll, below an app header', () => {
+    render(<SurveyCreator />)
+    const bar = screen.getByRole('tablist').parentElement!
+    expect(classesOf(bar)).toEqual(
+      expect.arrayContaining([
+        'sticky',
+        'top-[var(--mbc-creator-sticky-top,0px)]',
+        'z-10',
+        'bg-background',
+      ])
+    )
+  })
+
+  it('keeps scrolled-to cards clear of the pinned tabs', () => {
+    render(
+      <SurveyCreator
+        defaultValue={{
+          title: 'T',
+          items: [
+            { id: 's', type: 'section-header', title: 'S' },
+            { id: 'q', type: 'short-text', label: 'Q' },
+          ],
+        }}
+      />
+    )
+    const cards = document.querySelectorAll('[data-creator-card]')
+    // The title, the section and the question.
+    expect(cards).toHaveLength(3)
+    const list = cards[0]!.closest('[class*="data-creator-card"]')
+    expect(classesOf(list)).toContain(
+      '[&_[data-creator-card]]:scroll-mt-[calc(var(--mbc-creator-sticky-top,0px)+4rem)]'
+    )
+  })
+
+  it('returns to the selected question after the preview', async () => {
+    const scrolled: Element[] = []
+    const original = Element.prototype.scrollIntoView
+    Element.prototype.scrollIntoView = function (this: Element) {
+      scrolled.push(this)
+    }
+    try {
+      render(
+        <SurveyCreator
+          defaultValue={{
+            title: 'T',
+            items: [
+              { id: 's', type: 'section-header', title: 'S' },
+              { id: 'q1', type: 'short-text', label: 'First' },
+              { id: 'q2', type: 'short-text', label: 'Last' },
+            ],
+          }}
+        />
+      )
+      await userEvent.click(screen.getByText('Last'))
+      await userEvent.click(screen.getByRole('tab', { name: 'プレビュー' }))
+      scrolled.length = 0
+      await userEvent.click(screen.getByRole('tab', { name: '作成者' }))
+      await waitFor(() => expect(scrolled).toHaveLength(1))
+      expect(
+        within(scrolled[0] as HTMLElement).getByDisplayValue('Last')
+      ).toBeInTheDocument()
+      expect(scrolled[0]).toHaveAttribute('data-creator-card')
+    } finally {
+      Element.prototype.scrollIntoView = original
+    }
+  })
+
   it('shows live JSON', async () => {
     render(<SurveyCreator defaultValue={LOCKS} />)
     await userEvent.click(screen.getByRole('tab', { name: 'JSON' }))
