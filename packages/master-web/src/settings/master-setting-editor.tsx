@@ -30,6 +30,7 @@ import { isSameTenant } from '../core/tenant'
 import type { MasterField, MasterSetting } from '../core/types'
 import { ConfirmButton } from '../form/confirm-button'
 import { FailureAlert, failureOf, type Failure } from '../form/failure'
+import { useEditFocus } from '../form/edit-focus'
 import { RequiredMark } from '../form/required-mark'
 import {
   formatFieldDefinitionError,
@@ -163,6 +164,7 @@ function EditorBody({
     open: false,
   })
   const formRef = useRef<HTMLFormElement>(null)
+  const editFocus = useEditFocus(editing, formRef)
   const busy = useRef(false)
   const readOnly = !editing || !owned
 
@@ -305,7 +307,13 @@ function EditorBody({
             <div className="mbc:flex mbc:justify-between mbc:gap-4">
               {mode === 'edit' && !editing ? (
                 <div className="mbc:flex mbc:flex-wrap mbc:gap-2">
-                  <Button type="button" onClick={() => setEditing(true)}>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      editFocus.start()
+                      setEditing(true)
+                    }}
+                  >
                     {t.edit}
                   </Button>
                   {canCopy && setting && (

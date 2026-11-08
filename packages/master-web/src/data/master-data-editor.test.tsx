@@ -483,6 +483,13 @@ describe('MasterDataEditor', () => {
     expect(onRetry).toHaveBeenCalledTimes(1)
   })
 
+  it('moves focus into the form on Edit, as the button it pressed goes', async () => {
+    setup()
+    await userEvent.click(button('編集'))
+    // The code is locked after create: the first editable field is the name.
+    await waitFor(() => expect(input('名称')).toHaveFocus())
+  })
+
   it('marks a field’s description with ※ in Japanese only (v0 had no mark)', () => {
     render(
       <MbcProvider locale="en">

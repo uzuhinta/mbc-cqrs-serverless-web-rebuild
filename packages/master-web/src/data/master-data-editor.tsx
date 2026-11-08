@@ -27,6 +27,7 @@ import {
 } from '../core/values'
 import { ConfirmButton } from '../form/confirm-button'
 import { FailureAlert, failureOf, type Failure } from '../form/failure'
+import { useEditFocus } from '../form/edit-focus'
 import { isUnknownOutcome } from '../form/outcome'
 import { RequiredMark } from '../form/required-mark'
 import { formatMasterError } from '../i18n/format-error'
@@ -147,6 +148,7 @@ function EditorBody({
   const [failure, setFailure] = useState<Failure | null>(null)
   const busy = useRef(false)
   const formRef = useRef<HTMLFormElement>(null)
+  const editFocus = useEditFocus(editing, formRef)
   const readOnly = !editing || !owned
 
   // After a refused save: focus the first field with an error. Its control
@@ -310,7 +312,13 @@ function EditorBody({
             <div className="mbc:flex mbc:justify-between mbc:gap-4">
               <div className="mbc:flex mbc:flex-wrap mbc:gap-4">
                 {mode === 'edit' && !editing ? (
-                  <Button type="button" onClick={() => setEditing(true)}>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      editFocus.start()
+                      setEditing(true)
+                    }}
+                  >
                     {t.edit}
                   </Button>
                 ) : (

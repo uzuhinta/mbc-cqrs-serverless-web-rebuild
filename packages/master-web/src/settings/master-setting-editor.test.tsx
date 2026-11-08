@@ -392,6 +392,12 @@ describe('MasterSettingEditor', () => {
     expect(onRetry).toHaveBeenCalledTimes(1)
   })
 
+  it('moves focus into the form on Edit, as the button it pressed goes', async () => {
+    setup()
+    await userEvent.click(button('編集'))
+    await waitFor(() => expect(input('名称')).toHaveFocus())
+  })
+
   it('names a new setting’s fixed fields in the screen’s language', () => {
     render(
       <MbcProvider locale="en">
