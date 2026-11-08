@@ -120,6 +120,23 @@ describe('BulkImportDialog', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(onImport.mock.calls[0]?.[0]).toEqual([DATA, { ...DATA, code: 'D2' }])
     expect(onImported).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('status')).toHaveTextContent('2件を反映しました。')
+  })
+
+  it('says the items were accepted when their outcome is not known yet', async () => {
+    setup({ onImport: async () => 'accepted' })
+    await open()
+    await typeJson([DATA])
+    await userEvent.click(screen.getByRole('button', { name: 'データ反映' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '1件を受け付けました。'
+    )
+    // Opening the dialog again starts afresh.
+    await open()
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(screen.queryByRole('status')).toBeNull()
   })
 
   it('stays open and says why when the import fails', async () => {

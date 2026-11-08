@@ -43,7 +43,9 @@ export type BulkImportDialogProps = {
   mapRawItem?: BulkMapper
   /**
    * Sends the items; call `onProgress(done, total)` as they finish. Resolve
-   * when everything is done (or nothing changed); reject on failure. A
+   * when everything is done (or nothing changed), or with `'accepted'` when
+   * the backend took them but their outcome is not known yet (no realtime);
+   * reject on failure. A
    * rejection with numeric `from` / `to` (`/mbc`'s `MasterBulkError`) names
    * the failed items; a timeout or dropped connection (also as its `cause`) is shown
    * as an unknown outcome.
@@ -51,7 +53,7 @@ export type BulkImportDialogProps = {
   onImport(
     items: BulkJsonItem[],
     onProgress: (done: number, total: number) => void
-  ): Promise<void>
+  ): Promise<void | 'accepted'>
   /** After an import (also after a partial one), e.g. to reload the list. */
   onImported?(): void
   disabled?: boolean
@@ -111,6 +113,8 @@ export function BulkImportDialog({
   )
   const [errors, setErrors] = useState<BulkError[]>([])
   const [failure, setFailure] = useState<Failure | null>(null)
+  // Said after the dialog closes: how the import went.
+  const [result, setResult] = useState<string | null>(null)
   const [progress, setProgress] = useState<{
     done: number
     total: number
@@ -127,6 +131,7 @@ export function BulkImportDialog({
     if (submitting) return
     setOpen(next)
     if (next) {
+      setResult(null)
       setErrors([])
       setFailure(null)
       setPartial(null)
@@ -142,12 +147,18 @@ export function BulkImportDialog({
     let last = { done: 0, total: parsed.items.length }
     setProgress(last)
     try {
-      await onImport(parsed.items, (done, total) => {
+      const outcome = await onImport(parsed.items, (done, total) => {
         last = { done, total }
         setProgress(last)
       })
       setProgress(null)
       setOpen(false)
+      const count = parsed.items.length
+      setResult(
+        outcome === 'accepted'
+          ? t.bulkDialog.accepted({ count })
+          : t.bulkDialog.done({ count })
+      )
       onImported?.()
     } catch (error) {
       setProgress(null)
@@ -161,108 +172,118 @@ export function BulkImportDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={changeOpen}>
-      <DialogTrigger asChild>
-        <Button type="button" variant="outline" disabled={disabled}>
-          {t.bulkDialog.open}
-        </Button>
-      </DialogTrigger>
-      <DialogContent
-        aria-describedby={undefined}
-        // The textarea grows with its text: keep the buttons reachable. A grid
-        // spaces the parts (ui-web's Dialog is not one; 0.0.x master's was).
-        className="mbc:grid mbc:max-h-[calc(100dvh-2rem)] mbc:overflow-y-auto mbc:sm:max-w-3xl"
-      >
-        <DialogHeader>
-          <DialogTitle>{t.bulkDialog.title}</DialogTitle>
-        </DialogHeader>
-        <JsonText
-          value={text}
-          onChange={setText}
-          label={t.bulkDialog.json}
-          invalid={errors.length > 0}
-          describedBy={errors.length > 0 ? errorsId : undefined}
-          disabled={submitting}
-          editor={jsonEditor}
-        />
-        {errors.length > 0 && (
-          <Alert variant="destructive" id={errorsId}>
-            <AlertDescription>
-              <ul className="mbc:list-disc mbc:pl-5">
-                {errors.map((error, index) => (
-                  <li key={index}>{formatBulkError(error, t.bulk)}</li>
-                ))}
-              </ul>
-            </AlertDescription>
-          </Alert>
-        )}
-        {failure !== null && (
-          <Alert variant="destructive" role="alert">
-            <AlertTitle>
-              {failure.timeout ? t.bulkDialog.timeout : t.bulkDialog.failed}
-            </AlertTitle>
-            <AlertDescription>
-              {[
-                failure.range && t.bulkDialog.failedRange(failure.range),
-                failure.message,
-                partial && t.bulkDialog.partial(partial),
-              ]
-                .filter(Boolean)
-                .join(' ')}
-            </AlertDescription>
-          </Alert>
-        )}
-        {progress && (
-          <p role="status" className="mbc:text-muted-foreground mbc:text-sm">
-            {t.bulkDialog.progress(progress)}
-          </p>
-        )}
-        <DialogFooter className="mbc:gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={submitting}
-            onClick={() => changeOpen(false)}
-          >
-            {t.bulkDialog.cancel}
+    <>
+      {result && (
+        <p
+          role="status"
+          className="mbc:text-muted-foreground mbc:self-center mbc:text-sm"
+        >
+          {result}
+        </p>
+      )}
+      <Dialog open={open} onOpenChange={changeOpen}>
+        <DialogTrigger asChild>
+          <Button type="button" variant="outline" disabled={disabled}>
+            {t.bulkDialog.open}
           </Button>
-          <Button
-            type="button"
-            variant="secondary"
+        </DialogTrigger>
+        <DialogContent
+          aria-describedby={undefined}
+          // The textarea grows with its text: keep the buttons reachable. A grid
+          // spaces the parts (ui-web's Dialog is not one; 0.0.x master's was).
+          className="mbc:grid mbc:max-h-[calc(100dvh-2rem)] mbc:overflow-y-auto mbc:sm:max-w-3xl"
+        >
+          <DialogHeader>
+            <DialogTitle>{t.bulkDialog.title}</DialogTitle>
+          </DialogHeader>
+          <JsonText
+            value={text}
+            onChange={setText}
+            label={t.bulkDialog.json}
+            invalid={errors.length > 0}
+            describedBy={errors.length > 0 ? errorsId : undefined}
             disabled={submitting}
-            onClick={() => fileRef.current?.click()}
-          >
-            <Upload aria-hidden />
-            {t.bulkDialog.load}
-          </Button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".json,application/json"
-            tabIndex={-1}
-            aria-hidden
-            className="mbc:hidden"
-            onChange={(event) => readJsonFile(event, setText)}
+            editor={jsonEditor}
           />
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={submitting}
-            onClick={() => downloadJson(text, FILE_NAMES[screen])}
-          >
-            <Download aria-hidden />
-            {t.bulkDialog.save}
-          </Button>
-          <Button
-            type="button"
-            loading={submitting}
-            onClick={() => void submit()}
-          >
-            {!submitting && <Save aria-hidden />}
-            {t.bulkDialog.submit}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          {errors.length > 0 && (
+            <Alert variant="destructive" id={errorsId}>
+              <AlertDescription>
+                <ul className="mbc:list-disc mbc:pl-5">
+                  {errors.map((error, index) => (
+                    <li key={index}>{formatBulkError(error, t.bulk)}</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+          {failure !== null && (
+            <Alert variant="destructive" role="alert">
+              <AlertTitle>
+                {failure.timeout ? t.bulkDialog.timeout : t.bulkDialog.failed}
+              </AlertTitle>
+              <AlertDescription>
+                {[
+                  failure.range && t.bulkDialog.failedRange(failure.range),
+                  failure.message,
+                  partial && t.bulkDialog.partial(partial),
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+              </AlertDescription>
+            </Alert>
+          )}
+          {progress && (
+            <p role="status" className="mbc:text-muted-foreground mbc:text-sm">
+              {t.bulkDialog.progress(progress)}
+            </p>
+          )}
+          <DialogFooter className="mbc:gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={submitting}
+              onClick={() => changeOpen(false)}
+            >
+              {t.bulkDialog.cancel}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={submitting}
+              onClick={() => fileRef.current?.click()}
+            >
+              <Upload aria-hidden />
+              {t.bulkDialog.load}
+            </Button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".json,application/json"
+              tabIndex={-1}
+              aria-hidden
+              className="mbc:hidden"
+              onChange={(event) => readJsonFile(event, setText)}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={submitting}
+              onClick={() => downloadJson(text, FILE_NAMES[screen])}
+            >
+              <Download aria-hidden />
+              {t.bulkDialog.save}
+            </Button>
+            <Button
+              type="button"
+              loading={submitting}
+              onClick={() => void submit()}
+            >
+              {!submitting && <Save aria-hidden />}
+              {t.bulkDialog.submit}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

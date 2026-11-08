@@ -26,6 +26,10 @@ export type MasterMessages = {
     /** Shown in the failure alert when some items already saved. */
     partial: (params: { done: number; total: number }) => string
     failed: string
+    /** After the dialog closed: every item saved. */
+    done: (params: { count: number }) => string
+    /** After the dialog closed: the backend took the items (no realtime). */
+    accepted: (params: { count: number }) => string
     /** The batch that failed, by item position (1-based). */
     failedRange: (params: { from: number; to: number }) => string
     /** The result could not be confirmed (a timeout or a dropped connection). */
@@ -135,6 +139,9 @@ const ja: MasterMessages = {
     partial: ({ done, total }) => `${done} / ${total} 件反映済み`,
     failed: 'マスターデータの反映に失敗しました。',
     failedRange: ({ from, to }) => `${from}〜${to}件目の反映に失敗しました。`,
+    done: ({ count }) => `${count}件を反映しました。`,
+    accepted: ({ count }) =>
+      `${count}件を受け付けました。一覧に表示されるまで時間がかかる場合があります。`,
     timeout:
       '結果を確認できませんでした。反映されたかどうか、読み込み直して確認してください。',
   },
@@ -237,6 +244,9 @@ const en: MasterMessages = {
     partial: ({ done, total }) => `${done} / ${total} imported`,
     failed: 'The import failed.',
     failedRange: ({ from, to }) => `Items ${from} to ${to} failed to import.`,
+    done: ({ count }) => `Imported ${count} items.`,
+    accepted: ({ count }) =>
+      `${count} items were accepted; they may take a moment to appear in the list.`,
     timeout:
       'The result could not be confirmed. Reload to check which items were imported.',
   },

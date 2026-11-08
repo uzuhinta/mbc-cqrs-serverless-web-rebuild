@@ -23,6 +23,14 @@ export function useTenantCode(): string {
   return useMbcClient().tenantCode()
 }
 
+/**
+ * Whether the client hears command results over realtime. Without it a
+ * write ends once the backend has taken it, before it is stored.
+ */
+export function useHasRealtime(): boolean {
+  return useMbcClient().messages !== undefined
+}
+
 /** Reports each new load failure to `onError`. */
 export function useReport(
   error: unknown,

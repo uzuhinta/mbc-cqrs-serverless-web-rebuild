@@ -22,6 +22,7 @@ import {
   reported,
   settingIdOf,
   useListState,
+  useHasRealtime,
   useReport,
   useTenantCode,
   type MbcPageProps,
@@ -64,6 +65,7 @@ export function MbcMasterSettingListPage({
   )
   const list = useMasterSettings(current, { paths })
   const { importItems } = useMasterMutations({ paths })
+  const realtime = useHasRealtime()
   const tenantCode = useTenantCode()
   useReport(list.error, onError)
   return (
@@ -76,9 +78,10 @@ export function MbcMasterSettingListPage({
       loading={list.loading}
       error={list.error}
       onRetry={list.refetch}
-      onImport={(items, onProgress) =>
-        reported(importItems.runOrThrow(items, onProgress), onError)
-      }
+      onImport={async (items, onProgress) => {
+        await reported(importItems.runOrThrow(items, onProgress), onError)
+        return realtime ? undefined : 'accepted'
+      }}
       onImported={list.refetch}
       tenantCode={tenantCode}
       inputSampleJson={inputSampleJson}

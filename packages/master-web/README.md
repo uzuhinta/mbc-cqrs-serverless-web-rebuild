@@ -158,7 +158,7 @@ The current tenant is `client.tenantCode()`. A setting or record belongs to the 
 
 ### Realtime
 
-Writes are commands: the page waits for the backend's `finish:FINISHED` message over AppSync realtime, so a page that opens a new item finds it stored. Without `realtime`, a write ends as soon as the request is accepted; a newly created item may not be readable yet, and a list reloaded after an import may not show its rows yet.
+Writes are commands: the page waits for the backend's `finish:FINISHED` message over AppSync realtime, so a page that opens a new item finds it stored. Without `realtime`, a write ends as soon as the request is accepted; a newly created item may not be readable yet, and a list reloaded after an import may not show its rows yet (the import dialog says the items were accepted, not imported). Your own `onImport` can resolve `'accepted'` for the same message.
 
 ### With React Router
 

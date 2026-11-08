@@ -22,6 +22,7 @@ import {
   PageState,
   reported,
   useListState,
+  useHasRealtime,
   useReport,
   useTenantCode,
   type MbcPageProps,
@@ -68,6 +69,7 @@ function DataList({
   const setting = useMasterSetting(settingId, { paths })
   const list = useMasterDataList(settingId, current, { paths })
   const { importItems } = useMasterMutations({ paths })
+  const realtime = useHasRealtime()
   const tenantCode = useTenantCode()
   useReport(setting.error, onError)
   useReport(list.error, onError)
@@ -91,9 +93,10 @@ function DataList({
       loading={list.loading}
       error={list.error}
       onRetry={list.refetch}
-      onImport={(items, onProgress) =>
-        reported(importItems.runOrThrow(items, onProgress), onError)
-      }
+      onImport={async (items, onProgress) => {
+        await reported(importItems.runOrThrow(items, onProgress), onError)
+        return realtime ? undefined : 'accepted'
+      }}
       onImported={list.refetch}
       tenantCode={tenantCode}
       inputSampleJson={inputSampleJson}

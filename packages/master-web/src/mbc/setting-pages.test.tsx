@@ -144,6 +144,33 @@ describe('MbcMasterSettingListPage', () => {
     await waitFor(() =>
       expect(client.get.mock.calls.length).toBeGreaterThan(loads)
     )
+    // The fake client has no realtime: the backend only took the items.
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      '1件を受け付けました。'
+    )
+  })
+
+  it('says the import is done when realtime confirmed it', async () => {
+    const client = Object.assign(
+      createFakeClient(() => [{ requestId: 'req-1' }]),
+      { messages: {} }
+    )
+    serveGets(client, {
+      '/api/master-setting/list': () => ({ items: SETTING_ROWS, total: 2 }),
+    })
+    renderPage(client, <MbcMasterSettingListPage routing={createRouting()} />)
+    await screen.findByRole('link', { name: 'PRODUCT' })
+    await userEvent.click(button('JSONエディタ'))
+    const editor = screen.getByRole('textbox', { name: 'JSON' })
+    await userEvent.clear(editor)
+    editor.focus()
+    await userEvent.paste(
+      JSON.stringify([{ code: 'NEW', name: '新規', attributes: {} }])
+    )
+    await userEvent.click(button('データ反映'))
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      '1件を反映しました。'
+    )
   })
 })
 
