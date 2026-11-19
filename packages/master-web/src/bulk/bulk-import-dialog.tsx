@@ -16,6 +16,7 @@ import {
 import { Download, Save, Upload } from 'lucide-react'
 import { useId, useRef, useState } from 'react'
 
+import { OPEN_ACCESS, type MasterAccess } from '../core/access'
 import {
   bulkSampleJson,
   parseBulkJson,
@@ -25,6 +26,7 @@ import {
   type BulkScreen,
 } from '../core/bulk'
 import { isUnknownOutcome } from '../form/outcome'
+import { refusalOf, type RefusalTexts } from '../form/refusal'
 import { formatBulkError } from '../i18n/format-error'
 import { masterMessages } from '../i18n/master-messages'
 import { downloadJson, readJsonFile } from '../json/json-file'
@@ -59,6 +61,14 @@ export type BulkImportDialogProps = {
   disabled?: boolean
   /** Edits the JSON instead of the text box, e.g. `/editors`' JsonEditor. */
   jsonEditor?: JsonTextEditor
+  /**
+   * The caller's access (the list's). Enabled, entries the grants would
+   * refuse are reported before anything is sent, and a refused batch says
+   * why.
+   */
+  access?: MasterAccess
+  /** A data list's setting's system, for the access check. */
+  settingSystemId?: string
 }
 
 type Failure = {
@@ -68,7 +78,7 @@ type Failure = {
 }
 
 /** What the alert says: an unknown outcome has no message of its own. */
-function failureOf(error: unknown): Failure {
+function failureOf(error: unknown, refusal: RefusalTexts): Failure {
   if (isUnknownOutcome(error)) return { timeout: true }
   const { from, to } = (error ?? {}) as { from?: unknown; to?: unknown }
   return {
@@ -77,7 +87,9 @@ function failureOf(error: unknown): Failure {
       typeof from === 'number' && typeof to === 'number'
         ? { from, to }
         : undefined,
-    message: error instanceof Error ? error.message : undefined,
+    message:
+      refusalOf(error, refusal) ??
+      (error instanceof Error ? error.message : undefined),
   }
 }
 
@@ -97,6 +109,8 @@ export function BulkImportDialog({
   onImported,
   disabled = false,
   jsonEditor,
+  access = OPEN_ACCESS,
+  settingSystemId,
 }: BulkImportDialogProps) {
   const t = useMessages(masterMessages)
   const errorsId = useId()
@@ -139,7 +153,14 @@ export function BulkImportDialog({
   }
 
   const submit = async () => {
-    const parsed = parseBulkJson(text, { screen, mapRawItem, tenantCode })
+    const parsed = parseBulkJson(text, {
+      screen,
+      mapRawItem,
+      tenantCode,
+      access,
+      settingCode,
+      settingSystemId,
+    })
     setErrors(parsed.errors)
     setFailure(null)
     setPartial(null)
@@ -162,7 +183,12 @@ export function BulkImportDialog({
       onImported?.()
     } catch (error) {
       setProgress(null)
-      setFailure(failureOf(error))
+      setFailure(
+        failureOf(error, {
+          enabled: access.enabled,
+          permissionDenied: t.access.permissionDenied,
+        })
+      )
       // Batches already accepted by the host must still reach the list.
       if (last.done > 0) {
         setPartial(last)

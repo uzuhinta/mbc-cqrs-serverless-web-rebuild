@@ -24,6 +24,7 @@ describe('master-web entries', () => {
       'buildCopyRequest',
       'bulkSampleJson',
       'COPY_TASK_STATUSES',
+      'bulkAccessErrors',
       'COPY_TYPES',
       'dataCodeError',
       'masterAccess',

@@ -258,6 +258,8 @@ export function MasterDataList({
               {canCreate && onImport && (
                 <BulkImportDialog
                   disabled={waiting}
+                  access={access}
+                  settingSystemId={setting.systemId}
                   screen="data"
                   settingCode={code}
                   tenantCode={tenantCode}

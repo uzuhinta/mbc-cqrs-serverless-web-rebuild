@@ -1,3 +1,4 @@
+import { MbcApiError } from '@mbc-cqrs-serverless/client-web'
 import { MbcProvider } from '@mbc-cqrs-serverless/ui-web'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -5,6 +6,7 @@ import axe from 'axe-core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { FakeJsonEditor } from '../../test/fake-json-editor'
+import { masterAccess } from '../core/access'
 import type { BulkJsonItem } from '../core/bulk'
 import { MasterBulkError } from '../mbc/bulk'
 import {
@@ -313,5 +315,63 @@ describe('BulkImportDialog', () => {
     setup()
     await open()
     expect(screen.getByRole('dialog')).toHaveClass('mbc:grid', 'mbc:gap-4')
+  })
+})
+
+describe('BulkImportDialog with access', () => {
+  const access = (write: boolean) =>
+    masterAccess(
+      {
+        enabled: true,
+        grants: [{ systemId: 'app-a', settingCode: 'P', read: true, write }],
+      },
+      [{ id: 'app-a', label: 'App A' }]
+    )
+
+  it('refuses entries the grants would refuse and sends nothing', async () => {
+    const { onImport } = setup({
+      access: access(false),
+      settingSystemId: 'app-a',
+    })
+    await open()
+    await typeJson([DATA])
+    await userEvent.click(screen.getByRole('button', { name: 'データ反映' }))
+    expect(
+      screen.getByText(
+        '1件目: このマスター設定のデータを登録する権限がありません。'
+      )
+    ).toBeInTheDocument()
+    expect(onImport).not.toHaveBeenCalled()
+  })
+
+  it('imports what the grants allow', async () => {
+    const { onImport } = setup({
+      access: access(true),
+      settingSystemId: 'app-a',
+    })
+    await open()
+    await typeJson([DATA])
+    await userEvent.click(screen.getByRole('button', { name: 'データ反映' }))
+    await waitFor(() => expect(onImport).toHaveBeenCalled())
+  })
+
+  it('says a refused batch was refused for lack of permission', async () => {
+    setup({
+      access: access(true),
+      settingSystemId: 'app-a',
+      onImport: async () => {
+        throw new MasterBulkError(new MbcApiError(403, {}), {
+          done: 0,
+          from: 1,
+          to: 1,
+        })
+      },
+    })
+    await open()
+    await typeJson([DATA])
+    await userEvent.click(screen.getByRole('button', { name: 'データ反映' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'この操作を行う権限がありません。'
+    )
   })
 })

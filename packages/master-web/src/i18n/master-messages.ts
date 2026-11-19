@@ -127,6 +127,10 @@ export type MasterMessages = {
     otherTenant: string
     /** A code or settingCode the backend cannot key (`#`, `@`, `MASTER_SETTING`). */
     invalidCode: string
+    /** A setting for a system the user may not write (access enabled). */
+    systemNotWritable: string
+    /** A record of a setting the user may not write (access enabled). */
+    settingNotWritable: string
   }
 }
 
@@ -259,6 +263,8 @@ const ja: MasterMessages = {
     otherTenant: 'tenantCode が現在のテナントと異なります。',
     invalidCode:
       'code と settingCode に「#」「@」は使用できません。「MASTER_SETTING」は設定コードに使えません。',
+    systemNotWritable: 'このシステムの設定を登録する権限がありません。',
+    settingNotWritable: 'このマスター設定のデータを登録する権限がありません。',
   },
 }
 
@@ -384,6 +390,8 @@ const en: MasterMessages = {
     otherTenant: 'The tenantCode differs from the current tenant.',
     invalidCode:
       'code and settingCode cannot contain # or @, and MASTER_SETTING cannot be a setting code.',
+    systemNotWritable: 'You may not write settings of this system.',
+    settingNotWritable: 'You may not write data of this setting.',
   },
 }
 

@@ -2,6 +2,10 @@ import {
   createMbcClient,
   type MbcClient,
 } from '@mbc-cqrs-serverless/client-web'
+import {
+  masterAccess,
+  type MasterAccessGrant,
+} from '@mbc-cqrs-serverless/master-web'
 
 const TENANT = 'tenant-a'
 const PK = `MASTER#${TENANT}`
@@ -16,6 +20,8 @@ type Entity = {
   tenantCode: string
   seq?: number
   isDeleted: boolean
+  /** The owning system; a record takes its setting's. */
+  systemId?: string
   attributes: Record<string, unknown>
 }
 
@@ -48,8 +54,20 @@ const field = (
  * An in-memory master backend behind a real MbcClient: settings, data, bulk,
  * sequences, copies and their tasks. No realtime, so commands resolve on the
  * HTTP answer. Each task read finishes one more tenant of each copy.
+ *
+ * With `grants`, it plays a backend with access rules (v1.7+): it answers
+ * `GET /api/master-access`, lists only readable rows, filters settings by
+ * `systemId`, and refuses writes the grants do not allow with 403. Without
+ * them `/api/master-access` is unknown (404), as on an older backend.
  */
-export function createFakeMasterBackend(): MbcClient {
+export function createFakeMasterBackend({
+  grants,
+}: { grants?: MasterAccessGrant[] } = {}): MbcClient {
+  const rules = grants ? masterAccess({ enabled: true, grants }, []) : undefined
+  const canRead = (entity: { systemId?: string }, code: string) =>
+    !rules || rules.canRead(entity.systemId, code)
+  const canWrite = (systemId: string | undefined, code: string) =>
+    !rules || rules.canWrite(systemId, code)
   const settings = new Map<string, Entity>()
   const records = new Map<string, Entity>()
   const counters = new Map<string, number>()
@@ -60,10 +78,13 @@ export function createFakeMasterBackend(): MbcClient {
   const putSetting = (
     code: string,
     name: string,
-    attributes: Record<string, unknown>
+    attributes: Record<string, unknown>,
+    systemId?: string
   ) => {
     const sk = `MASTER_SETTING#${code}`
     const old = settings.get(`${PK}#${sk}`)
+    // The owner is set once and kept (the backend forbids changing it).
+    const owner = old?.systemId ?? systemId?.toLowerCase()
     settings.set(`${PK}#${sk}`, {
       id: `${PK}#${sk}`,
       pk: PK,
@@ -73,9 +94,12 @@ export function createFakeMasterBackend(): MbcClient {
       version: (old?.version ?? 0) + 1,
       tenantCode: TENANT,
       isDeleted: false,
+      ...(owner ? { systemId: owner } : {}),
       attributes,
     })
   }
+  const ownerOf = (settingCode: string) =>
+    settings.get(`${PK}#MASTER_SETTING#${settingCode}`)?.systemId
   const putRecord = (
     settingCode: string,
     body: { code: string; name: string; seq?: number; attributes?: object }
@@ -92,23 +116,41 @@ export function createFakeMasterBackend(): MbcClient {
       tenantCode: TENANT,
       seq: body.seq,
       isDeleted: false,
+      ...(ownerOf(settingCode) ? { systemId: ownerOf(settingCode) } : {}),
       attributes: { ...(body.attributes as Record<string, unknown>) },
     })
   }
 
-  putSetting('PRODUCT', '商品', {
-    description: '商品のマスタ',
-    fields: [
-      field('code', 'コード', 'auto_number', {
-        formatCode: 'sequence_setting#PRODUCT',
-        dataFormat: 'P-%%no%%',
-        formatName: '商品番号',
-      }),
-      field('name', '名称', 'string', { length: '255' }),
-      field('seq', '並び順', 'number'),
-      field('price', '価格', 'number', { min: '0' }),
-    ],
-  })
+  putSetting(
+    'PRODUCT',
+    '商品',
+    {
+      description: '商品のマスタ',
+      fields: [
+        field('code', 'コード', 'auto_number', {
+          formatCode: 'sequence_setting#PRODUCT',
+          dataFormat: 'P-%%no%%',
+          formatName: '商品番号',
+        }),
+        field('name', '名称', 'string', { length: '255' }),
+        field('seq', '並び順', 'number'),
+        field('price', '価格', 'number', { min: '0' }),
+      ],
+    },
+    'app-a'
+  )
+  putSetting(
+    'ROUTE',
+    '配送ルート',
+    {
+      description: '別のシステムのマスタ',
+      fields: [
+        field('code', 'コード', 'string'),
+        field('name', '名称', 'string'),
+      ],
+    },
+    'app-b'
+  )
   putSetting('sequence_setting', '採番設定', {
     description: '自動採番の書式',
     fields: [
@@ -219,9 +261,20 @@ export function createFakeMasterBackend(): MbcClient {
       decodeURIComponent(path.slice(prefix.length))
 
     // Settings
+    if (method === 'GET' && path === '/api/master-access' && grants)
+      return json({ enabled: true, grants })
+    const refused = () => json({ message: 'Forbidden' }, 403)
+
     if (method === 'GET' && path === '/api/master-setting/list') {
       const rows = [...settings.values()]
         .filter((entity) => !entity.isDeleted)
+        .filter((entity) => canRead(entity, entity.code))
+        .filter(
+          (entity) =>
+            !rules ||
+            !query.get('systemId') ||
+            (entity.systemId ?? 'shared') === query.get('systemId')
+        )
         .filter((entity) => entity.code.includes(query.get('code') ?? ''))
         .filter((entity) => entity.name.includes(query.get('name') ?? ''))
         .filter((entity) =>
@@ -271,12 +324,14 @@ export function createFakeMasterBackend(): MbcClient {
       return json(parent)
     }
     if (method === 'POST' && path === '/api/master-setting') {
-      putSetting(body.code, body.name, body.settingValue)
+      if (!canWrite(body.systemId, body.code)) return refused()
+      putSetting(body.code, body.name, body.settingValue, body.systemId)
       return accepted()
     }
     if (path.startsWith('/api/master-setting/')) {
       const entity = settings.get(part('/api/master-setting/'))
       if (!entity) return json({ message: 'not found' }, 404)
+      if (!canWrite(entity.systemId, entity.code)) return refused()
       if (method === 'PUT') putSetting(entity.code, body.name, body.attributes)
       if (method === 'DELETE') entity.isDeleted = true
       return accepted()
@@ -287,6 +342,7 @@ export function createFakeMasterBackend(): MbcClient {
       const settingCode = query.get('settingCode') ?? ''
       const rows = [...records.values()]
         .filter((record) => record.sk.startsWith(`${settingCode}#`))
+        .filter((record) => canRead(record, settingCode))
         .filter(
           (record) => query.get('isDeleted') === 'true' || !record.isDeleted
         )
@@ -308,12 +364,16 @@ export function createFakeMasterBackend(): MbcClient {
       return json(Boolean(record && !record.isDeleted))
     }
     if (method === 'POST' && path === '/api/master-data/create') {
+      if (!canWrite(ownerOf(body.settingCode), body.settingCode))
+        return refused()
       putRecord(body.settingCode, body)
       return accepted()
     }
     if (path.startsWith('/api/master-data/')) {
       const record = records.get(part('/api/master-data/'))
       if (!record) return json({ message: 'not found' }, 404)
+      const settingCode = record.sk.slice(0, record.sk.indexOf('#'))
+      if (!canWrite(record.systemId, settingCode)) return refused()
       if (method === 'DELETE') record.isDeleted = true
       else if (body.isDeleted === false) record.isDeleted = false
       else
@@ -329,13 +389,24 @@ export function createFakeMasterBackend(): MbcClient {
     // Bulk, sequences, tasks
     if (method === 'POST' && path === '/api/master-bulk') {
       const requestId = `req-${Date.now()}`
-      for (const item of body.items as Record<string, unknown>[]) {
+      const items = body.items as Record<string, unknown>[]
+      const allowed = items.every((item) =>
+        item.settingCode
+          ? canWrite(
+              ownerOf(String(item.settingCode)),
+              String(item.settingCode)
+            )
+          : canWrite(item.systemId as string | undefined, String(item.code))
+      )
+      if (!allowed) return refused()
+      for (const item of items) {
         if (item.settingCode) putRecord(String(item.settingCode), item as never)
         else
           putSetting(
             String(item.code),
             String(item.name),
-            item.attributes as Record<string, unknown>
+            item.attributes as Record<string, unknown>,
+            item.systemId as string | undefined
           )
       }
       return json((body.items as unknown[]).map(() => ({ requestId })))

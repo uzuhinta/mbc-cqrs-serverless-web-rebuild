@@ -40,6 +40,7 @@ export function Toolbar({
       <a href="#templates">Templates</a>
       <a href="#master">Master lists</a>
       <a href="#mbc">Master (backend)</a>
+      <a href="#mbc-scoped">Master (systems)</a>
     </div>
   )
 }

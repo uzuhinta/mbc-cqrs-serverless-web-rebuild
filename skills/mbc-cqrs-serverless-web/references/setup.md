@@ -87,7 +87,7 @@ The README has a complete `hrefOf` for Next and React Router — copy it from th
 
 ## 5. One page per route
 
-Pages: `MbcMasterSettingListPage`, `MbcMasterSettingEditorPage`, `MbcMasterDataListPage`, `MbcMasterDataEditorPage`, `MbcMasterCopyRequestPage`, `MbcMasterCopyTaskListPage`, `MbcMasterCopyTaskDetailPage` (master-web); `MbcSurveyTemplateListPage`, `MbcSurveyTemplateEditorPage` (survey-web). Each takes `routing` (or navigation callbacks), `onError` and optional `paths` (backend paths) plus its ids.
+Pages: `MbcMasterSettingListPage`, `MbcMasterSettingEditorPage`, `MbcMasterDataListPage`, `MbcMasterDataEditorPage`, `MbcMasterCopyRequestPage`, `MbcMasterCopyTaskListPage`, `MbcMasterCopyTaskDetailPage` (master-web); `MbcSurveyTemplateListPage`, `MbcSurveyTemplateEditorPage` (survey-web). Each takes `routing` (or navigation callbacks), `onError` and optional `paths` (backend paths) plus its ids. master-web's pages also take `systems` (`{ id, label }[]`, include `shared` to offer it) when the backend has access rules. Pass the same list to every page. The list pages take `includeCommon` to add the common tenant's rows.
 
 ## Checklist before calling it done
 

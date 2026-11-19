@@ -159,6 +159,39 @@ The current tenant is `client.tenantCode()`. A setting or record belongs to the 
 
 `tenantCode` runs during render, on the server too, so it must not need the browser (read the tenant on the server, for example from a cookie, and pass it down). Tenants are compared ignoring case, as the backend lowercases them (core 1.1.0).
 
+### Systems and access
+
+A backend with access rules (master package 1.7 or later, with an access resolver registered) gives each master setting an owning system and decides per system and setting code who may read and write. Pass `systems` to every page to show this:
+
+```tsx
+const systems = [
+  { id: 'app-a', label: 'App A' },
+  { id: 'shared', label: '共通' }, // include it to offer shared settings
+]
+
+<MbcMasterSettingListPage routing={routing} systems={systems} />
+```
+
+- The pages read the caller's grants from `GET /api/master-access` once (`paths.access` to change it). Without `systems` nothing is asked and nothing changes. A backend without the route (404), or one that answers `enabled: false`, also leaves the pages as they were.
+- With access enabled:
+  - The settings list filters by system and has a system column. The data list has the column only, because a record's system is its setting's.
+  - A new setting chooses its system from the ones the user may write. One choice is preselected. A stored setting shows its system and cannot change it.
+  - Create, Edit, Save, Delete, Restore and JSON import appear only where the grants allow. They are disabled while the grants load. A setting or record the user may not write opens read-only.
+  - The copy request needs a `*`/`*` write grant, as the backend's copy does. Copy results stay readable.
+  - Bulk import refuses items the grants would refuse before anything is sent. The backend writes settings before data and is not a transaction, so this avoids most half-done imports. It cannot avoid all of them, because grants can change: import settings and data separately when that matters.
+  - A refused write says so (HTTP 403). A rejected one shows the backend's reason (HTTP 400). A refused copy says so with or without `systems`.
+- A row with no system counts as `shared`. Systems compare ignoring case, as the backend stores them in lower case.
+- The UI only hides actions; the backend decides. Roll out in this order:
+  1. Upgrade the backend.
+  2. Upgrade this package and pass `systems`.
+  3. Register the resolver. An older UI sends no `systemId`, so every setting it creates would need write access on `shared`.
+- The settings editor reads the `sequence_setting` master for its formats. Users need read access to it, or the list of formats is empty.
+- A logged-out caller gets `enabled: true` with no grants, so every action is hidden.
+
+`includeCommon` on the two list pages adds the common tenant's rows that the tenant does not have (backend 1.7 or later). They are marked 共通 and open read-only, like any other tenant's.
+
+Codes the backend cannot use as keys are refused in the editors and in bulk import, with or without `systems`: `#` and `@` anywhere, and `MASTER_SETTING` as a setting code (backend 1.8).
+
 ### Realtime
 
 Writes are commands: the page waits for the backend's `finish:FINISHED` message over AppSync realtime, so a page that opens a new item finds it stored. Without `realtime`, a write ends as soon as the request is accepted; a newly created item may not be readable yet, and a list reloaded after an import may not show its rows yet (the import dialog says the items were accepted, not imported). Your own `onImport` can resolve `'accepted'` for the same message.

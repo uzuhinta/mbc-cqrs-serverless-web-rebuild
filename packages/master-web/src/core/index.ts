@@ -10,6 +10,7 @@ export {
   type SystemOption,
 } from './access'
 export {
+  bulkAccessErrors,
   bulkSampleJson,
   type BulkSampleTexts,
   mapResultToBulkItem,

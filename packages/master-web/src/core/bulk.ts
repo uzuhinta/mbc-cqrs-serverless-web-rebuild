@@ -1,3 +1,4 @@
+import type { MasterAccess } from './access'
 import type { FixedFieldNames } from './field-definition'
 import { dataCodeError, settingCodeError } from './keys'
 import { isSameTenant } from './tenant'
@@ -56,6 +57,8 @@ export type BulkError =
   | { key: 'settingNotAllowed'; index: number }
   | { key: 'otherTenant'; index: number }
   | { key: 'invalidCode'; index: number }
+  | { key: 'systemNotWritable'; index: number }
+  | { key: 'settingNotWritable'; index: number }
 
 export type BulkParseResult = { items: BulkJsonItem[]; errors: BulkError[] }
 
@@ -151,11 +154,19 @@ export function parseBulkJson(
     screen,
     mapRawItem,
     tenantCode,
+    access,
+    settingSystemId,
+    settingCode,
   }: {
     screen: BulkScreen
     mapRawItem?: BulkMapper
     /** The current tenant: entries for another tenant are refused (the backend rejects the whole batch). */
     tenantCode?: string
+    /** With access enabled, entries the grants would refuse are reported too (`bulkAccessErrors`). */
+    access?: MasterAccess
+    /** A data list's setting: its code is `settingCode`, its system this. */
+    settingSystemId?: string
+    settingCode?: string
   }
 ): BulkParseResult {
   let raw: unknown
@@ -167,6 +178,8 @@ export function parseBulkJson(
   if (!Array.isArray(raw)) return { items: [], errors: [{ key: 'notArray' }] }
 
   const items: BulkJsonItem[] = []
+  // Each item's position in the JSON, for errors found after mapping.
+  const positions: number[] = []
   const errors: BulkError[] = []
   const accept = (entry: BulkJsonItem, index: number) => {
     // The backend takes a record's system from its setting.
@@ -178,7 +191,10 @@ export function parseBulkJson(
     )
       errors.push({ key: 'otherTenant', index })
     else if (keyError(item)) errors.push({ key: 'invalidCode', index })
-    else items.push(item)
+    else {
+      items.push(item)
+      positions.push(index)
+    }
   }
   raw.forEach((entry: unknown, index) => {
     if (!mapRawItem) {
@@ -225,6 +241,15 @@ export function parseBulkJson(
     else accept(mapResultToBulkItem(mapped), index)
   })
   if (items.length === 0 && errors.length === 0) errors.push({ key: 'empty' })
+  if (access && errors.length === 0) {
+    const setting =
+      screen === 'data' && settingCode !== undefined
+        ? { code: settingCode, systemId: settingSystemId }
+        : undefined
+    for (const error of bulkAccessErrors(items, access, setting))
+      if ('index' in error)
+        errors.push({ ...error, index: positions[error.index] ?? error.index })
+  }
   return { items, errors }
 }
 
@@ -302,4 +327,49 @@ export function bulkSampleJson(
     null,
     2
   )
+}
+
+/**
+ * With access enabled, the items the grants would refuse, checked before
+ * anything is sent: the backend writes settings before data and is not a
+ * transaction, so a refusal half-way leaves part of an import written.
+ *
+ * - A setting item needs its `systemId` among `writableSystems`; without
+ *   one it is `shared` (or inherits a visible owner) and needs a write
+ *   grant on `shared` for its code.
+ * - A data item needs a write grant for its setting's system: `setting` on
+ *   a data list, or a setting item of the same import. A setting the import
+ *   does not hold has an owner the screen cannot know; the backend decides.
+ *
+ * Not enabled, nothing is refused. Grants can change, so this narrows
+ * partial writes; it cannot rule them out.
+ */
+export function bulkAccessErrors(
+  items: readonly BulkJsonItem[],
+  access: MasterAccess,
+  setting?: { code: string; systemId?: string }
+): BulkError[] {
+  if (!access.enabled) return []
+  const writable = new Set(
+    access.writableSystems.map((system) => system.id.toLowerCase())
+  )
+  const owners = new Map<string, string | undefined>()
+  if (setting) owners.set(setting.code, setting.systemId)
+  for (const item of items)
+    if (!isDataItem(item)) owners.set(item.code, item.systemId)
+  const errors: BulkError[] = []
+  items.forEach((item, index) => {
+    if (!isDataItem(item)) {
+      const allowed =
+        item.systemId === undefined
+          ? access.canWrite(undefined, item.code)
+          : writable.has(item.systemId.toLowerCase())
+      if (!allowed) errors.push({ key: 'systemNotWritable', index })
+      return
+    }
+    const code = item.settingCode ?? ''
+    if (owners.has(code) && !access.canWrite(owners.get(code), code))
+      errors.push({ key: 'settingNotWritable', index })
+  })
+  return errors
 }

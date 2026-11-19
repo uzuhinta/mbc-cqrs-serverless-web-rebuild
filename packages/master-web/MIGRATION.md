@@ -254,6 +254,7 @@ The package no longer navigates with Next's router or shows toasts: `onSaved`, `
 - **The copy request** (0.0.x: a host-specific endpoint) → the framework's `POST /api/master-setting/copy`. Change it with `paths.copy`.
 - **Extra setting flags** (0.0.x: labels for two host-specific flags) → `settingOptions: { key: string; label: string }[]`, stored in `attributes` as before.
 - **The word for a tenant** in the copy screens is now "テナント"; override it through `messages` (README, "Text").
+- **Systems** (0.0.x's `AppProviders` prop `systems`, if your version had it) → the `systems` prop on every page (README, "Systems and access"). Grants and rows now compare their systems ignoring case, as the backend does. Copy now needs a `*`/`*` write grant, also in the UI.
 
 ## 6. Rich editors
 
@@ -275,6 +276,7 @@ Stored settings and records keep their shapes. What behaves differently:
 - Saving unchanged data succeeds quietly.
 - A save that timed out says the outcome is unknown. After a create, Save stays off so that a second save cannot number a duplicate record.
 - Ids are URL-encoded in request paths.
+- A new code with `#` or `@`, or the setting code `MASTER_SETTING`, is refused before sending: the backend refuses it from 1.8. Codes that are already stored keep working.
 
 **Bulk import**
 

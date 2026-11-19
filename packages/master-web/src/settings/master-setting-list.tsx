@@ -257,6 +257,7 @@ export function MasterSettingList({
         {canCreate && onImport && (
           <BulkImportDialog
             disabled={waiting}
+            access={access}
             screen="settings"
             tenantCode={tenantCode}
             inputSampleJson={inputSampleJson}
