@@ -224,3 +224,32 @@ describe('MbcMasterCopyTaskDetailPage', () => {
     ).toBeVisible()
   })
 })
+
+describe('MbcMasterCopyRequestPage with systems', () => {
+  it('offers no request without a */* write grant', async () => {
+    const client = createFakeClient()
+    serveGets(client, {
+      [settingPath]: V0_SETTING,
+      '/api/master-data/list': { items: DATA_ROWS, total: 2 },
+      '/api/master-access': {
+        enabled: true,
+        grants: [
+          { systemId: 'shared', settingCode: '*', read: true, write: true },
+        ],
+      },
+    })
+    renderPage(
+      client,
+      <MbcMasterCopyRequestPage
+        routing={createRouting()}
+        settingId={SETTING_ID}
+        loadTenants={async () => TENANTS}
+        systems={[{ id: 'shared', label: '共通' }]}
+      />
+    )
+    expect(
+      await screen.findByText('この操作を行う権限がありません。')
+    ).toBeVisible()
+    expect(screen.queryByRole('button', { name: 'コピー登録' })).toBeNull()
+  })
+})

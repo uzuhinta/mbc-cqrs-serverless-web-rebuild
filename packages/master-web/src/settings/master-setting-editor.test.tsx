@@ -1,3 +1,4 @@
+import { MbcApiError } from '@mbc-cqrs-serverless/client-web'
 import { MbcProvider } from '@mbc-cqrs-serverless/ui-web'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -7,6 +8,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { FakeJsonEditor } from '../../test/fake-json-editor'
 import { V0_SETTING } from '../../test/fixtures/v0-master'
+import { masterAccess, OPEN_ACCESS } from '../core/access'
 import { parseMasterSetting } from '../core/parse'
 import type {
   MasterSettingCreateBody,
@@ -433,5 +435,176 @@ describe('MasterSettingEditor', () => {
     render(element)
     const results = await axe.run(document.body)
     expect(results.violations).toEqual([])
+  })
+})
+
+describe('MasterSettingEditor with access', () => {
+  const systems = [
+    { id: 'app-a', label: 'App A' },
+    { id: 'app-b', label: 'App B' },
+    { id: 'shared', label: '共通' },
+  ]
+  const access = (
+    grants: { systemId: string; settingCode: string; write: boolean }[]
+  ) =>
+    masterAccess(
+      {
+        enabled: true,
+        grants: grants.map((grant) => ({ ...grant, read: true })),
+      },
+      systems
+    )
+  const owned = (): MasterSetting => ({ ...stored(), systemId: 'app-a' })
+
+  it('creates with a chosen system, offering only writable ones', async () => {
+    const { onSave } = setup({
+      mode: 'create',
+      setting: undefined,
+      access: access([
+        { systemId: 'app-a', settingCode: '*', write: true },
+        { systemId: 'app-b', settingCode: 'ONE', write: true },
+        { systemId: 'shared', settingCode: '*', write: false },
+      ]),
+    })
+    await userEvent.type(input('コード'), 'NEW')
+    await userEvent.type(input('名称'), '新規')
+    await userEvent.click(button('保存'))
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.getByRole('combobox', { name: 'システム' })).toHaveAttribute(
+      'aria-invalid',
+      'true'
+    )
+    await userEvent.click(screen.getByRole('combobox', { name: 'システム' }))
+    expect(
+      screen.getAllByRole('option').map((option) => option.textContent)
+    ).toEqual(['App A', 'App B'])
+    await userEvent.click(screen.getByRole('option', { name: 'App B' }))
+    await userEvent.click(button('保存'))
+    expect(lastBody(onSave)).toMatchObject({ code: 'NEW', systemId: 'app-b' })
+  })
+
+  it('preselects the only writable system', async () => {
+    const { onSave } = setup({
+      mode: 'create',
+      setting: undefined,
+      access: access([{ systemId: 'app-a', settingCode: '*', write: true }]),
+    })
+    expect(
+      screen.getByRole('combobox', { name: 'システム' })
+    ).toHaveTextContent('App A')
+    await userEvent.type(input('コード'), 'NEW')
+    await userEvent.type(input('名称'), '新規')
+    await userEvent.click(button('保存'))
+    expect(lastBody(onSave)).toMatchObject({ systemId: 'app-a' })
+  })
+
+  it('sends no systemId without access', async () => {
+    const { onSave } = setup({ mode: 'create', setting: undefined })
+    expect(screen.queryByRole('combobox', { name: 'システム' })).toBeNull()
+    await userEvent.type(input('コード'), 'NEW')
+    await userEvent.type(input('名称'), '新規')
+    await userEvent.click(button('保存'))
+    expect(lastBody(onSave)).not.toHaveProperty('systemId')
+  })
+
+  it('shows a stored setting’s system and edits it with its write grant', () => {
+    setup({
+      setting: owned(),
+      onDelete: async () => {},
+      canCopy: true,
+      access: access([{ systemId: '*', settingCode: '*', write: true }]),
+    })
+    expect(screen.getByText('App A')).toBeVisible()
+    expect(screen.queryByRole('combobox', { name: 'システム' })).toBeNull()
+    expect(button('編集')).toBeEnabled()
+    expect(button('削除')).toBeEnabled()
+    expect(screen.getByRole('link', { name: 'テナントへコピー' })).toBeVisible()
+  })
+
+  it('opens a setting it may not write read-only, keeping the copy results', () => {
+    setup({
+      setting: owned(),
+      onDelete: async () => {},
+      canCopy: true,
+      access: access([{ systemId: 'app-b', settingCode: '*', write: true }]),
+    })
+    expect(screen.getByText('この操作を行う権限がありません。')).toBeVisible()
+    for (const name of ['編集', '削除', '項目追加'])
+      expect(screen.queryByRole('button', { name })).toBeNull()
+    expect(screen.queryByRole('link', { name: 'テナントへコピー' })).toBeNull()
+    expect(screen.getByRole('link', { name: 'コピー結果を確認' })).toBeVisible()
+  })
+
+  it('still opens another tenant’s setting read-only for its tenant', () => {
+    setup({
+      setting: { ...owned(), tenantCode: 'common' },
+      access: access([{ systemId: '*', settingCode: '*', write: true }]),
+    })
+    expect(
+      screen.getByText('他のテナントの設定のため、編集できません。')
+    ).toBeVisible()
+  })
+
+  it('offers the copy request only with a */* write grant', () => {
+    setup({
+      setting: owned(),
+      canCopy: true,
+      access: access([{ systemId: 'app-a', settingCode: '*', write: true }]),
+    })
+    expect(button('編集')).toBeEnabled()
+    expect(screen.queryByRole('link', { name: 'テナントへコピー' })).toBeNull()
+    expect(screen.getByRole('link', { name: 'コピー結果を確認' })).toBeVisible()
+  })
+
+  it('waits for the grants before editing', () => {
+    setup({
+      setting: owned(),
+      onDelete: async () => {},
+      canCopy: true,
+      access: { ...OPEN_ACCESS, loading: true, systems },
+    })
+    expect(button('編集')).toBeDisabled()
+    expect(button('削除')).toBeDisabled()
+    expect(screen.queryByRole('link', { name: 'テナントへコピー' })).toBeNull()
+    expect(screen.queryByText('App A')).toBeNull()
+  })
+
+  it('explains a refused save', async () => {
+    const onSave = vi
+      .fn<MasterSettingEditorProps['onSave']>()
+      .mockRejectedValueOnce(new MbcApiError(403, {}))
+      .mockRejectedValueOnce(
+        new MbcApiError(400, { message: 'systemId conflicts' })
+      )
+    setup({
+      setting: owned(),
+      onSave,
+      access: access([{ systemId: 'app-a', settingCode: '*', write: true }]),
+    })
+    await userEvent.click(button('編集'))
+    await userEvent.type(input('名称'), '2')
+    await userEvent.click(button('保存'))
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'この操作を行う権限がありません。'
+    )
+    await userEvent.click(button('保存'))
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent('systemId conflicts')
+    )
+  })
+
+  it('has no axe violations when creating with access', async () => {
+    setup({
+      mode: 'create',
+      setting: undefined,
+      access: access([{ systemId: '*', settingCode: '*', write: true }]),
+    })
+    const result = await axe.run(document.body, {
+      rules: {
+        'color-contrast': { enabled: false },
+        region: { enabled: false },
+      },
+    })
+    expect(result.violations.map((violation) => violation.id)).toEqual([])
   })
 })

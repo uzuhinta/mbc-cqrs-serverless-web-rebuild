@@ -1,4 +1,4 @@
-import { createMbcClient } from '@mbc-cqrs-serverless/client-web'
+import { createMbcClient, MbcApiError } from '@mbc-cqrs-serverless/client-web'
 import { MbcProvider } from '@mbc-cqrs-serverless/ui-web'
 import {
   fireEvent,
@@ -14,6 +14,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { FakeJsonEditor } from '../../test/fake-json-editor'
 import { V0_DATA, V0_DATA_ODD, V0_SETTING } from '../../test/fixtures/v0-master'
+import { masterAccess, OPEN_ACCESS } from '../core/access'
 import { parseMasterData, parseMasterSetting } from '../core/parse'
 import type {
   MasterDataCreateBody,
@@ -571,5 +572,81 @@ describe('MasterDataEditor', () => {
     render(element)
     const results = await axe.run(document.body)
     expect(results.violations).toEqual([])
+  })
+})
+
+describe('MasterDataEditor with access', () => {
+  const systems = [{ id: 'app-a', label: 'App A' }]
+  const access = (systemId: string, write: boolean) =>
+    masterAccess(
+      {
+        enabled: true,
+        grants: [{ systemId, settingCode: 'PRODUCT', read: true, write }],
+      },
+      systems
+    )
+  const ownedRecord = (): MasterData => ({ ...record(), systemId: 'app-a' })
+
+  it('edits, deletes and restores a record with its system’s write grant', () => {
+    setup({
+      data: ownedRecord(),
+      onDelete: async () => {},
+      access: access('app-a', true),
+    })
+    expect(button('編集')).toBeEnabled()
+    expect(button('削除')).toBeEnabled()
+  })
+
+  it('opens a record it may not write read-only with the permission text', () => {
+    setup({
+      data: ownedRecord(),
+      onDelete: async () => {},
+      access: access('app-a', false),
+    })
+    expect(screen.getByText('この操作を行う権限がありません。')).toBeVisible()
+    for (const name of ['編集', '削除'])
+      expect(screen.queryByRole('button', { name })).toBeNull()
+    expect(input('価格')).toBeDisabled()
+  })
+
+  it('checks a new record against its setting’s system', () => {
+    setup({
+      mode: 'create',
+      data: undefined,
+      setting: { ...setting(), systemId: 'app-a' },
+      access: access('app-a', true),
+    })
+    expect(button('登録')).toBeEnabled()
+  })
+
+  it('checks a record with no system as shared', () => {
+    setup({ access: access('app-a', true) })
+    expect(screen.queryByRole('button', { name: '編集' })).toBeNull()
+  })
+
+  it('waits for the grants before editing', () => {
+    setup({
+      data: ownedRecord(),
+      onDelete: async () => {},
+      access: { ...OPEN_ACCESS, loading: true, systems },
+    })
+    expect(button('編集')).toBeDisabled()
+    expect(button('削除')).toBeDisabled()
+  })
+
+  it('explains a refused delete', async () => {
+    const onDelete = vi.fn(async () => {
+      throw new MbcApiError(403, {})
+    })
+    setup({ data: ownedRecord(), onDelete, access: access('app-a', true) })
+    await userEvent.click(button('削除'))
+    await userEvent.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', {
+        name: '削除',
+      })
+    )
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'この操作を行う権限がありません。'
+    )
   })
 })

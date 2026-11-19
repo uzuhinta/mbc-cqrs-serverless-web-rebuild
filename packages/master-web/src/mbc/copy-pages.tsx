@@ -13,6 +13,7 @@ import { settingCodeOfId } from './api'
 import {
   useCopyTask,
   useCopyTasks,
+  useMasterAccess,
   useMasterDataList,
   useMasterMutations,
   useMasterSetting,
@@ -55,8 +56,10 @@ function CopyRequest({
   onRequested,
   state,
   onStateChange,
+  systems,
 }: MbcMasterCopyRequestPageProps) {
   const t = useMessages(masterCopyMessages).request
+  const { access, error: accessError } = useMasterAccess(systems, { paths })
   const [current, change] = useListState(
     state,
     onStateChange,
@@ -72,6 +75,7 @@ function CopyRequest({
   useReport(setting.error, onError)
   useReport(tenants.error, onError)
   useReport(list.error, onError)
+  useReport(accessError, onError)
   if (!setting.data || !tenants.data)
     return (
       <PageState
@@ -101,6 +105,7 @@ function CopyRequest({
         onRequested?.()
         routing.navigate({ screen: 'copyTasks', settingId })
       }}
+      access={access}
     />
   )
 }

@@ -279,3 +279,35 @@ describe('MasterDataList with access', () => {
     expect(screen.getByRole('button', { name: 'JSONエディタ' })).toBeDisabled()
   })
 })
+
+it('marks the common tenant’s records only with includeCommon', () => {
+  const items = [
+    { ...DATA_ROWS[0]!, tenantCode: 'tenant-a' },
+    { ...DATA_ROWS[1]!, tenantCode: 'common' },
+  ]
+  const { rerender } = render(
+    <MasterDataList
+      setting={setting()}
+      items={items}
+      total={2}
+      state={initialDataListState()}
+      onStateChange={() => {}}
+      routing={routing}
+      tenantCode="tenant-a"
+    />
+  )
+  expect(screen.queryByText('共通')).toBeNull()
+  rerender(
+    <MasterDataList
+      setting={setting()}
+      items={items}
+      total={2}
+      state={initialDataListState()}
+      onStateChange={() => {}}
+      routing={routing}
+      tenantCode="tenant-a"
+      includeCommon
+    />
+  )
+  expect(screen.getAllByText('共通')).toHaveLength(1)
+})

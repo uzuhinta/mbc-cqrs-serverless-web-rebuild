@@ -435,3 +435,32 @@ describe('MbcMasterDataListPage with systems', () => {
     ).toBe(true)
   })
 })
+
+describe('MbcMasterDataEditorPage with systems', () => {
+  it('opens a record it may not write read-only', async () => {
+    const client = createFakeClient()
+    serveGets(client, {
+      [settingPath]: V0_SETTING,
+      [dataPath]: { ...(V0_DATA as object), systemId: 'app-a' },
+      '/api/master-access': {
+        enabled: true,
+        grants: [
+          { systemId: 'app-a', settingCode: '*', read: true, write: false },
+        ],
+      },
+    })
+    renderPage(
+      client,
+      <MbcMasterDataEditorPage
+        routing={createRouting()}
+        settingId={SETTING_ID}
+        id={DATA_ID}
+        systems={[{ id: 'app-a', label: 'App A' }]}
+      />
+    )
+    expect(
+      await screen.findByText('この操作を行う権限がありません。')
+    ).toBeVisible()
+    expect(screen.queryByRole('button', { name: '編集' })).toBeNull()
+  })
+})

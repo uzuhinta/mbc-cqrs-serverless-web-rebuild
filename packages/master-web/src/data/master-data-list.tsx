@@ -31,6 +31,7 @@ import { masterDataMessages } from '../i18n/master-data-messages'
 import { masterMessages } from '../i18n/master-messages'
 import type { JsonTextEditor } from '../json/json-text'
 import { ListError } from '../list/list-error'
+import { CommonMark } from '../list/common-mark'
 import { systemColumn } from '../list/system-column'
 import { useFilters } from '../list/use-filters'
 import { MasterLink } from '../routing/master-link'
@@ -59,6 +60,8 @@ export type MasterDataListProps = {
   mapRawItem?: BulkMapper
   /** The import dialog's JSON editor instead of a text box, e.g. `/editors`' JsonEditor. */
   jsonEditor?: JsonTextEditor
+  /** Rows of another tenant are marked as common (`/mbc`'s `includeCommon`). */
+  includeCommon?: boolean
   /**
    * The caller's access (`/mbc`'s `systems`). Enabled, it adds a system
    * column, and offers create and import only with write access to the
@@ -93,6 +96,7 @@ export function MasterDataList({
   mapRawItem,
   jsonEditor,
   access = OPEN_ACCESS,
+  includeCommon = false,
 }: MasterDataListProps) {
   const t = useMessages(masterDataMessages)
   const m = useMessages(masterMessages)
@@ -102,17 +106,22 @@ export function MasterDataList({
   const canCreate = access.canWrite(setting.systemId, code)
   const waiting = access.loading
   const columns = dataColumns(setting, t.list, (row) => (
-    <MasterLink
-      routing={routing}
-      to={{
-        screen: 'dataItem',
-        settingId: setting.id,
-        id: row.id,
-      }}
-      className="mbc:text-primary mbc:block mbc:w-full mbc:overflow-hidden mbc:text-ellipsis mbc:hover:underline"
-    >
-      {dataCodeOf(row)}
-    </MasterLink>
+    <>
+      <MasterLink
+        routing={routing}
+        to={{
+          screen: 'dataItem',
+          settingId: setting.id,
+          id: row.id,
+        }}
+        className="mbc:text-primary mbc:block mbc:w-full mbc:overflow-hidden mbc:text-ellipsis mbc:hover:underline"
+      >
+        {dataCodeOf(row)}
+      </MasterLink>
+      {includeCommon && (
+        <CommonMark rowTenant={row.tenantCode} tenantCode={tenantCode} />
+      )}
+    </>
   ))
   if (access.enabled)
     columns.push(systemColumn<MasterDataListItem>(access, m.access.system))

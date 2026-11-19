@@ -110,6 +110,7 @@ function DataList({
       mapRawItem={mapRawItem}
       jsonEditor={jsonEditor}
       access={access}
+      includeCommon={includeCommon}
     />
   )
 }
@@ -151,8 +152,10 @@ function DataEditor({
   onDeleted,
   components,
   jsonEditor,
+  systems,
 }: MbcMasterDataEditorPageProps) {
   const api = useMasterApi({ paths })
+  const { access, error: accessError } = useMasterAccess(systems, { paths })
   const tenantCode = useTenantCode()
   const setting = useMasterSetting(settingId, { paths })
   const data = useMasterData(id, { paths })
@@ -160,6 +163,7 @@ function DataEditor({
     useMasterMutations({ paths })
   useReport(setting.error, onError)
   useReport(data.error, onError)
+  useReport(accessError, onError)
   const settingCode = settingCodeOfId(settingId)
   return (
     <MasterDataEditor
@@ -212,6 +216,7 @@ function DataEditor({
       }
       components={components}
       jsonEditor={jsonEditor}
+      access={access}
     />
   )
 }

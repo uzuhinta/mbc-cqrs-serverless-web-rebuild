@@ -476,3 +476,41 @@ describe('MbcMasterSettingListPage with systems', () => {
     )
   })
 })
+
+describe('MbcMasterSettingEditorPage with systems', () => {
+  it('creates a setting in the only writable system', async () => {
+    const client = createFakeClient()
+    serveGets(client, {
+      '/api/master-data/list': sequences,
+      '/api/master-access': {
+        enabled: true,
+        grants: [
+          { systemId: 'app-a', settingCode: '*', read: true, write: true },
+        ],
+      },
+    })
+    client.post.mockResolvedValue(false)
+    renderPage(
+      client,
+      <MbcMasterSettingEditorPage
+        routing={createRouting()}
+        systems={[
+          { id: 'app-a', label: 'App A' },
+          { id: 'shared', label: '共通' },
+        ]}
+      />
+    )
+    expect(
+      await screen.findByRole('combobox', { name: 'システム' })
+    ).toHaveTextContent('App A')
+    await userEvent.type(input('コード'), 'NEW')
+    await userEvent.type(input('名称'), '新規')
+    await userEvent.click(button('保存'))
+    await waitFor(() =>
+      expect(client.command.mock.calls[0]?.[0]).toMatchObject({
+        path: '/api/master-setting',
+        body: { code: 'NEW', systemId: 'app-a' },
+      })
+    )
+  })
+})

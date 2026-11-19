@@ -1,3 +1,4 @@
+import { MbcApiError } from '@mbc-cqrs-serverless/client-web'
 import { MbcProvider } from '@mbc-cqrs-serverless/ui-web'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -8,6 +9,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { DATA_ROWS } from '../../test/fixtures/v0-lists'
 import { V0_SETTING } from '../../test/fixtures/v0-master'
+import { masterAccess, OPEN_ACCESS } from '../core/access'
 import type { MasterCopyRequest, MasterTenant } from '../core/copy'
 import { initialDataListState, type MasterDataListState } from '../core/list'
 import { parseMasterSetting } from '../core/parse'
@@ -310,5 +312,45 @@ describe('MasterCopyRequestForm', () => {
     })
     expect(result.violations.map((violation) => violation.id)).toEqual([])
     expect(renderToString(<Host />)).toContain('コピー登録')
+  })
+})
+
+describe('MasterCopyRequestForm with access', () => {
+  const systems = [{ id: 'app-a', label: 'App A' }]
+  const access = (systemId: string, settingCode: string) =>
+    masterAccess(
+      {
+        enabled: true,
+        grants: [{ systemId, settingCode, read: true, write: true }],
+      },
+      systems
+    )
+
+  it('offers the request with a */* write grant', () => {
+    setup({ access: access('*', '*') })
+    expect(screen.getByRole('button', { name: 'コピー登録' })).toBeEnabled()
+  })
+
+  it('offers no request without a */* write grant, and says why', () => {
+    setup({ access: access('*', 'PRODUCT') })
+    expect(screen.queryByRole('button', { name: 'コピー登録' })).toBeNull()
+    expect(screen.getByText('この操作を行う権限がありません。')).toBeVisible()
+  })
+
+  it('waits for the grants before sending', () => {
+    setup({ access: { ...OPEN_ACCESS, loading: true, systems } })
+    expect(screen.getByRole('button', { name: 'コピー登録' })).toBeDisabled()
+  })
+
+  it('explains a refused copy even without access', async () => {
+    setup({
+      onRequestCopy: async () => {
+        throw new MbcApiError(403, {})
+      },
+    })
+    await submit()
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'この操作を行う権限がありません。'
+    )
   })
 })

@@ -347,3 +347,20 @@ it('has no axe violations with access and renders on the server', async () => {
   expect(result.violations.map((violation) => violation.id)).toEqual([])
   expect(renderToString(<MasterSettingList {...props} />)).toContain('App A')
 })
+
+it('marks the common tenant’s rows only with includeCommon', () => {
+  const props: MasterSettingListProps = {
+    items: SETTING_ROWS,
+    total: 2,
+    state: initialSettingListState(),
+    onStateChange: () => {},
+    routing,
+    tenantCode: 'tenant-a',
+  }
+  const { rerender } = render(<MasterSettingList {...props} />)
+  expect(screen.queryByText('共通')).toBeNull()
+  rerender(<MasterSettingList {...props} includeCommon />)
+  const table = screen.getByRole('table', { name: 'マスター設定一覧' })
+  expect(within(table).getAllByText('共通')).toHaveLength(1)
+  expect(within(table).getByRole('link', { name: 'PREF' })).toBeVisible()
+})

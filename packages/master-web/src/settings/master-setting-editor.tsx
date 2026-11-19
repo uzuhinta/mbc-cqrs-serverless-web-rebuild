@@ -7,6 +7,11 @@ import {
   FieldError,
   FieldLabel,
   Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Skeleton,
   Switch,
   Textarea,
@@ -15,6 +20,8 @@ import {
 import { PlusIcon } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
+import { OPEN_ACCESS, systemLabel, type MasterAccess } from '../core/access'
+import { settingCodeOf } from '../core/payload'
 import {
   settingToForm,
   toSettingPayload,
@@ -75,6 +82,13 @@ export type MasterSettingEditorProps = {
   formats?: readonly SequenceFormat[]
   /** The JSON dialog's editor instead of a text box, e.g. `/editors`' JsonEditor. */
   jsonEditor?: JsonTextEditor
+  /**
+   * The caller's access (`/mbc`'s `systems`). Enabled, a new setting
+   * chooses its system and a stored one shows it; writing needs the
+   * setting's write grant, and the copy request link a `*`/`*` one. Without
+   * it the editor is as before.
+   */
+  access?: MasterAccess
 }
 
 const SECTION =
@@ -125,6 +139,7 @@ function EditorBody({
   settingOptions = NO_OPTIONS,
   formats = NO_FORMATS,
   jsonEditor,
+  access = OPEN_ACCESS,
 }: MasterSettingEditorProps) {
   const messages = useMessages(masterSettingMessages)
   const t = messages.editor
@@ -133,10 +148,26 @@ function EditorBody({
     () => settingOptions.map((option) => option.key),
     [settingOptions]
   )
-  const owned =
+  const ownTenant =
     mode === 'create' ||
     tenantCode === undefined ||
     isSameTenant(setting?.tenantCode, tenantCode)
+  const scoped = access.enabled
+  const waiting = access.loading
+  // A new setting needs a system to write to; a stored one its own grant.
+  const permitted =
+    mode === 'create'
+      ? !scoped || access.writableSystems.length > 0
+      : access.canWrite(
+          setting?.systemId,
+          setting ? settingCodeOf(setting) : ''
+        )
+  const owned = ownTenant && permitted
+  const writable = access.writableSystems
+  // One choice is preselected, also when the grants arrive after the editor opened.
+  const onlySystem = writable.length === 1 ? (writable[0]?.id ?? '') : ''
+  const [systemId, setSystemId] = useState('')
+  const chosenSystem = systemId || onlySystem
 
   const [baseline, setBaseline] = useState<Snapshot>(() => {
     const form = settingToForm(setting, optionKeys, m.defaults)
@@ -153,7 +184,11 @@ function EditorBody({
   const [values, setValues] = useState(baseline.values)
   const [rows, setRows] = useState(baseline.rows)
   const [editing, setEditing] = useState(mode === 'create')
-  const [errors, setErrors] = useState<{ code?: string; name?: string }>({})
+  const [errors, setErrors] = useState<{
+    code?: string
+    name?: string
+    systemId?: string
+  }>({})
   const [attempts, setAttempts] = useState(0)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -184,11 +219,17 @@ function EditorBody({
     })
 
   const fail = (reason: unknown, title: string) =>
-    setFailure(failureOf(reason, title, t))
+    setFailure(
+      failureOf(reason, title, t, {
+        enabled: scoped,
+        permissionDenied: m.access.permissionDenied,
+      })
+    )
+  const chooseSystem = scoped && mode === 'create'
 
   const save = async (event: FormEvent) => {
     event.preventDefault()
-    if (busy.current || readOnly) return
+    if (busy.current || readOnly || waiting) return
     busy.current = true
     setSaving(true)
     setFailure(null)
@@ -197,11 +238,19 @@ function EditorBody({
       const found = validateSettingForm(values, {
         mode: mode === 'create' ? 'create' : 'update',
       })
-      const next: { code?: string; name?: string } = {
+      const next: { code?: string; name?: string; systemId?: string } = {
         code: found.code && formatMasterError(found.code, m.validation),
         name: found.name && formatMasterError(found.name, m.validation),
+        systemId:
+          chooseSystem && !chosenSystem ? m.validation.required : undefined,
       }
-      if (mode === 'create' && !next.code && !next.name && checkCodeUnique) {
+      if (
+        mode === 'create' &&
+        !next.code &&
+        !next.name &&
+        !next.systemId &&
+        checkCodeUnique
+      ) {
         try {
           if (!(await checkCodeUnique(values.code.trim())))
             next.code = t.codeTaken
@@ -211,13 +260,14 @@ function EditorBody({
         }
       }
       setErrors(next)
-      if (next.code || next.name) {
+      if (next.code || next.name || next.systemId) {
         setAttempts((count) => count + 1)
         return
       }
-      if (mode === 'create')
-        await onSave(toSettingPayload(values, fields, { mode: 'create' }))
-      else if (setting) {
+      if (mode === 'create') {
+        const body = toSettingPayload(values, fields, { mode: 'create' })
+        await onSave(chooseSystem ? { ...body, systemId: chosenSystem } : body)
+      } else if (setting) {
         await onSave(
           toSettingPayload(values, fields, {
             mode: 'update',
@@ -311,6 +361,7 @@ function EditorBody({
                 <div className="mbc:flex mbc:flex-wrap mbc:gap-2">
                   <Button
                     type="button"
+                    disabled={waiting}
                     onClick={() => {
                       editFocus.start()
                       setEditing(true)
@@ -320,14 +371,19 @@ function EditorBody({
                   </Button>
                   {canCopy && setting && (
                     <>
-                      <Button asChild>
-                        <MasterLink
-                          routing={routing}
-                          to={{ screen: 'copyRequest', settingId: setting.id }}
-                        >
-                          {t.copy}
-                        </MasterLink>
-                      </Button>
+                      {access.canCopyAll && !waiting && (
+                        <Button asChild>
+                          <MasterLink
+                            routing={routing}
+                            to={{
+                              screen: 'copyRequest',
+                              settingId: setting.id,
+                            }}
+                          >
+                            {t.copy}
+                          </MasterLink>
+                        </Button>
+                      )}
                       <Button asChild>
                         <MasterLink
                           routing={routing}
@@ -344,7 +400,7 @@ function EditorBody({
                   <Button
                     type="submit"
                     loading={saving}
-                    disabled={mode === 'edit' && !changed}
+                    disabled={waiting || (mode === 'edit' && !changed)}
                   >
                     {t.save}
                   </Button>
@@ -370,7 +426,7 @@ function EditorBody({
                   cancel={t.cancel}
                   onConfirm={() => void remove()}
                   loading={deleting}
-                  disabled={saving}
+                  disabled={saving || waiting}
                 />
               )}
             </div>
@@ -381,8 +437,19 @@ function EditorBody({
                   {t.back}
                 </MasterLink>
               </Button>
+              {ownTenant && canCopy && setting && (
+                // Copy results stay readable without write access.
+                <Button asChild>
+                  <MasterLink
+                    routing={routing}
+                    to={{ screen: 'copyTasks', settingId: setting.id }}
+                  >
+                    {t.copyResults}
+                  </MasterLink>
+                </Button>
+              )}
               <p className="mbc:text-muted-foreground mbc:text-sm">
-                {t.readOnly}
+                {ownTenant ? m.access.permissionDenied : t.readOnly}
               </p>
             </div>
           )}
@@ -418,6 +485,41 @@ function EditorBody({
               />
               <FieldError>{errors.name}</FieldError>
             </Field>
+            {scoped &&
+              (chooseSystem ? (
+                <Field invalid={errors.systemId !== undefined}>
+                  <FieldLabel className="mbc:font-semibold">
+                    {m.access.system}
+                    <RequiredMark />
+                  </FieldLabel>
+                  <Select
+                    value={chosenSystem || undefined}
+                    onValueChange={setSystemId}
+                    disabled={readOnly}
+                  >
+                    <SelectTrigger className="mbc:w-full" aria-required>
+                      <SelectValue placeholder={m.access.chooseSystem} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {writable.map((system) => (
+                        <SelectItem key={system.id} value={system.id}>
+                          {system.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FieldError>{errors.systemId}</FieldError>
+                </Field>
+              ) : (
+                <div className="mbc:grid mbc:gap-2">
+                  <span className="mbc:text-sm mbc:font-semibold">
+                    {m.access.system}
+                  </span>
+                  <p className="mbc:text-sm">
+                    {systemLabel(access.systems, setting?.systemId)}
+                  </p>
+                </div>
+              ))}
             <Field className="mbc:md:col-span-2">
               <FieldLabel className="mbc:font-semibold">
                 {t.description}

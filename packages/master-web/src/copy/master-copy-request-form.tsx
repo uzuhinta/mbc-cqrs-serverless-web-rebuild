@@ -17,6 +17,7 @@ import {
 import { Search } from 'lucide-react'
 import { useId, useRef, useState, type FormEvent } from 'react'
 
+import { OPEN_ACCESS, type MasterAccess } from '../core/access'
 import {
   buildCopyRequest,
   COPY_TYPES,
@@ -29,10 +30,12 @@ import {
   type MasterDataListItem,
   type MasterDataListState,
 } from '../core/list'
+import { settingCodeOf } from '../core/payload'
 import type { MasterSetting } from '../core/types'
 import { dataColumns } from '../data/data-columns'
 import { failureOf, FailureAlert, type Failure } from '../form/failure'
 import { masterCopyMessages } from '../i18n/master-copy-messages'
+import { masterMessages } from '../i18n/master-messages'
 import { ListError } from '../list/list-error'
 import { useFilters } from '../list/use-filters'
 import { MasterLink } from '../routing/master-link'
@@ -57,6 +60,12 @@ export type MasterCopyRequestFormProps = {
   onRetry?(): void
   /** Sends the request; reject to show the failure. What follows is the host's. */
   onRequestCopy(request: MasterCopyRequest): Promise<void>
+  /**
+   * The caller's access (`/mbc`'s `systems`). Enabled, the request needs a
+   * write grant for the setting and a `*`/`*` one, as the backend's copy
+   * does. Without it the form is as before.
+   */
+  access?: MasterAccess
 }
 
 type Filters = Pick<MasterDataListState, 'code' | 'keyword' | 'isDeleted'>
@@ -79,8 +88,15 @@ export function MasterCopyRequestForm({
   error,
   onRetry,
   onRequestCopy,
+  access = OPEN_ACCESS,
 }: MasterCopyRequestFormProps) {
   const t = useMessages(masterCopyMessages).request
+  const m = useMessages(masterMessages)
+  // The page is reachable by URL: offer the request only where it can pass.
+  const allowed =
+    access.canCopyAll &&
+    access.canWrite(setting.systemId, settingCodeOf(setting))
+  const waiting = access.loading
   const id = useId()
   const [destination, setDestination] = useState<'all' | 'chosen'>('all')
   const [chosen, setChosen] = useState<string[]>([])
@@ -126,7 +142,14 @@ export function MasterCopyRequestForm({
       await onRequestCopy(request)
       setRequested(true)
     } catch (reason) {
-      setFailure(failureOf(reason, t.failed, t))
+      // Copy needs system_admin with or without access rules: a 403 always
+      // means no permission.
+      setFailure(
+        failureOf(reason, t.failed, t, {
+          enabled: true,
+          permissionDenied: m.access.permissionDenied,
+        })
+      )
     } finally {
       setSaving(false)
     }
@@ -334,14 +357,21 @@ export function MasterCopyRequestForm({
             {t.back}
           </MasterLink>
         </Button>
-        <Button
-          type="button"
-          className="mbc:min-w-[200px]"
-          loading={saving}
-          onClick={() => void submit()}
-        >
-          {t.submit}
-        </Button>
+        {allowed ? (
+          <Button
+            type="button"
+            className="mbc:min-w-[200px]"
+            loading={saving}
+            disabled={waiting}
+            onClick={() => void submit()}
+          >
+            {t.submit}
+          </Button>
+        ) : (
+          <p className="mbc:text-muted-foreground mbc:text-sm">
+            {m.access.permissionDenied}
+          </p>
+        )}
       </div>
     </div>
   )

@@ -10,8 +10,10 @@ import {
   type FormEvent,
 } from 'react'
 
+import { OPEN_ACCESS, type MasterAccess } from '../core/access'
 import { dataJson, parseDataJson } from '../core/data-json'
 import {
+  settingCodeOf,
   toDataPayload,
   type MasterDataCreateBody,
   type MasterDataUpdateBody,
@@ -75,6 +77,12 @@ export type MasterDataEditorProps = {
   components?: FieldRenderers
   /** The JSON dialog's editor instead of a text box, e.g. `/editors`' JsonEditor. */
   jsonEditor?: JsonTextEditor
+  /**
+   * The caller's access (`/mbc`'s `systems`). Enabled, writing needs a
+   * write grant for the record's system (its setting's on create). Without
+   * it the editor is as before.
+   */
+  access?: MasterAccess
 }
 
 // Wide inputs take the whole row (v0).
@@ -120,16 +128,28 @@ function EditorBody({
   onRestore,
   components,
   jsonEditor,
+  access = OPEN_ACCESS,
 }: MasterDataEditorProps & { setting: MasterSetting }) {
   const messages = useMessages(masterDataMessages)
   const t = messages.editor
   const m = useMessages(masterMessages)
   const formId = useId()
   const fields = useMemo(() => dataFields(setting), [setting])
-  const owned =
+  const ownTenant =
     mode === 'create' ||
     tenantCode === undefined ||
     isSameTenant(data?.tenantCode, tenantCode)
+  // A record's system is its setting's; a stored record carries it too.
+  const permitted = access.canWrite(
+    mode === 'edit' ? data?.systemId : setting.systemId,
+    settingCodeOf(setting)
+  )
+  const owned = ownTenant && permitted
+  const waiting = access.loading
+  const refusal = {
+    enabled: access.enabled,
+    permissionDenied: m.access.permissionDenied,
+  }
 
   const [baseline, setBaseline] = useState<MasterFormValues>(() =>
     toFormValues(fields, data)
@@ -184,7 +204,7 @@ function EditorBody({
 
   const save = async (event: FormEvent) => {
     event.preventDefault()
-    if (busy.current || readOnly || created) return
+    if (busy.current || readOnly || created || waiting) return
     busy.current = true
     setSaving(true)
     setFailure(null)
@@ -229,7 +249,7 @@ function EditorBody({
         setEditing(false)
       }
     } catch (reason) {
-      setFailure(failureOf(reason, failedTitle, t))
+      setFailure(failureOf(reason, failedTitle, t, refusal))
       // A create that timed out may already exist. Saving again would
       // number another record; the message tells the host to reload.
       if (mode === 'create' && isUnknownOutcome(reason)) setCreated(true)
@@ -258,7 +278,7 @@ function EditorBody({
       await action()
       setDeleted(next)
     } catch (reason) {
-      setFailure(failureOf(reason, failedTitle, t))
+      setFailure(failureOf(reason, failedTitle, t, refusal))
     } finally {
       setActing(false)
     }
@@ -314,6 +334,7 @@ function EditorBody({
                 {mode === 'edit' && !editing ? (
                   <Button
                     type="button"
+                    disabled={waiting}
                     onClick={() => {
                       editFocus.start()
                       setEditing(true)
@@ -326,7 +347,9 @@ function EditorBody({
                     <Button
                       type="submit"
                       loading={saving}
-                      disabled={created || (mode === 'edit' && !changed)}
+                      disabled={
+                        waiting || created || (mode === 'edit' && !changed)
+                      }
                     >
                       {t.save}
                     </Button>
@@ -363,7 +386,7 @@ function EditorBody({
                             void act(onRestore, t.restoreFailed, false)
                           }
                           loading={acting}
-                          disabled={saving}
+                          disabled={saving || waiting}
                         />
                       )
                     : onDelete && (
@@ -376,7 +399,7 @@ function EditorBody({
                             void act(onDelete, t.deleteFailed, true)
                           }
                           loading={acting}
-                          disabled={saving}
+                          disabled={saving || waiting}
                         />
                       )}
                 </div>
@@ -393,7 +416,7 @@ function EditorBody({
                 </MasterLink>
               </Button>
               <p className="mbc:text-muted-foreground mbc:text-sm">
-                {t.readOnly}
+                {ownTenant ? m.access.permissionDenied : t.readOnly}
               </p>
             </div>
           )}

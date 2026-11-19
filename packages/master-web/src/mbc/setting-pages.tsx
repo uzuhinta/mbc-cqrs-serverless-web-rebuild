@@ -94,6 +94,7 @@ export function MbcMasterSettingListPage({
       jsonEditor={jsonEditor}
       onBack={onBack}
       access={access}
+      includeCommon={includeCommon}
     />
   )
 }
@@ -139,8 +140,10 @@ function SettingEditor({
   formats,
   formatSettingCode = SEQUENCE_SETTING_CODE,
   jsonEditor,
+  systems,
 }: MbcMasterSettingEditorPageProps) {
   const api = useMasterApi({ paths })
+  const { access, error: accessError } = useMasterAccess(systems, { paths })
   const tenantCode = useTenantCode()
   const setting = useMasterSetting(id, { paths })
   const { createSetting, updateSetting, deleteSetting } = useMasterMutations({
@@ -155,6 +158,7 @@ function SettingEditor({
   )
   useReport(setting.error, onError)
   useReport(sequences.error, onError)
+  useReport(accessError, onError)
   const loaded: SequenceFormat[] = (sequences.data?.items ?? []).map((row) => ({
     code: row.sk,
     name: row.name,
@@ -200,6 +204,7 @@ function SettingEditor({
       settingOptions={settingOptions}
       formats={formats ?? loaded}
       jsonEditor={jsonEditor}
+      access={access}
     />
   )
 }

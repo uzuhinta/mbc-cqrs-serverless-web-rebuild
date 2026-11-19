@@ -29,6 +29,7 @@ import { masterMessages } from '../i18n/master-messages'
 import { masterSettingMessages } from '../i18n/master-setting-messages'
 import type { JsonTextEditor } from '../json/json-text'
 import { ListError } from '../list/list-error'
+import { CommonMark } from '../list/common-mark'
 import { systemColumn } from '../list/system-column'
 import { useFilters } from '../list/use-filters'
 import { MasterLink } from '../routing/master-link'
@@ -57,6 +58,8 @@ export type MasterSettingListProps = {
   jsonEditor?: JsonTextEditor
   /** The back button (v0 went to the host's top page); hidden without it. */
   onBack?(): void
+  /** Rows of another tenant are marked as common (`/mbc`'s `includeCommon`). */
+  includeCommon?: boolean
   /**
    * The caller's access (`/mbc`'s `systems`). Enabled, it adds a system
    * filter and column, and offers create and import only when some system
@@ -88,6 +91,7 @@ export function MasterSettingList({
   jsonEditor,
   onBack,
   access = OPEN_ACCESS,
+  includeCommon = false,
 }: MasterSettingListProps) {
   const t = useMessages(masterSettingMessages)
   const m = useMessages(masterMessages)
@@ -123,13 +127,18 @@ export function MasterSettingList({
       sortable: true,
       width: '25%',
       cell: (row) => (
-        <MasterLink
-          routing={routing}
-          to={{ screen: 'data', settingId: row.id }}
-          className="mbc:text-primary mbc:block mbc:w-full mbc:overflow-clip mbc:break-words mbc:hover:underline"
-        >
-          {settingCodeOf(row)}
-        </MasterLink>
+        <>
+          <MasterLink
+            routing={routing}
+            to={{ screen: 'data', settingId: row.id }}
+            className="mbc:text-primary mbc:block mbc:w-full mbc:overflow-clip mbc:break-words mbc:hover:underline"
+          >
+            {settingCodeOf(row)}
+          </MasterLink>
+          {includeCommon && (
+            <CommonMark rowTenant={row.tenantCode} tenantCode={tenantCode} />
+          )}
+        </>
       ),
     },
     {
