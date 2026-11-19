@@ -56,13 +56,16 @@ function ownerOf(systemId: SystemIdValue): string {
   return systemId ? systemId.toLowerCase() : SHARED_SYSTEM_ID
 }
 
-const matches = (grant: string, value: string) =>
-  grant === ANY || grant.toLowerCase() === value
+/** Systems compare in lower case (the backend stores them so); setting codes exactly. */
+const matchesSystem = (grant: string, owner: string) =>
+  grant === ANY || grant.toLowerCase() === owner
+const matchesCode = (grant: string, code: string) =>
+  grant === ANY || grant === code
 
 /**
  * The access a set of grants gives, by the backend's rules: grants are a
- * union, `write` implies `read`, `*` matches anything, values compare in
- * lower case. Not enabled allows everything.
+ * union, `write` implies `read`, `*` matches anything, systems compare in
+ * lower case and setting codes exactly. Not enabled allows everything.
  */
 export function masterAccess(
   answer: MasterAccessAnswer,
@@ -75,12 +78,11 @@ export function masterAccess(
     (write: boolean) =>
     (systemId: SystemIdValue, settingCode: string): boolean => {
       const owner = ownerOf(systemId)
-      const code = settingCode.toLowerCase()
       return grants.some(
         (grant) =>
           (write ? grant.write : grant.read || grant.write) &&
-          matches(grant.systemId, owner) &&
-          matches(grant.settingCode, code)
+          matchesSystem(grant.systemId, owner) &&
+          matchesCode(grant.settingCode, settingCode)
       )
     }
   return {
@@ -89,7 +91,8 @@ export function masterAccess(
     systems,
     writableSystems: systems.filter((system) =>
       grants.some(
-        (grant) => grant.write && matches(grant.systemId, ownerOf(system.id))
+        (grant) =>
+          grant.write && matchesSystem(grant.systemId, ownerOf(system.id))
       )
     ),
     canRead: can(false),

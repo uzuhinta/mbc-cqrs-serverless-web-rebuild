@@ -53,7 +53,7 @@ The owner chose to go beyond the v0 branch (option B): also use what the backend
 From `docs/development/master-access-and-sync.md` and the controllers, DTOs and helpers on `main`:
 
 - **`GET /api/master-access`** → `{ enabled: boolean, grants: { systemId, settingCode, read, write }[] }`. No resolver: `{ enabled: false, grants: [] }`. A backend older than v1.7 answers 404. Route is guarded like the others when `controllerAuth` is set.
-- **Grants:** `systemId` and `settingCode` may be `*`; `write` implies `read`; grants are a union; no grants means nothing. The backend compares grant values in **lower case**. `systemId` is stored in lower case.
+- **Grants:** `systemId` and `settingCode` may be `*`; `write` implies `read`; grants are a union; no grants means nothing. The backend compares systems in **lower case** (`systemId` is stored so) and setting codes exactly (`assertAccess`).
 - **`shared`** is the reserved system for data every system receives; a row without `systemId` counts as `shared`.
 - **Rows** from every master endpoint carry an optional top-level `systemId`; `attributes.__systemId` is never returned and a client-sent `__systemId` attribute is removed.
 - **Writes:** `POST /api/master-setting` (common and tenant DTOs) and setting items of `POST /api/master-bulk` accept `systemId`. A setting whose code is already visible (tenant, then common) inherits that owner; a conflicting explicit value is 400. `'*'` as a value is 400. Data rows never take `systemId` from the client.
@@ -122,7 +122,7 @@ Rules:
 
 - A missing, `null` or empty `systemId` counts as `shared` (the functions take `string | null | undefined`).
 - `shared` is not added by the library. As in v0, the host lists `{ id: 'shared', label: … }` in `systems` if shared settings may be created and filtered for. Without it, a `shared` row still shows the label `shared` **(author's call, following v0)**.
-- Comparison is in lower case on both sides, as the backend does. v0 compared exactly, so a grant of `App-A` would not match a row stored as `app-a`. **Change from v0.**
+- Systems compare in lower case, setting codes exactly, as the backend does. v0 compared systems exactly, so a grant of `App-A` would not match a row stored as `app-a`. **Change from v0.**
 - `*` matches any system or setting code; `write` implies `read`; grants are a union.
 - Not enabled: `canRead`/`canWrite` are `true`, `canCopyAll` is `true`, and `writableSystems` is `systems` (unused, since the system field is hidden).
 - `writableSystems`: `systems` whose id has a write grant for some setting code (`*` counts). The backend has the final say per setting code.
@@ -152,7 +152,7 @@ Rules:
 
 ### `/mbc` pages
 
-- Every master page gains `systems?: readonly SystemOption[]`. Without it the page makes no access request and passes no `access`: exactly today's behaviour. **(author's call: the prop is per page, because the rebuild has no shared master provider; the pages share one cached request through `useQuery`, keyed by tenant and paths.)**
+- Every master page gains `systems?: readonly SystemOption[]`. Without it the page makes no access request and passes no `access`: exactly today's behaviour. **(author's call: the prop is per page, because the rebuild has no shared master provider; the pages share one request per client, tenant and paths; an answer is shared for 30 seconds, so another user or new roles are seen on the next page.)**
 - With `systems`, the page fetches `access.get` once per tenant and paths. While it loads, it passes an access with `enabled: false, loading: true`: no system column, filter or select yet (a host whose backend answers `enabled: false` never sees them flash), and every write action disabled. The server render is this loading state **(author's call: the column may appear after the answer; a brief layout change beats showing UI that may not apply)**. If the request fails, the page treats access as not enabled and reports the error to `onError` (v0 logged to the console). The backend still enforces, so the worst outcome is a refused button. **(author's call: `onError`, not the console, because the rebuild reports every failed load there.)**
 - Both list pages gain `includeCommon?: boolean` (default off, as v0), sent with every list request.
 - `onError` and the screens get the real `MbcApiError` as today. Messages are chosen as below.
@@ -167,14 +167,14 @@ All new behaviour applies only when `access.enabled`. Every screen without `acce
 | Data list                                    | The system column only, no filter (owner's decision: a data row's system comes from its setting, so one setting's rows share one system apart from untagged legacy rows). `MasterDataListState` therefore gets no `systemId`. Create and the JSON import need `canWrite(setting.systemId, settingCode)`.                         |
 | Settings editor (create)                     | A required "システム" `Select` from `writableSystems`, placeholder "システムを選択してください", sent as `systemId`. With exactly one option it is preselected (v0). The setting JSON has no `systemId`, so a JSON import into the form keeps the chosen system (v0 kept the choice across an import too).                       |
 | Settings editor (edit)                       | The system shown read-only. Save, delete, the JSON dialog and the link to the copy request form need `canWrite(setting.systemId, settingCode)`, on top of today's tenant condition. That link also needs `canCopyAll` (option B), on top of `canCopy`.                                                                           |
-| Data editor                                  | No system field. Save, delete, restore and the JSON dialog need `canWrite(systemId, settingCode)`, using the record's `systemId` when editing and the setting's when creating.                                                                                                                                                   |
+| Data editor                                  | No system field. Save, delete, restore and the JSON dialog need `canWrite(systemId, settingCode)`, using the record's own `systemId`, else its setting's (the backend's owner rule for untagged records).                                                                                                                        |
 | Copy request form, copy results, copy detail | Reachable by URL, so the request form offers no submit without `canWrite(setting.systemId, settingCode)` and `canCopyAll`. The results and detail stay readable, and the editor's link to the results stays under `canCopy` alone; only the link to the request form also needs `canWrite` and `canCopyAll` **(author's call)**. |
 | Bulk import dialog                           | Accepts `systemId` on setting items. Runs the key rules before sending, and, with access enabled, the access pre-check below.                                                                                                                                                                                                    |
 
 **Bulk import access pre-check** (owner's decision). The backend writes settings before data rows and is not a transaction, and the rebuild sends batches of 100, so a refusal mid-import leaves part of it written. With access enabled, the dialog checks every item before the first request and sends nothing if any fails:
 
-- A setting item with a `systemId` not in `writableSystems` (compared in lower case) is refused.
-- A setting item without `systemId` is allowed: the backend gives it the owner of a visible setting with the same code, or leaves it `shared`. When `canWrite(undefined, code)` is false (no write on `shared` for that code), it is refused too **(author's call: an untagged new setting is `shared`)**.
+- A setting item with a `systemId` is refused when `canWrite(systemId, code)` is false.
+- A setting item without `systemId` is left to the backend: it gives the item the owner of a visible setting with the same code, or leaves it `shared`, and the screen cannot know which (independent review).
 - A data item is refused when `canWrite(setting.systemId, settingCode)` is false for its setting. On the data list that is the screen's setting. On the settings list, a data item whose setting is in the same import uses that item's `systemId`, and otherwise its setting's owner is unknown, so it is allowed and the backend decides **(author's call)**.
 - Each refusal is a `BulkError` naming the item's position (new keys `systemNotWritable` and `settingNotWritable`, with ja/en messages).
 

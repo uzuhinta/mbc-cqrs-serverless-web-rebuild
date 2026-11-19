@@ -334,9 +334,10 @@ export function bulkSampleJson(
  * anything is sent: the backend writes settings before data and is not a
  * transaction, so a refusal half-way leaves part of an import written.
  *
- * - A setting item needs its `systemId` among `writableSystems`; without
- *   one it is `shared` (or inherits a visible owner) and needs a write
- *   grant on `shared` for its code.
+ * - A setting item with a `systemId` needs a write grant for that system
+ *   and its code. Without one, the backend gives it the owner of a visible
+ *   setting with the same code, or `shared`: the screen cannot know which,
+ *   so the backend decides.
  * - A data item needs a write grant for its setting's system: `setting` on
  *   a data list, or a setting item of the same import. A setting the import
  *   does not hold has an owner the screen cannot know; the backend decides.
@@ -350,9 +351,6 @@ export function bulkAccessErrors(
   setting?: { code: string; systemId?: string }
 ): BulkError[] {
   if (!access.enabled) return []
-  const writable = new Set(
-    access.writableSystems.map((system) => system.id.toLowerCase())
-  )
   const owners = new Map<string, string | undefined>()
   if (setting) owners.set(setting.code, setting.systemId)
   for (const item of items)
@@ -360,11 +358,11 @@ export function bulkAccessErrors(
   const errors: BulkError[] = []
   items.forEach((item, index) => {
     if (!isDataItem(item)) {
-      const allowed =
-        item.systemId === undefined
-          ? access.canWrite(undefined, item.code)
-          : writable.has(item.systemId.toLowerCase())
-      if (!allowed) errors.push({ key: 'systemNotWritable', index })
+      if (
+        item.systemId !== undefined &&
+        !access.canWrite(item.systemId, item.code)
+      )
+        errors.push({ key: 'systemNotWritable', index })
       return
     }
     const code = item.settingCode ?? ''

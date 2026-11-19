@@ -305,32 +305,35 @@ describe('bulkAccessErrors', () => {
     ).toEqual([])
   })
 
-  it('needs a setting’s system to be writable, in any case', () => {
-    const access = grants({ systemId: 'app-a', settingCode: '*', write: true })
+  it('needs a write grant for a setting’s system and code, in any case of the system', () => {
+    const access = grants(
+      { systemId: 'app-a', settingCode: 'S', write: true },
+      { systemId: 'app-z', settingCode: '*', write: true }
+    )
     expect(
       bulkAccessErrors(
         [
           { ...setting, systemId: 'APP-A' },
-          { ...setting, code: 'T', systemId: 'app-b' },
+          { ...setting, code: 'T', systemId: 'app-a' },
+          { ...setting, code: 'U', systemId: 'app-b' },
+          // A system the host did not list, covered by a grant.
+          { ...setting, code: 'V', systemId: 'app-z' },
         ],
         access
       )
-    ).toEqual([{ key: 'systemNotWritable', index: 1 }])
+    ).toEqual([
+      { key: 'systemNotWritable', index: 1 },
+      { key: 'systemNotWritable', index: 2 },
+    ])
   })
 
-  it('checks a setting without a system as shared', () => {
-    expect(
-      bulkAccessErrors(
-        [setting],
-        grants({ systemId: 'shared', settingCode: 'S', write: true })
-      )
-    ).toEqual([])
+  it('leaves a setting without a system to the backend: it may inherit an owner', () => {
     expect(
       bulkAccessErrors(
         [setting],
         grants({ systemId: 'app-a', settingCode: '*', write: true })
       )
-    ).toEqual([{ key: 'systemNotWritable', index: 0 }])
+    ).toEqual([])
   })
 
   it('checks a record against a setting of the same import', () => {

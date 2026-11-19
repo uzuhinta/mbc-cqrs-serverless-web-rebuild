@@ -178,9 +178,12 @@ const systems = [
   - A new setting chooses its system from the ones the user may write. One choice is preselected. A stored setting shows its system and cannot change it.
   - Create, Edit, Save, Delete, Restore and JSON import appear only where the grants allow. They are disabled while the grants load. A setting or record the user may not write opens read-only.
   - The copy request needs a `*`/`*` write grant, as the backend's copy does. Copy results stay readable.
-  - Bulk import refuses items the grants would refuse before anything is sent. The backend writes settings before data and is not a transaction, so this avoids most half-done imports. It cannot avoid all of them, because grants can change: import settings and data separately when that matters.
+  - Bulk import refuses items the grants would refuse before anything is sent. The backend writes settings before data and is not a transaction, so this avoids most half-done imports. It cannot avoid all of them: grants can change, and a setting without `systemId`, or a record of a setting the import does not hold, has an owner only the backend knows. Import settings and data separately when that matters.
   - A refused write says so (HTTP 403). A rejected one shows the backend's reason (HTTP 400). A refused copy says so with or without `systems`.
-- A row with no system counts as `shared`. Systems compare ignoring case, as the backend stores them in lower case.
+- A setting with no system counts as `shared`. A record with no system of its own takes its setting's, as on the backend. Systems compare ignoring case, as the backend stores them in lower case; setting codes compare exactly.
+- A new setting offers every system with some write grant. A grant for only some setting codes is refused on save for other codes, and the editor says so.
+- If the grants cannot be read, the pages report it to `onError` and show every action, as without `systems`; the backend still refuses what it does not allow.
+- The grants are read again after 30 seconds, so another user signing in on the same client, or new roles, are seen on the next page.
 - The UI only hides actions; the backend decides. Roll out in this order:
   1. Upgrade the backend.
   2. Upgrade this package and pass `systems`.

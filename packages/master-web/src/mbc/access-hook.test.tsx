@@ -2,7 +2,7 @@ import { MbcApiError } from '@mbc-cqrs-serverless/client-web'
 import { MbcClientProvider } from '@mbc-cqrs-serverless/client-web/react'
 import { renderHook, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { createFakeClient } from '../../test/fake-mbc-client'
 import { useMasterAccess } from './hooks'
@@ -20,6 +20,10 @@ const wrap = (client: ReturnType<typeof createFakeClient>) =>
   function Wrapper({ children }: { children: ReactNode }) {
     return <MbcClientProvider client={client}>{children}</MbcClientProvider>
   }
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 describe('useMasterAccess', () => {
   it('asks nothing and gives no access without systems', () => {
@@ -81,6 +85,25 @@ describe('useMasterAccess', () => {
     })
     expect(first.result.current.access?.canWrite('app-b', 'X')).toBe(true)
     first.unmount()
+    const second = renderHook(() => useMasterAccess(SYSTEMS), {
+      wrapper: wrap(client),
+    })
+    await waitFor(() =>
+      expect(second.result.current.access?.enabled).toBe(true)
+    )
+    expect(client.get).toHaveBeenCalledTimes(2)
+  })
+
+  it('asks again once the shared answer is 30 seconds old, so another user or new roles are seen', async () => {
+    const client = createFakeClient()
+    client.get.mockResolvedValue(GRANTS)
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_000)
+    const first = renderHook(() => useMasterAccess(SYSTEMS), {
+      wrapper: wrap(client),
+    })
+    await waitFor(() => expect(first.result.current.access?.enabled).toBe(true))
+    first.unmount()
+    now.mockReturnValue(1_000 + 30_001)
     const second = renderHook(() => useMasterAccess(SYSTEMS), {
       wrapper: wrap(client),
     })

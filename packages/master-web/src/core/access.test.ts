@@ -81,13 +81,14 @@ describe('masterAccess', () => {
     expect(access.canRead('app-a', 'X')).toBe(true)
   })
 
-  it('compares systems and setting codes in lower case', () => {
+  it('compares systems in lower case and setting codes exactly, as the backend does', () => {
     const access = masterAccess(
-      { enabled: true, grants: [grant('App-A', 'Route', true, true)] },
+      { enabled: true, grants: [grant('App-A', 'ROUTE', true, true)] },
       systems
     )
     expect(access.canWrite('app-a', 'ROUTE')).toBe(true)
-    expect(access.canWrite('APP-A', 'route')).toBe(true)
+    expect(access.canWrite('APP-A', 'ROUTE')).toBe(true)
+    expect(access.canWrite('app-a', 'route')).toBe(false)
     expect(access.writableSystems.map((s) => s.id)).toEqual(['app-a'])
   })
 

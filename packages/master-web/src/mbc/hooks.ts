@@ -112,15 +112,17 @@ export function useMasterDataList(
   )
 }
 
+/** How long an answer is shared: another user or new roles are seen after it. */
+const GRANTS_SHARED_MS = 30_000
+
+type Asked = { request: Promise<MasterAccessAnswer>; answeredAt?: number }
+
 /**
- * The grants already asked for, per client and scope, so the pages a user
- * moves between share one request. A failed request is forgotten, so the
- * next page asks again.
+ * The grants asked for, per client and scope, so the pages a user moves
+ * between share one request. An answer is shared for 30 seconds; a failed
+ * request is forgotten, so the next page asks again.
  */
-const grantsAsked = new WeakMap<
-  MbcClient,
-  Map<string, Promise<MasterAccessAnswer>>
->()
+const grantsAsked = new WeakMap<MbcClient, Map<string, Asked>>()
 
 function askGrants(
   client: MbcClient,
@@ -133,14 +135,24 @@ function askGrants(
     grantsAsked.set(client, asked)
   }
   const known = asked.get(scope)
-  if (known) return known
+  if (
+    known &&
+    (known.answeredAt === undefined ||
+      Date.now() - known.answeredAt <= GRANTS_SHARED_MS)
+  )
+    return known.request
   // Not tied to one page's signal: other pages may be waiting on it.
-  const request = api.access.get()
-  asked.set(scope, request)
-  request.catch(() => {
-    if (asked.get(scope) === request) asked.delete(scope)
-  })
-  return request
+  const entry: Asked = { request: api.access.get() }
+  asked.set(scope, entry)
+  entry.request.then(
+    () => {
+      entry.answeredAt = Date.now()
+    },
+    () => {
+      if (asked.get(scope) === entry) asked.delete(scope)
+    }
+  )
+  return entry.request
 }
 
 /**

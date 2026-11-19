@@ -619,6 +619,12 @@ describe('MasterDataEditor with access', () => {
     expect(button('登録')).toBeEnabled()
   })
 
+  it('checks an untagged record against its setting’s system, as the backend does', () => {
+    const owned = { ...setting(), systemId: 'app-a' }
+    setup({ setting: owned, access: access('app-a', true) })
+    expect(button('編集')).toBeEnabled()
+  })
+
   it('checks a record with no system as shared', () => {
     setup({ access: access('app-a', true) })
     expect(screen.queryByRole('button', { name: '編集' })).toBeNull()

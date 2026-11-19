@@ -139,9 +139,9 @@ function EditorBody({
     mode === 'create' ||
     tenantCode === undefined ||
     isSameTenant(data?.tenantCode, tenantCode)
-  // A record's system is its setting's; a stored record carries it too.
+  // A record's system is its own, else its setting's (the backend's rule).
   const permitted = access.canWrite(
-    mode === 'edit' ? data?.systemId : setting.systemId,
+    (mode === 'edit' ? data?.systemId : undefined) ?? setting.systemId,
     settingCodeOf(setting)
   )
   const owned = ownTenant && permitted
