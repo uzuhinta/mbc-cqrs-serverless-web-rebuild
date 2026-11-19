@@ -12,6 +12,8 @@ export type MasterSettingListState = {
   name: string
   /** v0 searches the description with it. */
   keyword: string
+  /** Only this system's settings; empty or absent means all (backend v1.7+). */
+  systemId?: string
   sort?: ListSort
 }
 
@@ -33,6 +35,7 @@ export function initialSettingListState(): MasterSettingListState {
     code: '',
     name: '',
     keyword: '',
+    systemId: '',
   }
 }
 
@@ -57,6 +60,8 @@ export type MasterSettingListItem = {
   code: string
   name: string
   tenantCode?: string
+  /** The owning system; absent means `shared`. */
+  systemId?: string
   attributes?: { description?: unknown; [key: string]: unknown }
   [key: string]: unknown
 }
@@ -71,6 +76,9 @@ export type MasterDataListItem = {
   name: string
   seq?: number | null
   isDeleted?: boolean
+  tenantCode?: string
+  /** The owning system, its setting's; absent means `shared`. */
+  systemId?: string
   attributes?: Record<string, unknown>
   [key: string]: unknown
 }

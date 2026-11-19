@@ -209,6 +209,51 @@ describe('mapResultToBulkItem', () => {
   })
 })
 
+describe('parseBulkJson: keys and systems (backend v1.8)', () => {
+  it('refuses codes the backend cannot key, before anything is sent', () => {
+    const text = JSON.stringify([
+      { ...setting, code: 'a#b' },
+      { ...setting, code: 'MASTER_SETTING' },
+      { ...data, settingCode: 'S@1' },
+      { ...data, code: 'D#1' },
+      { ...data, settingCode: 'MASTER_SETTING' },
+      { ...data, code: 'MASTER_SETTING' },
+    ])
+    expect(parseBulkJson(text, { screen: 'settings' })).toEqual({
+      items: [{ ...data, code: 'MASTER_SETTING' }],
+      errors: [0, 1, 2, 3, 4].map((index) => ({ key: 'invalidCode', index })),
+    })
+  })
+
+  it('keeps a setting’s systemId and drops a record’s', () => {
+    const text = JSON.stringify([
+      { ...setting, systemId: 'app-a' },
+      { ...data, systemId: 'app-a' },
+    ])
+    const { items, errors } = parseBulkJson(text, { screen: 'settings' })
+    expect(errors).toEqual([])
+    expect(items[0]).toEqual({ ...setting, systemId: 'app-a' })
+    expect(items[1]).toEqual(data)
+    expect(items[1]).not.toHaveProperty('systemId')
+  })
+
+  it('refuses a systemId that is not text', () => {
+    const text = JSON.stringify([{ ...setting, systemId: 1 }])
+    expect(parseBulkJson(text, { screen: 'settings' }).errors).toEqual([
+      { key: 'invalidItem', index: 0 },
+    ])
+  })
+
+  it('carries a mapped setting’s systemId', () => {
+    expect(
+      mapResultToBulkItem({
+        kind: 'setting',
+        value: { code: 'c', name: 'n', settingValue: {}, systemId: 'app-a' },
+      })
+    ).toMatchObject({ code: 'c', systemId: 'app-a' })
+  })
+})
+
 describe('bulkSampleJson', () => {
   it('writes its sample names in the screen’s language when given texts', () => {
     const texts = {

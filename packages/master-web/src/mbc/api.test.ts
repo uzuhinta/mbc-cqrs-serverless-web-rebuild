@@ -357,3 +357,101 @@ describe('createMasterApi: copy', () => {
     expect(client.get.mock.calls[0]?.[0]).toBe('/x/tasks/sfn-task-parent')
   })
 })
+
+describe('createMasterApi: system scoping (backend v1.7+)', () => {
+  it('sends systemId and includeCommon only when given', async () => {
+    const client = createFakeClient()
+    client.get.mockResolvedValue({ items: [], total: 0 })
+    const api = createMasterApi(client)
+    await api.settings.list(
+      { ...initialSettingListState(), systemId: ' app-a ' },
+      { includeCommon: true }
+    )
+    expect(client.get).toHaveBeenLastCalledWith('/api/master-setting/list', {
+      query: expect.objectContaining({
+        systemId: 'app-a',
+        includeCommon: true,
+      }),
+      signal: undefined,
+    })
+    await api.settings.list(initialSettingListState())
+    const query = client.get.mock.lastCall?.[1].query
+    expect(query.systemId).toBeUndefined()
+    expect(query.includeCommon).toBeUndefined()
+    await api.data.list('PRODUCT', initialDataListState(), {
+      includeCommon: true,
+    })
+    expect(client.get).toHaveBeenLastCalledWith('/api/master-data/list', {
+      query: expect.objectContaining({
+        settingCode: 'PRODUCT',
+        includeCommon: true,
+      }),
+      signal: undefined,
+    })
+    expect(client.get.mock.lastCall?.[1].query).not.toHaveProperty('systemId')
+  })
+
+  it('reads list rows with a null systemId as shared and drops the reserved attribute', async () => {
+    const client = createFakeClient()
+    client.get.mockResolvedValue({
+      items: [
+        { id: 'a', systemId: null, attributes: { __systemId: 'x' } },
+        { id: 'b', systemId: 'app-a' },
+      ],
+      total: 2,
+    })
+    const page = await createMasterApi(client).settings.list(
+      initialSettingListState()
+    )
+    expect(page.items).toEqual([
+      { id: 'a', attributes: {} },
+      { id: 'b', systemId: 'app-a' },
+    ])
+  })
+
+  it('gets the grants from /api/master-access', async () => {
+    const client = createFakeClient()
+    const grants = [
+      { systemId: 'app-a', settingCode: '*', read: true, write: true },
+    ]
+    client.get.mockResolvedValue({
+      enabled: true,
+      grants: [...grants, { x: 1 }],
+    })
+    expect(await createMasterApi(client).access.get()).toEqual({
+      enabled: true,
+      grants,
+    })
+    expect(client.get).toHaveBeenCalledWith('/api/master-access', {
+      signal: undefined,
+    })
+  })
+
+  it('reads a missing route or an odd answer as not enabled', async () => {
+    const client = createFakeClient()
+    const api = createMasterApi(client)
+    client.get.mockRejectedValueOnce(new MbcApiError(404, null))
+    expect(await api.access.get()).toEqual({ enabled: false, grants: [] })
+    client.get.mockResolvedValueOnce({ message: 'odd' })
+    expect(await api.access.get()).toEqual({ enabled: false, grants: [] })
+    client.get.mockResolvedValueOnce({ enabled: false, grants: [{}] })
+    expect(await api.access.get()).toEqual({ enabled: false, grants: [] })
+  })
+
+  it('rejects other failures of the access request', async () => {
+    const client = createFakeClient()
+    client.get.mockRejectedValue(new MbcApiError(500, null))
+    await expect(createMasterApi(client).access.get()).rejects.toBeInstanceOf(
+      MbcApiError
+    )
+  })
+
+  it('uses a host’s access path', async () => {
+    const client = createFakeClient()
+    client.get.mockResolvedValue({ enabled: false, grants: [] })
+    await createMasterApi(client, {
+      paths: { access: '/x/access' },
+    }).access.get()
+    expect(client.get).toHaveBeenCalledWith('/x/access', { signal: undefined })
+  })
+})

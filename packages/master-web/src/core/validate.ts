@@ -1,5 +1,6 @@
 import type { MasterError } from './errors'
 import { fieldTypeOf } from './field-types'
+import { dataCodeError } from './keys'
 import type { MasterField } from './types'
 import type { MasterFormValues } from './values'
 
@@ -28,6 +29,11 @@ export function validateMasterData(
       }
       if (typeof form === 'string' && form.trim() === '') {
         errors[name] = { key: 'blank' }
+        continue
+      }
+      const key = typeof form === 'string' ? dataCodeError(form) : undefined
+      if (key) {
+        errors[name] = key
         continue
       }
     } else if (field.isRequired && type.isEmpty(form)) {

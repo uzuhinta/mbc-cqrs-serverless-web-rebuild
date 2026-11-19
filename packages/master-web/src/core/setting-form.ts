@@ -1,4 +1,5 @@
 import type { MasterError } from './errors'
+import { settingCodeError } from './keys'
 import {
   defaultSettingFields,
   type FixedFieldNames,
@@ -34,6 +35,8 @@ export type MasterSettingCreateBody = {
   attributes: MasterSettingAttributes
   /** v0 sends the attributes twice; the backend reads this one on create. */
   settingValue: MasterSettingAttributes
+  /** The new setting's system (backend v1.7+); sent only with access enabled. */
+  systemId?: string
 }
 
 /** `PUT /api/master-setting/:id` body. */
@@ -162,14 +165,23 @@ export function applyFieldDialog(
   return next
 }
 
-/** v0's checks of the code and name inputs. */
+/**
+ * v0's checks of the code and name inputs. On create the code must also be
+ * one the backend accepts as a key (no `#` or `@`, not `MASTER_SETTING`);
+ * an existing setting's code is read-only and not checked.
+ */
 export function validateSettingForm(
-  values: SettingFormValues
+  values: SettingFormValues,
+  { mode = 'create' }: { mode?: 'create' | 'update' } = {}
 ): Partial<Record<'code' | 'name', MasterError>> {
   const errors: Partial<Record<'code' | 'name', MasterError>> = {}
   for (const key of ['code', 'name'] as const) {
     if (values[key] === '') errors[key] = { key: 'required' }
     else if (values[key].trim() === '') errors[key] = { key: 'blank' }
+  }
+  if (mode === 'create' && !errors.code) {
+    const code = settingCodeError(values.code.trim())
+    if (code) errors.code = code
   }
   return errors
 }

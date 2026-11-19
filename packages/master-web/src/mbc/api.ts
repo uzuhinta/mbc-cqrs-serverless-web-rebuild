@@ -5,6 +5,7 @@ import {
   type MbcClient,
 } from '@mbc-cqrs-serverless/client-web'
 
+import type { MasterAccessAnswer, MasterAccessGrant } from '../core/access'
 import type { BulkJsonItem } from '../core/bulk'
 import {
   copyTaskName,
@@ -21,6 +22,7 @@ import type {
 import {
   parseMasterData,
   parseMasterSetting,
+  publicRow,
   type ParseResult,
 } from '../core/parse'
 import {
@@ -49,6 +51,8 @@ export type MasterApiPaths = {
   sequence: string
   /** A code with a format. The package names this route `provided-setting`: v0's host path. */
   sequenceWithSetting: string
+  /** The caller's grants (backend v1.7+). */
+  access: string
 }
 
 export const DEFAULT_MASTER_API_PATHS: MasterApiPaths = {
@@ -59,11 +63,14 @@ export const DEFAULT_MASTER_API_PATHS: MasterApiPaths = {
   tasks: '/api/tasks',
   sequence: '/api/sequence',
   sequenceWithSetting: '/api/sequence/with-provided-setting',
+  access: '/api/master-access',
 }
 
 export type MasterApiOptions = { paths?: Partial<MasterApiPaths> }
 
 export type ReadOptions = { signal?: AbortSignal }
+/** A list read; `includeCommon` adds the common tenant's rows (backend v1.7+). */
+export type ListOptions = ReadOptions & { includeCommon?: boolean }
 export type WriteOptions = Pick<
   CommandOptions,
   'signal' | 'onPhase' | 'timeoutMs'
@@ -76,7 +83,7 @@ export type MasterApi = {
   settings: {
     list(
       state: MasterSettingListState,
-      options?: ReadOptions
+      options?: ListOptions
     ): Promise<MasterListPage<MasterSettingListItem>>
     get(id: string, options?: ReadOptions): Promise<MasterSetting>
     /**
@@ -100,7 +107,7 @@ export type MasterApi = {
     list(
       settingCode: string,
       state: MasterDataListState,
-      options?: ReadOptions
+      options?: ListOptions
     ): Promise<MasterListPage<MasterDataListItem>>
     get(id: string, options?: ReadOptions): Promise<MasterData>
     /**
@@ -142,6 +149,14 @@ export type MasterApi = {
       options?: ReadOptions
     ): Promise<string>
   }
+  access: {
+    /**
+     * The caller's grants. A backend without the route (404) or an answer
+     * that is not one reads as `{ enabled: false, grants: [] }`; other
+     * failures reject.
+     */
+    get(options?: ReadOptions): Promise<MasterAccessAnswer>
+  }
   copy: {
     request(body: MasterCopyRequest, options?: ReadOptions): Promise<void>
     /** The setting's copy requests, newest first. */
@@ -173,7 +188,7 @@ function pageOf<T>(answer: unknown): MasterListPage<T> {
     total?: unknown
   }
   return {
-    items: Array.isArray(items) ? (items as T[]) : [],
+    items: Array.isArray(items) ? (items.map(publicRow) as T[]) : [],
     total: typeof total === 'number' ? total : 0,
   }
 }
@@ -181,6 +196,40 @@ function pageOf<T>(answer: unknown): MasterListPage<T> {
 function parsed<T>(result: ParseResult<T>): T {
   if (!result.success) throw result.error
   return result.data
+}
+
+const ACCESS_DISABLED: MasterAccessAnswer = { enabled: false, grants: [] }
+
+const isGrant = (value: unknown): value is MasterAccessGrant => {
+  const { systemId, settingCode, read, write } = (value ?? {}) as Record<
+    string,
+    unknown
+  >
+  return (
+    typeof systemId === 'string' &&
+    typeof settingCode === 'string' &&
+    typeof read === 'boolean' &&
+    typeof write === 'boolean'
+  )
+}
+
+/** `GET /api/master-access`; anything else than `{ enabled, grants }` means not enabled. */
+function accessOf(answer: unknown): MasterAccessAnswer {
+  const { enabled, grants } = (answer ?? {}) as Record<string, unknown>
+  if (typeof enabled !== 'boolean' || !Array.isArray(grants))
+    return ACCESS_DISABLED
+  if (!enabled) return ACCESS_DISABLED
+  return {
+    enabled,
+    grants: grants
+      .filter(isGrant)
+      .map(({ systemId, settingCode, read, write }) => ({
+        systemId,
+        settingCode,
+        read,
+        write,
+      })),
+  }
 }
 
 function tasksOf(answer: unknown): CopyTask[] {
@@ -237,13 +286,15 @@ export function createMasterApi(
 
   return {
     settings: {
-      async list(state, { signal } = {}) {
+      async list(state, { signal, includeCommon } = {}) {
         return pageOf(
           await client.get<unknown>(`${paths.setting}/list`, {
             query: {
               code: filter(state.code),
               name: filter(state.name),
               keyword: filter(state.keyword),
+              systemId: filter(state.systemId ?? ''),
+              includeCommon: includeCommon || undefined,
               page: state.page,
               pageSize: state.pageSize,
               orderBys: orderBys(state.sort),
@@ -279,11 +330,12 @@ export function createMasterApi(
         exists(`${paths.setting}/check-exist/${encode(code)}`, signal),
     },
     data: {
-      async list(settingCode, state, { signal } = {}) {
+      async list(settingCode, state, { signal, includeCommon } = {}) {
         return pageOf(
           await client.get<unknown>(`${paths.data}/list`, {
             query: {
               settingCode,
+              includeCommon: includeCommon || undefined,
               code: filter(state.code),
               keyword: filter(state.keyword),
               isDeleted: state.isDeleted,
@@ -365,6 +417,17 @@ export function createMasterApi(
             'The sequence response has no formattedNo'
           )
         return answer.formattedNo
+      },
+    },
+    access: {
+      async get({ signal } = {}) {
+        try {
+          return accessOf(await client.get<unknown>(paths.access, { signal }))
+        } catch (error) {
+          if (error instanceof MbcApiError && error.status === 404)
+            return ACCESS_DISABLED
+          throw error
+        }
       },
     },
     copy: {

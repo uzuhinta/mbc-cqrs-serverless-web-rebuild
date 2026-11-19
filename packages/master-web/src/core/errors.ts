@@ -9,3 +9,5 @@ export type MasterError =
   | { key: 'min'; params: { min: number } }
   | { key: 'max'; params: { max: number } }
   | { key: 'json' }
+  | { key: 'keyChars' }
+  | { key: 'reserved' }

@@ -64,6 +64,22 @@ describe('validateMasterData', () => {
     ).toEqual({})
   })
 
+  it('rejects # and @ in a typed code on create only', () => {
+    const fields = [codeField('string')]
+    expect(
+      validateMasterData(fields, { code: 'a#b' }, { mode: 'create' })
+    ).toEqual({ code: { key: 'keyChars' } })
+    expect(
+      validateMasterData(fields, { code: 'a@b' }, { mode: 'create' })
+    ).toEqual({ code: { key: 'keyChars' } })
+    expect(
+      validateMasterData(fields, { code: 'MASTER_SETTING' }, { mode: 'create' })
+    ).toEqual({})
+    expect(
+      validateMasterData(fields, { code: 'a#b' }, { mode: 'update' })
+    ).toEqual({})
+  })
+
   it('accepts a required switch that is off, and checks a missing value as empty', () => {
     const fields: MasterField[] = [
       {

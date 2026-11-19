@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { V0_DATA, V0_DATA_ODD, V0_SETTING } from '../../test/fixtures/v0-master'
-import { parseMasterData, parseMasterSetting } from './parse'
+import { parseMasterData, parseMasterSetting, publicRow } from './parse'
 
 describe('parseMasterSetting', () => {
   it('reads a v0 setting and keeps every key it does not know', () => {
@@ -144,5 +144,49 @@ describe('parseMasterData', () => {
     expect(result.data.seq).toBeUndefined()
     expect(result.data.attributes.price).toBe(980)
     expect(result.data.attributes.tags).toBeNull()
+  })
+})
+
+describe('publicRow', () => {
+  it('keeps a string systemId and drops null or empty', () => {
+    expect(publicRow({ id: 'a', systemId: 'app-a' })).toEqual({
+      id: 'a',
+      systemId: 'app-a',
+    })
+    expect(publicRow({ id: 'a', systemId: null })).not.toHaveProperty(
+      'systemId'
+    )
+    expect(publicRow({ id: 'a', systemId: '' })).not.toHaveProperty('systemId')
+  })
+
+  it('drops the reserved owner attribute', () => {
+    expect(
+      publicRow({ id: 'a', attributes: { __systemId: 'x', keep: 1 } })
+    ).toEqual({ id: 'a', attributes: { keep: 1 } })
+  })
+
+  it('returns what is not an object as it is', () => {
+    expect(publicRow(null)).toBeNull()
+    expect(publicRow('x')).toBe('x')
+  })
+})
+
+describe('systemId on parsed rows', () => {
+  type Row = Record<string, unknown> & { attributes: Record<string, unknown> }
+  const v0Setting = V0_SETTING as Row
+  const v0Data = V0_DATA as Row
+
+  it('keeps a setting’s and a record’s owner and drops the reserved attribute', () => {
+    const setting = parseMasterSetting({
+      ...v0Setting,
+      systemId: 'app-a',
+      attributes: { ...v0Setting.attributes, __systemId: 'app-a' },
+    })
+    expect(setting.success && setting.data.systemId).toBe('app-a')
+    expect(setting.success && setting.data.attributes).not.toHaveProperty(
+      '__systemId'
+    )
+    const data = parseMasterData({ ...v0Data, systemId: null })
+    expect(data.success && data.data).not.toHaveProperty('systemId')
   })
 })

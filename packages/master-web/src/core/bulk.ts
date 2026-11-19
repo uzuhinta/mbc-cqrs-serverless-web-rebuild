@@ -1,4 +1,5 @@
 import type { FixedFieldNames } from './field-definition'
+import { dataCodeError, settingCodeError } from './keys'
 import { isSameTenant } from './tenant'
 
 /** One item of `POST /api/master-bulk`; `settingCode` makes it a data record. */
@@ -9,6 +10,8 @@ export type BulkJsonItem = {
   tenantCode?: string
   settingCode?: string
   seq?: number
+  /** A setting's owning system (backend v1.7+); data items never carry one. */
+  systemId?: string
 }
 
 /** v0's mapper result types: hosts map their own JSON shape with `mapRawItem`. */
@@ -19,6 +22,8 @@ export type MappedSetting = {
     code: string
     tenantCode?: string
     settingValue: Record<string, unknown>
+    /** The owning system (backend v1.7+). */
+    systemId?: string
   }
 }
 
@@ -50,6 +55,7 @@ export type BulkError =
   | { key: 'invalidMappedData'; index: number }
   | { key: 'settingNotAllowed'; index: number }
   | { key: 'otherTenant'; index: number }
+  | { key: 'invalidCode'; index: number }
 
 export type BulkParseResult = { items: BulkJsonItem[]; errors: BulkError[] }
 
@@ -67,8 +73,14 @@ const optionalText = (value: unknown) => value === undefined || isText(value)
 
 export function mapResultToBulkItem(result: MapResult): BulkJsonItem {
   if (result.kind === 'setting') {
-    const { name, code, tenantCode, settingValue } = result.value
-    return { name, code, tenantCode, attributes: settingValue }
+    const { name, code, tenantCode, settingValue, systemId } = result.value
+    return {
+      name,
+      code,
+      tenantCode,
+      attributes: settingValue,
+      ...(systemId === undefined ? {} : { systemId }),
+    }
   }
   const { name, code, settingCode, tenantCode, seq, attributes } = result.value
   return { name, code, settingCode, tenantCode, seq, attributes }
@@ -79,7 +91,8 @@ function isMappedSetting(value: MappedSetting['value']): boolean {
     isText(value.name) &&
     isText(value.code) &&
     isPlainObject(value.settingValue) &&
-    optionalText(value.tenantCode)
+    optionalText(value.tenantCode) &&
+    optionalText(value.systemId)
   )
 }
 
@@ -102,10 +115,27 @@ function isBulkItem(entry: unknown, screen: BulkScreen): entry is BulkJsonItem {
     !isPlainObject(entry.attributes)
   )
     return false
-  if (!optionalText(entry.tenantCode)) return false
+  if (!optionalText(entry.tenantCode) || !optionalText(entry.systemId))
+    return false
   const isData = screen === 'data' || 'settingCode' in entry
   return (
     !isData || (isFilled(entry.settingCode) && typeof entry.seq === 'number')
+  )
+}
+
+const isDataItem = (item: BulkJsonItem) => item.settingCode !== undefined
+
+function withoutSystem(item: BulkJsonItem): BulkJsonItem {
+  const { systemId: _ignored, ...rest } = item
+  return rest
+}
+
+/** A key the backend rejects (v1.8), checked before anything is sent. */
+function keyError(item: BulkJsonItem): boolean {
+  if (!isDataItem(item)) return settingCodeError(item.code) !== undefined
+  return (
+    settingCodeError(item.settingCode ?? '') !== undefined ||
+    dataCodeError(item.code) !== undefined
   )
 }
 
@@ -138,13 +168,16 @@ export function parseBulkJson(
 
   const items: BulkJsonItem[] = []
   const errors: BulkError[] = []
-  const accept = (item: BulkJsonItem, index: number) => {
+  const accept = (entry: BulkJsonItem, index: number) => {
+    // The backend takes a record's system from its setting.
+    const item = isDataItem(entry) ? withoutSystem(entry) : entry
     if (
       tenantCode !== undefined &&
       item.tenantCode !== undefined &&
       !isSameTenant(item.tenantCode, tenantCode)
     )
       errors.push({ key: 'otherTenant', index })
+    else if (keyError(item)) errors.push({ key: 'invalidCode', index })
     else items.push(item)
   }
   raw.forEach((entry: unknown, index) => {

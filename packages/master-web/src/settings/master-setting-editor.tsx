@@ -194,7 +194,9 @@ function EditorBody({
     setFailure(null)
     const failedTitle = mode === 'create' ? t.createFailed : t.updateFailed
     try {
-      const found = validateSettingForm(values)
+      const found = validateSettingForm(values, {
+        mode: mode === 'create' ? 'create' : 'update',
+      })
       const next: { code?: string; name?: string } = {
         code: found.code && formatMasterError(found.code, m.validation),
         name: found.name && formatMasterError(found.name, m.validation),

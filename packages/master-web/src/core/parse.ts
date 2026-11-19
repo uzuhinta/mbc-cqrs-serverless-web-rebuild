@@ -97,6 +97,29 @@ const MasterDataSchema = z.looseObject({
   ),
 })
 
+/** The attribute the backend keeps a row's owner in; never shown or sent back. */
+export const SYSTEM_ATTRIBUTE = '__systemId'
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+
+/**
+ * A row as the screens read it: `systemId` only when it is a non-empty
+ * string (RDS rows send `null`), and no `attributes.__systemId`, so it is
+ * never echoed back. Anything that is not an object is returned as it is.
+ */
+export function publicRow<T>(row: T): T {
+  if (!isRecord(row)) return row
+  const { systemId, ...rest } = row
+  const out: Record<string, unknown> = rest
+  if (typeof systemId === 'string' && systemId !== '') out.systemId = systemId
+  if (isRecord(rest.attributes) && SYSTEM_ATTRIBUTE in rest.attributes) {
+    const { [SYSTEM_ATTRIBUTE]: _owner, ...attributes } = rest.attributes
+    out.attributes = attributes
+  }
+  return out as T
+}
+
 function wrap<T>(result: z.ZodSafeParseResult<unknown>): ParseResult<T> {
   return result.success
     ? { success: true, data: result.data as T }
@@ -105,10 +128,10 @@ function wrap<T>(result: z.ZodSafeParseResult<unknown>): ParseResult<T> {
 
 /** Reads a stored setting the way v0 wrote it; unknown keys are kept. */
 export function parseMasterSetting(input: unknown): ParseResult<MasterSetting> {
-  return wrap(MasterSettingSchema.safeParse(input))
+  return wrap(MasterSettingSchema.safeParse(publicRow(input)))
 }
 
 /** Reads a stored data record the way v0 wrote it; unknown keys are kept. */
 export function parseMasterData(input: unknown): ParseResult<MasterData> {
-  return wrap(MasterDataSchema.safeParse(input))
+  return wrap(MasterDataSchema.safeParse(publicRow(input)))
 }

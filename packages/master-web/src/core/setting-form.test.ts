@@ -185,6 +185,15 @@ describe('validateSettingForm', () => {
     })
     expect(validateSettingForm({ ...values, code: 'A', name: 'B' })).toEqual({})
   })
+
+  it('rejects codes the backend cannot key on create, not on update', () => {
+    const values = { code: ' a#b ', name: 'N', description: '', options: {} }
+    expect(validateSettingForm(values)).toEqual({ code: { key: 'keyChars' } })
+    expect(validateSettingForm({ ...values, code: 'MASTER_SETTING' })).toEqual({
+      code: { key: 'reserved' },
+    })
+    expect(validateSettingForm(values, { mode: 'update' })).toEqual({})
+  })
 })
 
 describe('toSettingPayload', () => {

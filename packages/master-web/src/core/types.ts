@@ -46,6 +46,8 @@ export type MasterSetting = {
   version: number
   tenantCode?: string
   isDeleted?: boolean
+  /** The owning system; absent means `shared` (backend v1.7+). */
+  systemId?: string
   attributes: MasterSettingAttributes
   [key: string]: unknown
 }
@@ -61,6 +63,8 @@ export type MasterData = {
   tenantCode?: string
   seq?: number
   isDeleted?: boolean
+  /** The owning system, its setting's; absent means `shared` (backend v1.7+). */
+  systemId?: string
   attributes: Record<string, unknown>
   [key: string]: unknown
 }

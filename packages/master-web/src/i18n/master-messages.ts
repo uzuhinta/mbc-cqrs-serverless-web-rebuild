@@ -75,6 +75,10 @@ export type MasterMessages = {
     min: (params: { min: number }) => string
     max: (params: { max: number }) => string
     json: string
+    /** A code with `#` or `@`, which the backend rejects. */
+    keyChars: string
+    /** The reserved setting code `MASTER_SETTING`. */
+    reserved: string
   }
   /** Field-definition errors (`FieldDefinitionError`). */
   fieldDefinition: {
@@ -108,6 +112,8 @@ export type MasterMessages = {
     invalidMappedData: string
     settingNotAllowed: string
     otherTenant: string
+    /** A code or settingCode the backend cannot key (`#`, `@`, `MASTER_SETTING`). */
+    invalidCode: string
   }
 }
 
@@ -192,6 +198,8 @@ const ja: MasterMessages = {
     min: ({ min }) => `最小値は ${min} です。`,
     max: ({ max }) => `最大値は ${max} です。`,
     json: 'JSONの形式が正しくありません。',
+    keyChars: '「#」と「@」は使用できません。',
+    reserved: 'このコードは予約されています。',
   },
   fieldDefinition: {
     required: '入力してください。',
@@ -229,6 +237,8 @@ const ja: MasterMessages = {
     settingNotAllowed:
       'マスター設定はこの画面から登録できません。マスターデータ画面では kind: "data" のみ登録できます。',
     otherTenant: 'tenantCode が現在のテナントと異なります。',
+    invalidCode:
+      'code と settingCode に「#」「@」は使用できません。「MASTER_SETTING」は設定コードに使えません。',
   },
 }
 
@@ -307,6 +317,8 @@ const en: MasterMessages = {
     min: ({ min }) => `The minimum is ${min}.`,
     max: ({ max }) => `The maximum is ${max}.`,
     json: 'The JSON is not valid.',
+    keyChars: 'The characters # and @ cannot be used.',
+    reserved: 'This code is reserved.',
   },
   fieldDefinition: {
     required: 'This field is required.',
@@ -343,6 +355,8 @@ const en: MasterMessages = {
     settingNotAllowed:
       'Settings cannot be imported here; only kind: "data" items are allowed.',
     otherTenant: 'The tenantCode differs from the current tenant.',
+    invalidCode:
+      'code and settingCode cannot contain # or @, and MASTER_SETTING cannot be a setting code.',
   },
 }
 

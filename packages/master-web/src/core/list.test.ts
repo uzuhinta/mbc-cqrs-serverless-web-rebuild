@@ -18,6 +18,7 @@ describe('list state', () => {
       code: '',
       name: '',
       keyword: '',
+      systemId: '',
     })
     expect(initialDataListState()).toEqual({
       page: 1,
