@@ -1,6 +1,16 @@
 'use client'
 
-import { Button, Input, Label, useMessages } from '@mbc-cqrs-serverless/ui-web'
+import {
+  Button,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  useMessages,
+} from '@mbc-cqrs-serverless/ui-web'
 import { Search, X } from 'lucide-react'
 import { useId, type FormEvent } from 'react'
 
@@ -8,15 +18,18 @@ import {
   BulkImportDialog,
   type BulkImportDialogProps,
 } from '../bulk/bulk-import-dialog'
+import { OPEN_ACCESS, type MasterAccess } from '../core/access'
 import type { BulkMapper } from '../core/bulk'
 import type {
   MasterSettingListItem,
   MasterSettingListState,
 } from '../core/list'
 import { settingCodeOf } from '../core/payload'
+import { masterMessages } from '../i18n/master-messages'
 import { masterSettingMessages } from '../i18n/master-setting-messages'
 import type { JsonTextEditor } from '../json/json-text'
 import { ListError } from '../list/list-error'
+import { systemColumn } from '../list/system-column'
 import { useFilters } from '../list/use-filters'
 import { MasterLink } from '../routing/master-link'
 import type { MasterRouting } from '../routing/routing'
@@ -44,9 +57,18 @@ export type MasterSettingListProps = {
   jsonEditor?: JsonTextEditor
   /** The back button (v0 went to the host's top page); hidden without it. */
   onBack?(): void
+  /**
+   * The caller's access (`/mbc`'s `systems`). Enabled, it adds a system
+   * filter and column, and offers create and import only when some system
+   * is writable. Without it the screen is as before.
+   */
+  access?: MasterAccess
 }
 
-type Filters = Pick<MasterSettingListState, 'code' | 'name' | 'keyword'>
+type Filters = { code: string; name: string; keyword: string; systemId: string }
+
+/** Radix Select takes no empty value, so "every system" travels as this. */
+const ALL_SYSTEMS = '\u0000all'
 
 /** v0's master settings list: search, JSON editor and create, the table, back. */
 export function MasterSettingList({
@@ -65,23 +87,33 @@ export function MasterSettingList({
   mapRawItem,
   jsonEditor,
   onBack,
+  access = OPEN_ACCESS,
 }: MasterSettingListProps) {
   const t = useMessages(masterSettingMessages)
+  const m = useMessages(masterMessages)
   const id = useId()
   const [filters, setFilters] = useFilters<Filters>({
     code: state.code,
     name: state.name,
     keyword: state.keyword,
+    systemId: state.systemId ?? '',
   })
+  const scoped = access.enabled
+  // Create and import need a system to write to; they wait for the grants.
+  const canCreate = !scoped || access.writableSystems.length > 0
+  const waiting = access.loading
 
+  // The system filter is part of the state only where it is shown.
+  const applied = ({ systemId, ...rest }: Filters) =>
+    scoped ? { ...rest, systemId } : rest
   const search = (event: FormEvent) => {
     event.preventDefault()
-    onStateChange({ ...state, ...filters, page: 1 })
+    onStateChange({ ...state, ...applied(filters), page: 1 })
   }
   const clear = () => {
-    const empty = { code: '', name: '', keyword: '' }
+    const empty = { code: '', name: '', keyword: '', systemId: '' }
     setFilters(empty)
-    onStateChange({ ...state, ...empty, page: 1 })
+    onStateChange({ ...state, ...applied(empty), page: 1 })
   }
 
   const columns: DataTableColumn<MasterSettingListItem>[] = [
@@ -119,9 +151,12 @@ export function MasterSettingList({
         </div>
       ),
     },
+    ...(scoped
+      ? [systemColumn<MasterSettingListItem>(access, m.access.system)]
+      : []),
   ]
 
-  const field = (key: keyof Filters) => ({
+  const field = (key: Exclude<keyof Filters, 'systemId'>) => ({
     id: `${id}-${key}`,
     value: filters[key],
     onChange: (event: { target: { value: string } }) =>
@@ -154,11 +189,44 @@ export function MasterSettingList({
                   >
                     {t.list.description}
                   </Label>
+                  {scoped && (
+                    <Label
+                      htmlFor={`${id}-system`}
+                      className="mbc:flex mbc:h-9 mbc:items-center mbc:text-sm mbc:font-semibold"
+                    >
+                      {m.access.system}
+                    </Label>
+                  )}
                 </div>
                 <div className="mbc:flex mbc:flex-1 mbc:flex-col mbc:gap-4">
                   <Input {...field('code')} />
                   <Input {...field('name')} />
                   <Input {...field('keyword')} />
+                  {scoped && (
+                    <Select
+                      value={filters.systemId || ALL_SYSTEMS}
+                      onValueChange={(value) =>
+                        setFilters({
+                          ...filters,
+                          systemId: value === ALL_SYSTEMS ? '' : value,
+                        })
+                      }
+                    >
+                      <SelectTrigger id={`${id}-system`} className="mbc:w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ALL_SYSTEMS}>
+                          {m.access.allSystems}
+                        </SelectItem>
+                        {access.systems.map((system) => (
+                          <SelectItem key={system.id} value={system.id}>
+                            {system.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
               </div>
             </div>
@@ -177,8 +245,9 @@ export function MasterSettingList({
       </div>
 
       <div className="mbc:mx-3 mbc:mb-2 mbc:flex mbc:justify-end mbc:gap-2 mbc:pt-3">
-        {onImport && (
+        {canCreate && onImport && (
           <BulkImportDialog
+            disabled={waiting}
             screen="settings"
             tenantCode={tenantCode}
             inputSampleJson={inputSampleJson}
@@ -188,11 +257,18 @@ export function MasterSettingList({
             jsonEditor={jsonEditor}
           />
         )}
-        <Button asChild>
-          <MasterLink routing={routing} to={{ screen: 'newSetting' }}>
-            {t.list.create}
-          </MasterLink>
-        </Button>
+        {canCreate &&
+          (waiting ? (
+            <Button type="button" disabled>
+              {t.list.create}
+            </Button>
+          ) : (
+            <Button asChild>
+              <MasterLink routing={routing} to={{ screen: 'newSetting' }}>
+                {t.list.create}
+              </MasterLink>
+            </Button>
+          ))}
       </div>
 
       {error !== undefined && error !== null && (

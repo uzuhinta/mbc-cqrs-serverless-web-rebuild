@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { FakeJsonEditor } from '../../test/fake-json-editor'
 import { SETTING_ROWS } from '../../test/fixtures/v0-lists'
+import { masterAccess, OPEN_ACCESS } from '../core/access'
 import {
   initialSettingListState,
   type MasterSettingListState,
@@ -228,4 +229,121 @@ describe('MasterSettingList', () => {
       'PRODUCT'
     )
   })
+})
+
+describe('MasterSettingList with access', () => {
+  const systems = [
+    { id: 'app-a', label: 'App A' },
+    { id: 'shared', label: '共通' },
+  ]
+  const grant = (systemId: string, write: boolean) => ({
+    systemId,
+    settingCode: '*',
+    read: true,
+    write,
+  })
+  const rows = [
+    { ...SETTING_ROWS[0]!, systemId: 'app-a' },
+    { ...SETTING_ROWS[1]! },
+  ]
+
+  it('shows no system filter or column without access, and keeps the state’s shape', async () => {
+    // A host's own state, written before systemId existed.
+    const { onStateChange, props } = setup({
+      access: OPEN_ACCESS,
+      state: { page: 1, pageSize: 20, code: '', name: '', keyword: '' },
+    })
+    expect(screen.queryByRole('combobox', { name: 'システム' })).toBeNull()
+    expect(screen.queryByRole('columnheader', { name: 'システム' })).toBeNull()
+    await userEvent.type(screen.getByLabelText('コード'), 'P{Enter}')
+    expect(last(onStateChange)).toEqual({ ...props.state, code: 'P', page: 1 })
+    expect(last(onStateChange)).not.toHaveProperty('systemId')
+  })
+
+  it('filters by system and shows each row’s system, shared when it has none', async () => {
+    const { onStateChange, props } = setup({
+      items: rows,
+      access: masterAccess(
+        { enabled: true, grants: [grant('*', true)] },
+        systems
+      ),
+    })
+    const table = screen.getByRole('table', { name: 'マスター設定一覧' })
+    expect(
+      within(table).getByRole('columnheader', { name: 'システム' })
+    ).toBeInTheDocument()
+    expect(
+      within(table).getByRole('cell', { name: 'App A' })
+    ).toBeInTheDocument()
+    expect(
+      within(table).getByRole('cell', { name: '共通' })
+    ).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('combobox', { name: 'システム' }))
+    await userEvent.click(await screen.findByRole('option', { name: 'App A' }))
+    await userEvent.click(screen.getByRole('button', { name: '検索' }))
+    expect(last(onStateChange)).toEqual({
+      ...props.state,
+      systemId: 'app-a',
+      page: 1,
+    })
+    await userEvent.click(screen.getByRole('button', { name: 'クリア' }))
+    expect(last(onStateChange)).toEqual({
+      ...props.state,
+      systemId: '',
+      page: 1,
+    })
+  })
+
+  it('hides create and import when no system is writable', () => {
+    setup({
+      onImport: async () => {},
+      access: masterAccess(
+        { enabled: true, grants: [grant('*', false)] },
+        systems
+      ),
+    })
+    expect(screen.queryByRole('link', { name: '新規作成' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'JSONエディタ' })).toBeNull()
+  })
+
+  it('disables create and import while the grants load', () => {
+    setup({
+      onImport: async () => {},
+      access: { ...OPEN_ACCESS, loading: true, systems },
+    })
+    expect(screen.getByRole('button', { name: '新規作成' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'JSONエディタ' })).toBeDisabled()
+    expect(screen.queryByRole('combobox', { name: 'システム' })).toBeNull()
+  })
+})
+
+it('has no axe violations with access and renders on the server', async () => {
+  const props: MasterSettingListProps = {
+    items: [{ ...SETTING_ROWS[0]!, systemId: 'app-a' }],
+    total: 1,
+    state: initialSettingListState(),
+    onStateChange: () => {},
+    routing,
+    onImport: async () => {},
+    access: masterAccess(
+      {
+        enabled: true,
+        grants: [{ systemId: '*', settingCode: '*', read: true, write: true }],
+      },
+      [{ id: 'app-a', label: 'App A' }]
+    ),
+  }
+  render(
+    <main>
+      <MasterSettingList {...props} />
+    </main>
+  )
+  const result = await axe.run(document.body, {
+    rules: {
+      'color-contrast': { enabled: false },
+      region: { enabled: false },
+    },
+  })
+  expect(result.violations.map((violation) => violation.id)).toEqual([])
+  expect(renderToString(<MasterSettingList {...props} />)).toContain('App A')
 })

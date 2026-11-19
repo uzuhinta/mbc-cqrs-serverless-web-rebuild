@@ -11,6 +11,7 @@ import type { JsonTextEditor } from '../json/json-text'
 import type { FieldRenderers } from '../renderers/registry'
 import { settingCodeOfId } from './api'
 import {
+  useMasterAccess,
   useMasterApi,
   useMasterData,
   useMasterDataList,
@@ -25,20 +26,22 @@ import {
   useHasRealtime,
   useReport,
   useTenantCode,
+  type MbcListPageProps,
   type MbcPageProps,
 } from './page-parts'
 
-export type MbcMasterDataListPageProps = MbcPageProps & {
-  /** The setting whose records are listed. */
-  settingId: string
-  /** The list's filters, sort and page; the page keeps its own without it. */
-  state?: MasterDataListState
-  onStateChange?(state: MasterDataListState): void
-  inputSampleJson?: string
-  mapRawItem?: BulkMapper
-  /** The import dialog's JSON editor instead of a text box, e.g. `/editors`' JsonEditor. */
-  jsonEditor?: JsonTextEditor
-}
+export type MbcMasterDataListPageProps = MbcPageProps &
+  MbcListPageProps & {
+    /** The setting whose records are listed. */
+    settingId: string
+    /** The list's filters, sort and page; the page keeps its own without it. */
+    state?: MasterDataListState
+    onStateChange?(state: MasterDataListState): void
+    inputSampleJson?: string
+    mapRawItem?: BulkMapper
+    /** The import dialog's JSON editor instead of a text box, e.g. `/editors`' JsonEditor. */
+    jsonEditor?: JsonTextEditor
+  }
 
 /**
  * v0's data list of one setting on the mbc backend, with bulk import.
@@ -59,6 +62,8 @@ function DataList({
   inputSampleJson,
   mapRawItem,
   jsonEditor,
+  systems,
+  includeCommon,
 }: MbcMasterDataListPageProps) {
   const t = useMessages(masterDataMessages).list
   const [current, change] = useListState(
@@ -67,12 +72,14 @@ function DataList({
     initialDataListState
   )
   const setting = useMasterSetting(settingId, { paths })
-  const list = useMasterDataList(settingId, current, { paths })
+  const list = useMasterDataList(settingId, current, { paths, includeCommon })
+  const { access, error: accessError } = useMasterAccess(systems, { paths })
   const { importItems } = useMasterMutations({ paths })
   const realtime = useHasRealtime()
   const tenantCode = useTenantCode()
   useReport(setting.error, onError)
   useReport(list.error, onError)
+  useReport(accessError, onError)
   if (!setting.data)
     return (
       <PageState
@@ -102,6 +109,7 @@ function DataList({
       inputSampleJson={inputSampleJson}
       mapRawItem={mapRawItem}
       jsonEditor={jsonEditor}
+      access={access}
     />
   )
 }

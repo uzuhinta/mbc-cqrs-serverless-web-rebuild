@@ -1,6 +1,6 @@
 'use client'
 
-import { MbcAbortError } from '@mbc-cqrs-serverless/client-web'
+import { MbcAbortError, type MbcClient } from '@mbc-cqrs-serverless/client-web'
 import {
   useCommand,
   useMbcClient,
@@ -9,6 +9,13 @@ import {
 } from '@mbc-cqrs-serverless/client-web/react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import {
+  masterAccess,
+  OPEN_ACCESS,
+  type MasterAccess,
+  type MasterAccessAnswer,
+  type SystemOption,
+} from '../core/access'
 import type { BulkJsonItem } from '../core/bulk'
 import type { MasterCopyRequest } from '../core/copy'
 import type { MasterDataListState, MasterSettingListState } from '../core/list'
@@ -30,6 +37,11 @@ import {
 } from './api'
 
 export type { QueryState }
+
+/** A list query; `includeCommon` adds the common tenant's rows (backend v1.7+). */
+export type MasterListQueryOptions = MasterApiOptions & {
+  includeCommon?: boolean
+}
 
 /** The copy result hooks reload every `pollMs` ms when it is set. */
 export type CopyTaskQueryOptions = MasterApiOptions & { pollMs?: number }
@@ -59,11 +71,13 @@ export function useMasterApi(options?: MasterApiOptions): MasterApi {
 
 export function useMasterSettings(
   state: MasterSettingListState,
-  options?: MasterApiOptions
+  options?: MasterListQueryOptions
 ) {
   const { api, scope } = useMasterScope(options)
-  return useQuery(`${scope}\u0000${JSON.stringify(state)}`, (signal) =>
-    api.settings.list(state, { signal })
+  const includeCommon = options?.includeCommon === true
+  return useQuery(
+    `${scope}\u0000${JSON.stringify(state)}\u0000${includeCommon}`,
+    (signal) => api.settings.list(state, { signal, includeCommon })
   )
 }
 
@@ -82,15 +96,82 @@ export function useMasterSetting(
 export function useMasterDataList(
   settingId: string | undefined,
   state: MasterDataListState,
-  options?: MasterApiOptions
+  options?: MasterListQueryOptions
 ) {
   const { api, scope } = useMasterScope(options)
+  const includeCommon = options?.includeCommon === true
   return useQuery(
-    `${scope}\u0000${settingId ?? ''}\u0000${JSON.stringify(state)}`,
+    `${scope}\u0000${settingId ?? ''}\u0000${JSON.stringify(state)}\u0000${includeCommon}`,
     settingId
-      ? (signal) => api.data.list(settingCodeOfId(settingId), state, { signal })
+      ? (signal) =>
+          api.data.list(settingCodeOfId(settingId), state, {
+            signal,
+            includeCommon,
+          })
       : null
   )
+}
+
+/**
+ * The grants already asked for, per client and scope, so the pages a user
+ * moves between share one request. A failed request is forgotten, so the
+ * next page asks again.
+ */
+const grantsAsked = new WeakMap<
+  MbcClient,
+  Map<string, Promise<MasterAccessAnswer>>
+>()
+
+function askGrants(
+  client: MbcClient,
+  scope: string,
+  api: MasterApi
+): Promise<MasterAccessAnswer> {
+  let asked = grantsAsked.get(client)
+  if (!asked) {
+    asked = new Map()
+    grantsAsked.set(client, asked)
+  }
+  const known = asked.get(scope)
+  if (known) return known
+  // Not tied to one page's signal: other pages may be waiting on it.
+  const request = api.access.get()
+  asked.set(scope, request)
+  request.catch(() => {
+    if (asked.get(scope) === request) asked.delete(scope)
+  })
+  return request
+}
+
+/**
+ * The caller's access for the screens. Without `systems` it asks nothing
+ * and gives `undefined`, so the screens behave as before. While the grants
+ * load, nothing new is shown and writes wait (`loading`). A failed request
+ * gives `error` and an access that is not enabled: the backend still
+ * decides.
+ */
+export function useMasterAccess(
+  systems: readonly SystemOption[] | undefined,
+  options?: MasterApiOptions
+): { access: MasterAccess | undefined; error: unknown } {
+  const client = useMbcClient()
+  const { api, scope } = useMasterScope(options)
+  const grants = useQuery(
+    `${scope}\u0000access`,
+    systems ? () => askGrants(client, scope, api) : null
+  )
+  const listed = JSON.stringify(systems ?? null)
+  const access = useMemo((): MasterAccess | undefined => {
+    const offered = JSON.parse(listed) as SystemOption[] | null
+    if (!offered) return undefined
+    if (grants.data) return masterAccess(grants.data, offered)
+    return {
+      ...OPEN_ACCESS,
+      systems: offered,
+      loading: grants.error === undefined || grants.error === null,
+    }
+  }, [listed, grants.data, grants.error])
+  return { access, error: grants.error }
 }
 
 export function useMasterData(

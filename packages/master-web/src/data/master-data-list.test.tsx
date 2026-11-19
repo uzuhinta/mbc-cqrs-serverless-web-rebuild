@@ -8,6 +8,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { FakeJsonEditor } from '../../test/fake-json-editor'
 import { DATA_ROWS } from '../../test/fixtures/v0-lists'
 import { V0_SETTING } from '../../test/fixtures/v0-master'
+import { masterAccess, OPEN_ACCESS } from '../core/access'
 import { initialDataListState, type MasterDataListState } from '../core/list'
 import { parseMasterSetting } from '../core/parse'
 import type { MasterSetting } from '../core/types'
@@ -206,5 +207,75 @@ describe('MasterDataList', () => {
     })
     expect(result.violations.map((violation) => violation.id)).toEqual([])
     expect(renderToString(<MasterDataList {...props} />)).toContain('りんご')
+  })
+})
+
+describe('MasterDataList with access', () => {
+  const systems = [
+    { id: 'app-a', label: 'App A' },
+    { id: 'shared', label: '共通' },
+  ]
+  const owned = (): MasterSetting => ({ ...setting(), systemId: 'app-a' })
+  const access = (write: boolean) =>
+    masterAccess(
+      {
+        enabled: true,
+        grants: [
+          { systemId: 'app-a', settingCode: 'PRODUCT', read: true, write },
+        ],
+      },
+      systems
+    )
+
+  it('shows no system column without access', () => {
+    setup({ access: OPEN_ACCESS })
+    expect(screen.queryByRole('columnheader', { name: 'システム' })).toBeNull()
+  })
+
+  it('shows each record’s system, shared when it has none', () => {
+    setup({
+      setting: owned(),
+      items: [{ ...DATA_ROWS[0]!, systemId: 'app-a' }, DATA_ROWS[1]!],
+      access: access(true),
+    })
+    const table = screen.getByRole('table')
+    expect(
+      within(table).getByRole('columnheader', { name: 'システム' })
+    ).toBeInTheDocument()
+    expect(
+      within(table).getByRole('cell', { name: 'App A' })
+    ).toBeInTheDocument()
+    expect(
+      within(table).getByRole('cell', { name: '共通' })
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: 'システム' })).toBeNull()
+  })
+
+  it('offers create and import only with write access to the setting', () => {
+    const { unmount } = setup({
+      setting: owned(),
+      onImport: async () => {},
+      access: access(true),
+    })
+    expect(screen.getByRole('link', { name: '新規登録' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'JSONエディタ' })).toBeEnabled()
+    unmount()
+    setup({ setting: owned(), onImport: async () => {}, access: access(false) })
+    expect(screen.queryByRole('link', { name: '新規登録' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'JSONエディタ' })).toBeNull()
+  })
+
+  it('checks a setting with no system as shared', () => {
+    setup({ onImport: async () => {}, access: access(true) })
+    expect(screen.queryByRole('link', { name: '新規登録' })).toBeNull()
+  })
+
+  it('disables create and import while the grants load', () => {
+    setup({
+      onImport: async () => {},
+      access: { ...OPEN_ACCESS, loading: true, systems },
+    })
+    expect(screen.getByRole('button', { name: '新規登録' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'JSONエディタ' })).toBeDisabled()
   })
 })

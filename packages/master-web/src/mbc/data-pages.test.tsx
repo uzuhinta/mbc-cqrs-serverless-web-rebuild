@@ -401,3 +401,37 @@ describe('MbcMasterDataEditorPage', () => {
     expect(screen.queryByRole('button', { name: '削除' })).toBeNull()
   })
 })
+
+describe('MbcMasterDataListPage with systems', () => {
+  it('offers create only with write access to the setting, and includes common rows when asked', async () => {
+    const client = createFakeClient()
+    serveGets(client, {
+      [settingPath]: { ...(V0_SETTING as object), systemId: 'app-a' },
+      '/api/master-access': {
+        enabled: true,
+        grants: [
+          { systemId: 'app-a', settingCode: '*', read: true, write: false },
+        ],
+      },
+      '/api/master-data/list': () => ({ items: DATA_ROWS, total: 2 }),
+    })
+    renderPage(
+      client,
+      <MbcMasterDataListPage
+        routing={createRouting()}
+        settingId={SETTING_ID}
+        systems={[{ id: 'app-a', label: 'App A' }]}
+        includeCommon
+      />
+    )
+    expect(
+      await screen.findByRole('columnheader', { name: 'システム' })
+    ).toBeVisible()
+    expect(screen.queryByRole('link', { name: '新規登録' })).toBeNull()
+    expect(
+      client.get.mock.calls.find(
+        ([path]) => path === '/api/master-data/list'
+      )?.[1].query.includeCommon
+    ).toBe(true)
+  })
+})

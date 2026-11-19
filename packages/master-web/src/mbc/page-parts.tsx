@@ -4,6 +4,7 @@ import { useMbcClient } from '@mbc-cqrs-serverless/client-web/react'
 import { Skeleton, useMessages } from '@mbc-cqrs-serverless/ui-web'
 import { useEffect, useRef, useState } from 'react'
 
+import type { SystemOption } from '../core/access'
 import { masterMessages } from '../i18n/master-messages'
 import { ListError } from '../list/list-error'
 import type { MasterRouting } from '../routing/routing'
@@ -16,6 +17,19 @@ export type MbcPageProps = {
   onError?(error: unknown): void
   /** Where the requests go (`createMasterApi`'s `paths`). */
   paths?: Partial<MasterApiPaths>
+  /**
+   * The systems the screens may offer, with their names; include `shared`
+   * to offer it. Passing it turns on system scoping: the page reads the
+   * caller's grants (`GET /api/master-access`, backend v1.7+) and the
+   * screens offer only what they allow. Without it nothing is asked.
+   */
+  systems?: readonly SystemOption[]
+}
+
+/** What the list pages also take. */
+export type MbcListPageProps = {
+  /** Adds the common tenant's rows the tenant does not have (backend v1.7+). */
+  includeCommon?: boolean
 }
 
 /** The current tenant, read on every render (`client.tenantCode()`). */

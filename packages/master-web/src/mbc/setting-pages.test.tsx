@@ -401,3 +401,78 @@ describe('MbcMasterSettingEditorPage', () => {
     )
   })
 })
+
+describe('MbcMasterSettingListPage with systems', () => {
+  const systems = [{ id: 'app-a', label: 'App A' }]
+
+  it('asks for no grants without systems', async () => {
+    const client = createFakeClient()
+    serveGets(client, {
+      '/api/master-setting/list': () => ({ items: SETTING_ROWS, total: 2 }),
+    })
+    renderPage(client, <MbcMasterSettingListPage routing={createRouting()} />)
+    expect(await screen.findByRole('link', { name: 'PRODUCT' })).toBeVisible()
+    expect(client.get.mock.calls.map(([path]) => path)).not.toContain(
+      '/api/master-access'
+    )
+  })
+
+  it('reads the grants and filters by system', async () => {
+    const client = createFakeClient()
+    serveGets(client, {
+      '/api/master-access': {
+        enabled: true,
+        grants: [
+          { systemId: 'app-a', settingCode: '*', read: true, write: true },
+        ],
+      },
+      '/api/master-setting/list': () => ({ items: SETTING_ROWS, total: 2 }),
+    })
+    renderPage(
+      client,
+      <MbcMasterSettingListPage routing={createRouting()} systems={systems} />
+    )
+    await userEvent.click(
+      await screen.findByRole('combobox', { name: 'システム' })
+    )
+    await userEvent.click(await screen.findByRole('option', { name: 'App A' }))
+    await userEvent.click(button('検索'))
+    await waitFor(() =>
+      expect(client.get.mock.calls.at(-1)?.[1].query.systemId).toBe('app-a')
+    )
+    expect(screen.getByRole('link', { name: '新規作成' })).toBeVisible()
+  })
+
+  it('reports a failed grants request and works as before', async () => {
+    const client = createFakeClient()
+    const onError = vi.fn()
+    serveGets(client, {
+      '/api/master-setting/list': () => ({ items: SETTING_ROWS, total: 2 }),
+    })
+    renderPage(
+      client,
+      <MbcMasterSettingListPage
+        routing={createRouting()}
+        systems={systems}
+        onError={onError}
+      />
+    )
+    await waitFor(() => expect(onError).toHaveBeenCalled())
+    expect(await screen.findByRole('link', { name: '新規作成' })).toBeVisible()
+    expect(screen.queryByRole('combobox', { name: 'システム' })).toBeNull()
+  })
+
+  it('includes the common tenant’s rows when asked', async () => {
+    const client = createFakeClient()
+    serveGets(client, {
+      '/api/master-setting/list': () => ({ items: SETTING_ROWS, total: 2 }),
+    })
+    renderPage(
+      client,
+      <MbcMasterSettingListPage routing={createRouting()} includeCommon />
+    )
+    await waitFor(() =>
+      expect(client.get.mock.calls.at(-1)?.[1].query.includeCommon).toBe(true)
+    )
+  })
+})

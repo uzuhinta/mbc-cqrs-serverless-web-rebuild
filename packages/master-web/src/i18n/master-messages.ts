@@ -4,6 +4,19 @@ import type { MasterFieldType } from '../core/field-type-names'
 
 export type MasterMessages = {
   fieldTypes: Record<MasterFieldType, string>
+  /** System scoping (backend v1.7+): only shown with access enabled. */
+  access: {
+    /** The system column, filter and select. */
+    system: string
+    /** The filter's "every system" choice. */
+    allSystems: string
+    /** The create form's select before a choice. */
+    chooseSystem: string
+    /** Marks a common-tenant row in a list. */
+    common: string
+    /** A write the backend refused (HTTP 403). */
+    permissionDenied: string
+  }
   /** The data tables of the list screens. */
   table: {
     empty: string
@@ -124,6 +137,13 @@ declare module '@mbc-cqrs-serverless/ui-web' {
 }
 
 const ja: MasterMessages = {
+  access: {
+    system: 'システム',
+    allSystems: 'すべて',
+    chooseSystem: 'システムを選択してください',
+    common: '共通',
+    permissionDenied: 'この操作を行う権限がありません。',
+  },
   fieldTypes: {
     string: '文字列',
     number: '数値',
@@ -243,6 +263,13 @@ const ja: MasterMessages = {
 }
 
 const en: MasterMessages = {
+  access: {
+    system: 'System',
+    allSystems: 'All',
+    chooseSystem: 'Choose a system',
+    common: 'Common',
+    permissionDenied: 'You do not have permission to do this.',
+  },
   fieldTypes: {
     string: 'Text',
     number: 'Number',

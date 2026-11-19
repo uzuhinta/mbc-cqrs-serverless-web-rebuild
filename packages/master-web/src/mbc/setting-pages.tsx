@@ -14,6 +14,7 @@ import { MasterSettingEditor } from '../settings/master-setting-editor'
 import { MasterSettingList } from '../settings/master-setting-list'
 import { SEQUENCE_SETTING_CODE } from './api'
 import {
+  useMasterAccess,
   useMasterApi,
   useMasterMutations,
   useMasterSetting,
@@ -26,23 +27,25 @@ import {
   useHasRealtime,
   useReport,
   useTenantCode,
+  type MbcListPageProps,
   type MbcPageProps,
 } from './page-parts'
 
 /** v0 read the first 100 sequences. */
 const FORMATS_STATE = { ...initialDataListState(), pageSize: 100 }
 
-export type MbcMasterSettingListPageProps = MbcPageProps & {
-  /** The list's filters, sort and page; the page keeps its own without it. */
-  state?: MasterSettingListState
-  onStateChange?(state: MasterSettingListState): void
-  inputSampleJson?: string
-  mapRawItem?: BulkMapper
-  /** The import dialog's JSON editor instead of a text box, e.g. `/editors`' JsonEditor. */
-  jsonEditor?: JsonTextEditor
-  /** The back button; hidden without it. */
-  onBack?(): void
-}
+export type MbcMasterSettingListPageProps = MbcPageProps &
+  MbcListPageProps & {
+    /** The list's filters, sort and page; the page keeps its own without it. */
+    state?: MasterSettingListState
+    onStateChange?(state: MasterSettingListState): void
+    inputSampleJson?: string
+    mapRawItem?: BulkMapper
+    /** The import dialog's JSON editor instead of a text box, e.g. `/editors`' JsonEditor. */
+    jsonEditor?: JsonTextEditor
+    /** The back button; hidden without it. */
+    onBack?(): void
+  }
 
 /** v0's settings list on the mbc backend, with bulk import. */
 export function MbcMasterSettingListPage({
@@ -55,17 +58,21 @@ export function MbcMasterSettingListPage({
   mapRawItem,
   jsonEditor,
   onBack,
+  systems,
+  includeCommon,
 }: MbcMasterSettingListPageProps) {
   const [current, change] = useListState(
     state,
     onStateChange,
     initialSettingListState
   )
-  const list = useMasterSettings(current, { paths })
+  const list = useMasterSettings(current, { paths, includeCommon })
+  const { access, error: accessError } = useMasterAccess(systems, { paths })
   const { importItems } = useMasterMutations({ paths })
   const realtime = useHasRealtime()
   const tenantCode = useTenantCode()
   useReport(list.error, onError)
+  useReport(accessError, onError)
   return (
     <MasterSettingList
       items={list.data?.items ?? []}
@@ -86,6 +93,7 @@ export function MbcMasterSettingListPage({
       mapRawItem={mapRawItem}
       jsonEditor={jsonEditor}
       onBack={onBack}
+      access={access}
     />
   )
 }

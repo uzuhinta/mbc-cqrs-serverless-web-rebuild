@@ -139,6 +139,7 @@ describe('master-web entries', () => {
         'useCommand',
         'useCopyTask',
         'useCopyTasks',
+        'useMasterAccess',
         'useMasterApi',
         'useMasterData',
         'useMasterDataList',

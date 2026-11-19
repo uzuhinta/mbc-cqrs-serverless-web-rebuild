@@ -18,6 +18,7 @@ import {
   BulkImportDialog,
   type BulkImportDialogProps,
 } from '../bulk/bulk-import-dialog'
+import { OPEN_ACCESS, type MasterAccess } from '../core/access'
 import type { BulkMapper } from '../core/bulk'
 import {
   dataCodeOf,
@@ -27,8 +28,10 @@ import {
 import { settingCodeOf } from '../core/payload'
 import type { MasterSetting } from '../core/types'
 import { masterDataMessages } from '../i18n/master-data-messages'
+import { masterMessages } from '../i18n/master-messages'
 import type { JsonTextEditor } from '../json/json-text'
 import { ListError } from '../list/list-error'
+import { systemColumn } from '../list/system-column'
 import { useFilters } from '../list/use-filters'
 import { MasterLink } from '../routing/master-link'
 import type { MasterRouting } from '../routing/routing'
@@ -56,6 +59,12 @@ export type MasterDataListProps = {
   mapRawItem?: BulkMapper
   /** The import dialog's JSON editor instead of a text box, e.g. `/editors`' JsonEditor. */
   jsonEditor?: JsonTextEditor
+  /**
+   * The caller's access (`/mbc`'s `systems`). Enabled, it adds a system
+   * column, and offers create and import only with write access to the
+   * setting. Without it the screen is as before.
+   */
+  access?: MasterAccess
 }
 
 type Filters = Pick<MasterDataListState, 'code' | 'keyword' | 'isDeleted'>
@@ -83,10 +92,30 @@ export function MasterDataList({
   inputSampleJson,
   mapRawItem,
   jsonEditor,
+  access = OPEN_ACCESS,
 }: MasterDataListProps) {
   const t = useMessages(masterDataMessages)
+  const m = useMessages(masterMessages)
   const id = useId()
   const code = settingCodeOf(setting)
+  // A record's system is its setting's.
+  const canCreate = access.canWrite(setting.systemId, code)
+  const waiting = access.loading
+  const columns = dataColumns(setting, t.list, (row) => (
+    <MasterLink
+      routing={routing}
+      to={{
+        screen: 'dataItem',
+        settingId: setting.id,
+        id: row.id,
+      }}
+      className="mbc:text-primary mbc:block mbc:w-full mbc:overflow-hidden mbc:text-ellipsis mbc:hover:underline"
+    >
+      {dataCodeOf(row)}
+    </MasterLink>
+  ))
+  if (access.enabled)
+    columns.push(systemColumn<MasterDataListItem>(access, m.access.system))
   const [filters, setFilters] = useFilters<Filters>({
     code: state.code,
     keyword: state.keyword,
@@ -217,8 +246,9 @@ export function MasterDataList({
           </AccordionTrigger>
           <AccordionContent className="mbc:flex mbc:flex-col mbc:justify-center">
             <div className="mbc:my-3 mbc:flex mbc:justify-end mbc:gap-4 mbc:px-3">
-              {onImport && (
+              {canCreate && onImport && (
                 <BulkImportDialog
+                  disabled={waiting}
                   screen="data"
                   settingCode={code}
                   tenantCode={tenantCode}
@@ -229,14 +259,21 @@ export function MasterDataList({
                   jsonEditor={jsonEditor}
                 />
               )}
-              <Button asChild>
-                <MasterLink
-                  routing={routing}
-                  to={{ screen: 'newData', settingId: setting.id }}
-                >
-                  {t.list.create}
-                </MasterLink>
-              </Button>
+              {canCreate &&
+                (waiting ? (
+                  <Button type="button" disabled>
+                    {t.list.create}
+                  </Button>
+                ) : (
+                  <Button asChild>
+                    <MasterLink
+                      routing={routing}
+                      to={{ screen: 'newData', settingId: setting.id }}
+                    >
+                      {t.list.create}
+                    </MasterLink>
+                  </Button>
+                ))}
             </div>
             {error !== undefined && error !== null && (
               <div className="mbc:mb-3 mbc:px-3">
@@ -250,19 +287,7 @@ export function MasterDataList({
             <div className="mbc:px-3">
               <DataTable
                 label={t.list.table}
-                columns={dataColumns(setting, t.list, (row) => (
-                  <MasterLink
-                    routing={routing}
-                    to={{
-                      screen: 'dataItem',
-                      settingId: setting.id,
-                      id: row.id,
-                    }}
-                    className="mbc:text-primary mbc:block mbc:w-full mbc:overflow-hidden mbc:text-ellipsis mbc:hover:underline"
-                  >
-                    {dataCodeOf(row)}
-                  </MasterLink>
-                ))}
+                columns={columns}
                 rows={items}
                 rowKey={(row) => row.id}
                 total={total}
